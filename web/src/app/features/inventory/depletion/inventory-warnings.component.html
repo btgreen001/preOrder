@@ -1,0 +1,63 @@
+<div class="warnings-container">
+  <h2>Inventory Warnings &amp; Alerts</h2>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="!loading && lowStockAlerts.length > 0" class="alert-card low-stock">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="warning-icon">warning</mat-icon>
+        Low Stock Items ({{lowStockAlerts.length}})
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngFor="let alert of lowStockAlerts" class="alert-item">
+        <strong>{{alert.itemName}}</strong>: {{alert.message}}
+        <span class="metric">Qty: {{alert.metric}}</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card *ngIf="!loading && expiringAlerts.length > 0" class="alert-card expiring-soon">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="warning-icon">schedule</mat-icon>
+        Expiring Soon ({{expiringAlerts.length}})
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngFor="let alert of expiringAlerts" class="alert-item">
+        <strong>{{alert.itemName}}</strong>: {{alert.message}}
+        <span class="metric" [ngClass]="{'critical': alert.metric <= 1}">
+          Days: {{alert.metric}}
+        </span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card *ngIf="!loading && expiredAlerts.length > 0" class="alert-card expired">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="warning-icon">error</mat-icon>
+        Expired Items ({{expiredAlerts.length}})
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngFor="let alert of expiredAlerts" class="alert-item">
+        <strong>{{alert.itemName}}</strong>: {{alert.message}}
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card *ngIf="!loading && lowStockAlerts.length === 0 && expiringAlerts.length === 0 && expiredAlerts.length === 0" class="no-alerts">
+    <mat-card-content>
+      <p>✓ All inventory is healthy. No low stock, expiring, or expired items.</p>
+    </mat-card-content>
+  </mat-card>
+
+  <button mat-raised-button color="accent" (click)="refreshAlerts()" data-testid="refresh-alerts-btn" class="refresh-btn">
+    Refresh Alerts
+  </button>
+</div>

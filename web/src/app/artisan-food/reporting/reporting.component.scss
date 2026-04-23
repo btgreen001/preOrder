@@ -1,0 +1,312 @@
+.reporting {
+  padding: 1rem;
+  max-width: 1400px;
+}
+
+.reporting.expired-license {
+  opacity: 0.8;
+}
+
+.reporting.expired-license h1::after {
+  content: " (License Expired)";
+  color: #d32f2f;
+  font-size: 0.6em;
+  font-weight: normal;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.report-header h1 {
+  margin: 0;
+  color: #333;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.period-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #2196f3;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #545b62;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  position: relative;
+}
+
+.metric-card.revenue {
+  border-top: 4px solid #4caf50;
+}
+
+.metric-card.orders {
+  border-top: 4px solid #2196f3;
+}
+
+.metric-card.avg-order {
+  border-top: 4px solid #ff9800;
+}
+
+.metric-card.customers {
+  border-top: 4px solid #9c27b0;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.metric-change {
+  font-size: 0.75rem;
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-container {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.chart-container h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.simple-chart {
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: end;
+  height: 200px;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.chart-bar {
+  flex: 1;
+  background: linear-gradient(to top, #2196f3, #64b5f6);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  min-height: 20px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+}
+
+.bar-value {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.25rem;
+}
+
+.chart-labels {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chart-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.products-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.product-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 80px;
+}
+
+.product-sales {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.product-revenue {
+  font-weight: bold;
+  color: #2196f3;
+}
+
+.product-bar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.product-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #4caf50, #81c784);
+  transition: width 0.3s ease;
+}
+
+.tables-section {
+  display: grid;
+  gap: 2rem;
+}
+
+.table-container {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow-x: auto;
+}
+
+.table-container h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.report-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.growth.positive {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.growth.negative {
+  color: #f44336;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .report-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

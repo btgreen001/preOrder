@@ -1,0 +1,64 @@
+<div class="order-edit-container">
+  <header class="page-header">
+    <h1>Edit Order</h1>
+    <button class="btn-secondary" (click)="goBack()">Back to Orders</button>
+  </header>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-message">
+    <p>Loading order details...</p>
+  </div>
+
+  <!-- Order information display (read-only context) -->
+  <div *ngIf="!loading && orderData" class="order-info-card">
+    <h2>Order Details</h2>
+    <div class="info-grid">
+      <div class="info-item">
+        <label>Customer:</label>
+        <p>{{ customerName }}</p>
+      </div>
+      <div class="info-item">
+        <label>Order Date:</label>
+        <p>{{ orderDate }}</p>
+      </div>
+      <div class="info-item">
+        <label>Total Amount:</label>
+        <p>${{ totalAmount | number: '1.2-2' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Edit form -->
+  <form *ngIf="!loading" [formGroup]="form" (ngSubmit)="save()" class="order-form">
+    <div class="form-group">
+      <label for="customerId">Customer ID:</label>
+      <input type="text" id="customerId" formControlName="customerId" class="form-control" readonly>
+    </div>
+
+    <div class="form-group">
+      <label for="status">Status:</label>
+      <select id="status" formControlName="status" class="form-control">
+        <option value="PENDING">Pending</option>
+        <option value="PROCESSING">Processing</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="specialInstructionTxt">Special Instructions:</label>
+      <textarea id="specialInstructionTxt" formControlName="specialInstructionTxt" class="form-control" rows="4"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" [disabled]="form.invalid || saving">
+        {{ saving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>

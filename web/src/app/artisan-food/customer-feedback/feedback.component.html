@@ -1,0 +1,225 @@
+<div class="customer-feedback">
+  <h1>Customer Feedback & Follow-up</h1>
+  
+  <!-- Tab Navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn" [class.active]="selectedTab === 'follow-up'" (click)="selectedTab = 'follow-up'">
+      Follow-up Queue
+    </button>
+    <button class="tab-btn" [class.active]="selectedTab === 'feedback'" (click)="selectedTab = 'feedback'">
+      Customer Feedback
+    </button>
+    <button class="tab-btn" [class.active]="selectedTab === 'templates'" (click)="selectedTab = 'templates'">
+      Templates
+    </button>
+  </div>
+
+  <!-- Follow-up Tab -->
+  <div *ngIf="selectedTab === 'follow-up'" class="tab-content">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number">{{ pendingFollowUps.length }}</div>
+        <div class="stat-label">Pending Follow-ups</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ sentFollowUps.length }}</div>
+        <div class="stat-label">Sent This Week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ averageRating.toFixed(1) }}</div>
+        <div class="stat-label">Average Rating</div>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+      <label>
+        Template:
+        <select [(ngModel)]="selectedTemplate">
+          <option *ngFor="let template of templates" [value]="template.id">
+            {{ template.name }}
+          </option>
+        </select>
+      </label>
+      <button class="btn btn-primary" (click)="bulkSendFollowUps()">
+        Send All Pending Follow-ups
+      </button>
+    </div>
+
+    <!-- Pending Follow-ups -->
+    <div class="section">
+      <h2>Pending Follow-ups ({{ pendingFollowUps.length }})</h2>
+      <div class="follow-up-list">
+        <div *ngFor="let request of pendingFollowUps" class="follow-up-item">
+          <div class="customer-info">
+            <strong>{{ request.customerName }}</strong>
+            <div class="order-details">
+              Order {{ request.orderId }} • {{ request.items.join(', ') }} • ${{ request.orderTotal }}
+            </div>
+            <div class="delivery-date">
+              Delivered: {{ request.deliveryDate | date:'mediumDate' }}
+            </div>
+          </div>
+          <div class="follow-up-actions">
+            <button class="btn btn-primary" (click)="sendFollowUp(request)">
+              Send Follow-up
+            </button>
+          </div>
+        </div>
+        <div *ngIf="pendingFollowUps.length === 0" class="empty-state">
+          No pending follow-ups! 🎉
+        </div>
+      </div>
+    </div>
+
+    <!-- Sent Follow-ups -->
+    <div class="section">
+      <h2>Awaiting Response ({{ sentFollowUps.length }})</h2>
+      <div class="follow-up-list">
+        <div *ngFor="let request of sentFollowUps" class="follow-up-item">
+          <div class="customer-info">
+            <strong>{{ request.customerName }}</strong>
+            <div class="order-details">
+              Order {{ request.orderId }} • ${{ request.orderTotal }}
+            </div>
+            <div class="sent-date">
+              Follow-up sent: {{ request.sentDate | date:'mediumDate' }}
+            </div>
+          </div>
+          <div class="follow-up-actions">
+            <button class="btn btn-secondary btn-sm" (click)="resendFollowUp(request)">
+              Resend
+            </button>
+            <button class="btn btn-secondary btn-sm" (click)="markNoResponse(request)">
+              Mark No Response
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Tab -->
+  <div *ngIf="selectedTab === 'feedback'" class="tab-content">
+    <div class="section">
+      <h2>Customer Responses ({{ respondedFeedback.length }})</h2>
+      <div class="feedback-list">
+        <div *ngFor="let feedback of respondedFeedback" class="feedback-item">
+          <div class="feedback-header">
+            <div class="customer-info">
+              <strong>{{ feedback.customerName }}</strong>
+              <span class="order-id">Order {{ feedback.orderId }}</span>
+            </div>
+            <div class="rating" [style.color]="getRatingColor(feedback.rating!)">
+              {{ getStarRating(feedback.rating!) }} ({{ feedback.rating }}/5)
+            </div>
+          </div>
+          <div class="feedback-content">
+            <p>{{ feedback.comments }}</p>
+          </div>
+          <div class="feedback-actions">
+            <span class="response-date">{{ feedback.responseDate | date:'mediumDate' }}</span>
+            <button class="btn btn-secondary btn-sm" (click)="createRepeatOrder(feedback)">
+              Create Repeat Order
+            </button>
+          </div>
+        </div>
+        <div *ngIf="respondedFeedback.length === 0" class="empty-state">
+          No customer responses yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- No Response -->
+    <div class="section" *ngIf="noResponseFeedback.length > 0">
+      <h2>No Response ({{ noResponseFeedback.length }})</h2>
+      <div class="feedback-list">
+        <div *ngFor="let request of noResponseFeedback" class="feedback-item no-response">
+          <div class="customer-info">
+            <strong>{{ request.customerName }}</strong>
+            <div class="order-details">
+              Order {{ request.orderId }} • ${{ request.orderTotal }}
+            </div>
+          </div>
+          <div class="follow-up-actions">
+            <button class="btn btn-secondary btn-sm" (click)="resendFollowUp(request)">
+              Try Different Method
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates Tab -->
+  <div *ngIf="selectedTab === 'templates'" class="tab-content">
+    <div class="section">
+      <h2>Follow-up Templates</h2>
+      
+      <!-- Template List -->
+      <div class="template-list">
+        <div *ngFor="let template of templates" class="template-item">
+          <div class="template-info">
+            <strong>{{ template.name }}</strong>
+            <div class="template-details">
+              {{ template.type | uppercase }} • Send {{ template.timing }}
+            </div>
+            <div class="template-subject" *ngIf="template.type === 'email'">
+              Subject: {{ template.subject }}
+            </div>
+          </div>
+          <div class="template-actions">
+            <button class="btn btn-secondary btn-sm">Edit</button>
+            <button class="btn btn-danger btn-sm" (click)="deleteTemplate(template.id)">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Template Form -->
+      <div class="new-template">
+        <h3>Create New Template</h3>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="templateName">Template Name:</label>
+            <input id="templateName" type="text" [(ngModel)]="newTemplate.name" placeholder="e.g., Birthday Follow-up">
+          </div>
+          <div class="form-field">
+            <label for="templateType">Type:</label>
+            <select id="templateType" [(ngModel)]="newTemplate.type">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="templateTiming">Send Timing:</label>
+            <select id="templateTiming" [(ngModel)]="newTemplate.timing">
+              <option value="immediate">Immediately</option>
+              <option value="1-day">1 Day After</option>
+              <option value="3-days">3 Days After</option>
+              <option value="1-week">1 Week After</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-field" *ngIf="newTemplate.type === 'email'">
+          <label for="templateSubject">Subject Line:</label>
+          <input id="templateSubject" type="text" [(ngModel)]="newTemplate.subject" placeholder="How was your recent order?">
+        </div>
+        
+        <div class="form-field">
+          <label for="templateContent">Message Content:</label>
+          <textarea id="templateContent" [(ngModel)]="newTemplate.content" rows="8" 
+                    placeholder="Hi {{customerName}}, thank you for ordering {{items}}..."></textarea>
+        </div>
+        
+        <div class="template-help">
+          <strong>Available Variables:</strong>
+          {{customerName}}, {{orderId}}, {{items}}, {{orderTotal}}, {{feedbackLink}}
+        </div>
+        
+        <button class="btn btn-primary" (click)="saveTemplate()">Save Template</button>
+      </div>
+    </div>
+  </div>
+</div>

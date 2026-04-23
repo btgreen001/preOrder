@@ -1,0 +1,205 @@
+<div class="customer-feedback">
+  <h1>Customer Feedback & Follow-up</h1>
+  
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="tab" [class.active]="selectedView === 'dashboard'" (click)="setView('dashboard')">
+      Dashboard
+    </button>
+    <button class="tab" [class.active]="selectedView === 'pending-feedback'" (click)="setView('pending-feedback')">
+      Pending Feedback ({{ pendingFeedback.length }})
+    </button>
+    <button class="tab" [class.active]="selectedView === 'feedback-responses'" (click)="setView('feedback-responses')">
+      Feedback Responses ({{ feedbackReceived }})
+    </button>
+    <button class="tab" [class.active]="selectedView === 'follow-up'" (click)="setView('follow-up')">
+      Follow-up ({{ pendingFollowUp.length }})
+    </button>
+  </div>
+
+  <!-- Dashboard View -->
+  <div *ngIf="selectedView === 'dashboard'" class="dashboard-view">
+    <!-- Key Metrics -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-number">{{ totalCompleted }}</div>
+        <div class="metric-label">Completed Orders</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-number">{{ feedbackReceived }}</div>
+        <div class="metric-label">Feedback Received</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-number">{{ averageRating }}⭐</div>
+        <div class="metric-label">Average Rating</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-number">{{ repeatCustomers }}</div>
+        <div class="metric-label">Repeat Customers</div>
+      </div>
+    </div>
+
+    <!-- Recent Feedback -->
+    <div class="recent-feedback">
+      <h2>Recent Feedback</h2>
+      <div *ngIf="recentFeedback.length === 0" class="empty-state">
+        No feedback received yet.
+      </div>
+      <div class="feedback-list">
+        <div *ngFor="let order of recentFeedback" class="feedback-item">
+          <div class="feedback-header">
+            <strong>{{ order.customer }}</strong> - {{ order.id }}
+            <div class="rating">{{ getRatingStars(order.feedbackResponse!.rating) }}</div>
+          </div>
+          <div class="feedback-content">
+            <p>"{{ order.feedbackResponse!.comments }}"</p>
+            <div class="feedback-details">
+              <span class="recommendation">{{ getRecommendationText(order.feedbackResponse!.wouldRecommend) }}</span>
+              <span class="date">{{ order.feedbackResponse!.receivedAt | date:'short' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Feedback View -->
+  <div *ngIf="selectedView === 'pending-feedback'" class="pending-feedback-view">
+    <h2>Orders Awaiting Feedback</h2>
+    <div *ngIf="pendingFeedback.length === 0" class="empty-state">
+      All recent orders have feedback requests sent!
+    </div>
+    <div class="orders-list">
+      <div *ngFor="let order of pendingFeedback" class="order-item">
+        <div class="order-header">
+          <div class="order-info">
+            <strong>{{ order.id }}</strong> - {{ order.customer }}
+            <div class="order-details">
+              Delivered: {{ order.deliveredDate | date:'medium' }} | Amount: ${{ order.amount }}
+            </div>
+          </div>
+          <div class="order-actions">
+            <button class="btn btn-primary" (click)="sendFeedbackRequest(order)">
+              Send Feedback Request
+            </button>
+          </div>
+        </div>
+        <div class="order-items">
+          Items: {{ order.items.join(', ') }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Responses View -->
+  <div *ngIf="selectedView === 'feedback-responses'" class="feedback-responses-view">
+    <h2>Customer Feedback Responses</h2>
+    <div *ngIf="feedbackReceived === 0" class="empty-state">
+      No feedback responses yet.
+    </div>
+    <div class="responses-list">
+      <ng-container *ngFor="let order of completedOrders">
+        <div *ngIf="order.feedbackResponse" class="response-item">
+        <div class="response-header">
+          <div class="customer-info">
+            <strong>{{ order.customer }}</strong> - {{ order.id }}
+            <div class="rating-display">{{ getRatingStars(order.feedbackResponse.rating) }}</div>
+          </div>
+          <div class="response-date">{{ order.feedbackResponse.receivedAt | date:'medium' }}</div>
+        </div>
+        
+        <div class="response-content">
+          <div class="comment-section">
+            <h4>Comments:</h4>
+            <p>{{ order.feedbackResponse.comments }}</p>
+          </div>
+          
+          <div class="details-grid">
+            <div class="detail-item">
+              <strong>Would Recommend:</strong>
+              <span [class]="order.feedbackResponse.wouldRecommend ? 'positive' : 'negative'">
+                {{ order.feedbackResponse.wouldRecommend ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            
+            <div class="detail-item" *ngIf="order.feedbackResponse.favoriteItems.length > 0">
+              <strong>Favorite Items:</strong>
+              <span>{{ order.feedbackResponse.favoriteItems.join(', ') }}</span>
+            </div>
+            
+            <div class="detail-item" *ngIf="order.feedbackResponse.suggestions">
+              <strong>Suggestions:</strong>
+              <span>{{ order.feedbackResponse.suggestions }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="response-actions" *ngIf="!order.followUpSent">
+          <button class="btn btn-secondary" (click)="sendFollowUp(order, followUpTemplates[2])">
+            Send Thank You Follow-up
+          </button>
+          <button class="btn btn-primary" (click)="scheduleNextOrder(order)">
+            Schedule Next Order
+          </button>
+        </div>
+      </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Follow-up View -->
+  <div *ngIf="selectedView === 'follow-up'" class="follow-up-view">
+    <h2>Follow-up Management</h2>
+    
+    <!-- Follow-up Templates -->
+    <div class="templates-section">
+      <h3>Follow-up Templates</h3>
+      <div class="templates-list">
+        <div *ngFor="let template of followUpTemplates" class="template-item">
+          <div class="template-header">
+            <strong>{{ template.name }}</strong>
+            <span class="template-timing">{{ template.daysAfter }} days after delivery</span>
+          </div>
+          <div class="template-content">
+            <div class="template-subject">Subject: {{ template.subject }}</div>
+            <div class="template-body">{{ template.content }}</div>
+            <div class="template-features" *ngIf="template.includeDiscount">
+              <span class="discount-badge">{{ template.discountPercent }}% Discount Included</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Follow-ups -->
+    <div class="pending-followups">
+      <h3>Pending Follow-ups</h3>
+      <div *ngIf="pendingFollowUp.length === 0" class="empty-state">
+        No pending follow-ups at this time.
+      </div>
+      <div class="followup-list">
+        <div *ngFor="let order of pendingFollowUp" class="followup-item">
+          <div class="followup-header">
+            <div class="customer-info">
+              <strong>{{ order.customer }}</strong> - {{ order.id }}
+              <div class="feedback-summary">
+                {{ getRatingStars(order.feedbackResponse!.rating) }}
+                {{ getRecommendationText(order.feedbackResponse!.wouldRecommend) }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="followup-actions">
+            <div class="template-options">
+              <button *ngFor="let template of followUpTemplates" 
+                      class="btn btn-outline" 
+                      (click)="sendFollowUp(order, template)">
+                {{ template.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

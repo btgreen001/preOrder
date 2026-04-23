@@ -1,0 +1,79 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using OrderMgmt.Models;
+using OrderMgmt.Services;
+
+namespace OrderMgmt.Controllers
+{
+    [ApiController]
+    [Route("api/recipe-steps")]
+    [Authorize]
+    public class RecipeStepController : ControllerBase
+    {
+        private readonly IRecipeStepService _service;
+        public RecipeStepController(IRecipeStepService service)
+        {
+            _service = service;
+        }
+
+        [HttpGet("{externalId:guid}")]
+        public async Task<ActionResult<RecipeStep>> GetStep(Guid externalId)
+        {
+            var orgId = GetOrgIdFromClaims();
+            var step = await _service.GetStepByExternalIdAsync(externalId, orgId);
+            if (step == null) return NotFound();
+            return Ok(step);
+        }
+
+        [HttpGet("by-recipe/{recipeExternalId:guid}")]
+        public async Task<ActionResult<List<RecipeStep>>> GetStepsByRecipe(Guid recipeExternalId)
+        {
+            var orgId = GetOrgIdFromClaims();
+            var steps = await _service.GetStepsByRecipeExternalIdAsync(recipeExternalId, orgId);
+            return Ok(steps);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<RecipeStep>> CreateStep([FromBody] RecipeStep step)
+        {
+            var orgId = GetOrgIdFromClaims();
+            var userId = GetUserIdFromClaims();
+            var created = await _service.CreateStepAsync(step, orgId, userId);
+            return CreatedAtAction(nameof(GetStep), new { externalId = created.ExternalId }, created);
+        }
+
+        [HttpPut("{externalId:guid}")]
+        public async Task<ActionResult<RecipeStep>> UpdateStep(Guid externalId, [FromBody] RecipeStep step)
+        {
+            var orgId = GetOrgIdFromClaims();
+            var userId = GetUserIdFromClaims();
+            var updated = await _service.UpdateStepAsync(externalId, step, orgId, userId);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+
+        [HttpDelete("{externalId:guid}")]
+        public async Task<ActionResult> DeleteStep(Guid externalId)
+        {
+            var orgId = GetOrgIdFromClaims();
+            var userId = GetUserIdFromClaims();
+            var deleted = await _service.DeleteStepAsync(externalId, orgId, userId);
+            if (!deleted) return NotFound();
+            return NoContent();
+        }
+
+        private Guid GetOrgIdFromClaims()
+        {
+            // Implement claim extraction logic
+            return Guid.Parse(User.FindFirst("org_id").Value);
+        }
+        private Guid GetUserIdFromClaims()
+        {
+            // Implement claim extraction logic
+            return Guid.Parse(User.FindFirst("sub").Value);
+        }
+    }
+}

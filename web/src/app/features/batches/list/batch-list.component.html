@@ -1,0 +1,139 @@
+<div class="batch-list-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Production Batches</mat-card-title>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="addNewBatch()"
+        data-testid="add-batch-btn">
+        <mat-icon>add</mat-icon> New Batch
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Status Filter</mat-label>
+          <mat-select 
+            [(ngModel)]="statusFilter"
+            (change)="onStatusFilterChange()"
+            data-testid="status-filter">
+            <mat-option value="">All Status</mat-option>
+            <mat-option *ngFor="let status of availableStatuses" [value]="status">
+              {{ status }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading" class="loading-spinner">
+        <mat-spinner></mat-spinner>
+        <p>Loading batches...</p>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        <strong>Error:</strong> {{ error }}
+      </div>
+
+      <div *ngIf="!loading && batches.length === 0 && !error" class="no-data">
+        <p>No batches found. <a routerLink="/batches/add">Create one now</a></p>
+      </div>
+
+      <table 
+        mat-table 
+        [dataSource]="batches" 
+        *ngIf="!loading && batches.length > 0"
+        class="batches-table"
+        data-testid="batches-table">
+        
+        <!-- Batch Number Column -->
+        <ng-container matColumnDef="batchNumber">
+          <th mat-header-cell *matHeaderCellDef>Batch Number</th>
+          <td mat-cell *matCellDef="let batch">{{ batch.batchNumber }}</td>
+        </ng-container>
+
+        <!-- Quantity Column -->
+        <ng-container matColumnDef="quantityProduced">
+          <th mat-header-cell *matHeaderCellDef>Quantity</th>
+          <td mat-cell *matCellDef="let batch">{{ batch.quantityProduced }}</td>
+        </ng-container>
+
+        <!-- Production Date Column -->
+        <ng-container matColumnDef="productionDate">
+          <th mat-header-cell *matHeaderCellDef>Production Date</th>
+          <td mat-cell *matCellDef="let batch">
+            {{ batch.productionDate | date: 'short' }}
+          </td>
+        </ng-container>
+
+        <!-- Expiration Date Column -->
+        <ng-container matColumnDef="expirationDate">
+          <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
+          <td mat-cell *matCellDef="let batch">
+            {{ batch.expirationDate ? (batch.expirationDate | date: 'short') : '-' }}
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let batch">
+            <span [ngClass]="getStatusColor(batch.status)">
+              {{ batch.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Cost Per Unit Column -->
+        <ng-container matColumnDef="costPerUnit">
+          <th mat-header-cell *matHeaderCellDef>Cost Per Unit</th>
+          <td mat-cell *matCellDef="let batch">${{ batch.costPerUnit.toFixed(2) }}</td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let batch">
+            <button 
+              mat-icon-button 
+              (click)="viewBatch(batch.externalId)"
+              title="View"
+              data-testid="view-batch-btn">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              [disabled]="batch.status !== 'Active'"
+              (click)="completeBatch(batch.externalId)"
+              title="Complete"
+              data-testid="complete-batch-btn">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              color="warn"
+              [disabled]="batch.status !== 'Active'"
+              (click)="cancelBatch(batch.externalId)"
+              title="Cancel"
+              data-testid="cancel-batch-btn">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator
+        *ngIf="!loading && batches.length > 0"
+        [length]="totalBatches"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+        (page)="onPageChange($event)"
+        data-testid="batches-paginator">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

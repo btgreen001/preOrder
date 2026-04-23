@@ -1,0 +1,71 @@
+
+.register-container {
+  padding: 40px 20px;
+  min-height: 100vh;
+  background: var(--bakery-bg);
+  color: var(--bakery-text);
+}
+
+.register-card {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: var(--bakery-surface);
+  color: var(--bakery-text-emph);
+  box-shadow: var(--bakery-shadow-soft);
+  border: 1px solid var(--bakery-border);
+  border-radius: 8px;
+}
+
+.welcome-promo {
+  background: var(--bakery-accent-transparent);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--bakery-primary);
+  
+  p {
+    margin: 0 0 8px 0;
+    color: var(--bakery-text);
+    line-height: 1.5;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .cake-emoji {
+    font-size: 1.5em;
+    margin-left: 4px;
+  }
+}
+
+.mat-form-field {
+  color: var(--bakery-text-emph);
+}
+
+.mat-form-field label, .mat-form-field .mat-label {
+  color: var(--bakery-text-emph) !important;
+}
+
+input {
+  background: var(--bakery-surface);
+  color: var(--bakery-text-emph);
+  border: 1px solid var(--bakery-border);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.actions {
+  margin-top: 20px;
+}
+
+.error {
+  color: var(--bakery-error);
+  margin-top: 10px;
+}
+
+.success {
+  color: var(--bakery-success);
+  margin-top: 10px;
+}

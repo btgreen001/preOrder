@@ -1,0 +1,41 @@
+<div class="spotify-login-root">
+  <div class="left-graphic">
+    <div class="brand">Artisan's Bake</div>
+    <div class="promo">Welcome to BakeBoard — where every order begins with a sprinkle of care and a dash of delight!
+
+</div>
+  </div>
+
+  <div class="login-area">
+    <mat-card class="spotify-card" data-testid="login-card">
+      <div class="card-header">
+        <h2>Welcome back</h2>
+        <p class="muted">Sign in to continue to your company dashboard</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" data-testid="login-form">
+        <!-- Error message display -->
+        <div *ngIf="errorMessage" class="error-message" data-testid="error-message">
+          {{ errorMessage }}
+        </div>
+        
+        <mat-form-field appearance="outline" class="full" data-testid="username-field">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" data-testid="username-input" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full" data-testid="password-field">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" data-testid="password-input" />
+        </mat-form-field>
+
+        <button mat-flat-button class="spotify-btn" type="submit" data-testid="login-submit-button">Log in</button>
+      </form>
+
+      <mat-card-actions class="card-actions">
+        <a routerLink="/company-register" data-testid="register-link">Register your company</a>
+        <a href="sms:?body=Please use this link to access your dispatch jobs. http%3A%2F%2F162.155.159.154%2Fdev%2Ftruck-stryled.asp%3Ftruck%3D001">Text us</a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

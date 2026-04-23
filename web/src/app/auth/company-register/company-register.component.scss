@@ -1,0 +1,190 @@
+.spotify-register-root {
+  min-height: 100vh;
+  background: var(--bakery-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.register-card-wrap { width: 800px; }
+
+.spotify-card { 
+  background: var(--bakery-surface); 
+  border-radius: 12px; 
+  padding: 18px; 
+  color: var(--bakery-text-emph); 
+  border: 1px solid var(--bakery-border); 
+  box-shadow: var(--bakery-shadow-soft);
+}
+
+.muted { color: var(--bakery-text-muted); }
+
+.welcome-promo {
+  background: var(--bakery-accent-transparent);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--bakery-primary);
+  
+  p {
+    margin: 0 0 8px 0;
+    color: var(--bakery-text);
+    line-height: 1.5;
+  }
+  
+  .promo-tagline {
+    margin: 0;
+    color: var(--bakery-primary);
+    font-size: 1.1rem;
+  }
+}
+
+.register-form .section { margin-bottom: 12px; }
+.register-form .full { width: 100%; }
+.register-form .half { width: calc(50% - 8px); display: inline-block; vertical-align: top; }
+.register-form .row { display: flex; gap: 12px; }
+
+.spotify-btn { background: var(--bakery-accent); color: var(--bakery-text-emph); font-weight: 700; }
+
+.links { display: flex; gap: 12px; justify-content: space-between; margin-top: 12px; }
+
+.error { color: var(--bakery-error); margin-top: 8px; }
+
+@media (max-width: 860px) {
+  .register-card-wrap { width: 100%; }
+  .register-form .half { width: 100%; display:block; }
+}
+mat-form-field.full-width {
+  min-width: 100%;
+}
+
+mat-form-field .mat-form-field-infix {
+  min-height: 72px;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+}
+
+input.mat-input-element {
+  height: 40px;
+  font-size: 1.15rem;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-sizing: border-box;
+}
+.company-register-container {
+  padding: 40px 20px;
+  min-height: 100vh;
+  background: var(--bakery-bg);
+}
+
+.company-register-card {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background: var(--bakery-surface);
+  border-radius: 8px;
+  border: 1px solid var(--bakery-border);
+  box-shadow: var(--bakery-shadow-soft);
+}
+
+.section-header {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 20px 0 10px;
+  color: var(--bakery-accent);
+  border-bottom: 1px solid var(--bakery-border);
+  padding-bottom: 8px;
+}
+
+.license-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.license-tier {
+  border: 1px solid var(--bakery-border);
+  border-radius: 4px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  background: var(--bakery-surface);
+}
+
+.license-tier:hover {
+  border-color: var(--bakery-accent);
+  box-shadow: var(--bakery-shadow-soft);
+}
+
+.tier-info {
+  padding: 8px 0 8px 30px;
+}
+
+.tier-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tier-name {
+  font-weight: 500;
+  font-size: 18px;
+  margin-right: 12px;
+  color: var(--bakery-text-emph);
+}
+
+.tier-badge {
+  background-color: var(--bakery-success);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tier-description {
+  color: var(--bakery-text-muted);
+  margin-bottom: 12px;
+}
+
+.tier-features {
+  padding-left: 20px;
+  margin: 0;
+  
+  li {
+    margin-bottom: 4px;
+  }
+}
+
+.form-actions {
+  margin-top: 24px;
+}
+
+.error-message {
+  color: var(--bakery-error);
+  margin-top: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+// For the mat-radio-button styling
+::ng-deep .mat-radio-button.mat-accent .mat-radio-inner-circle {
+  background-color: var(--bakery-accent);
+}
+
+::ng-deep .mat-radio-button.mat-accent.mat-radio-checked .mat-radio-outer-circle {
+  border-color: var(--bakery-accent);
+}
+
+::ng-deep .mat-radio-button .mat-radio-container {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+// Make the radio button take full width of the parent
+::ng-deep .mat-radio-label {
+  width: 100%;
+}

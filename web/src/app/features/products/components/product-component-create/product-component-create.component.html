@@ -1,0 +1,185 @@
+
+<form [formGroup]="form" class="product-component-form" (ngSubmit)="submit()">
+<h4>Add Product</h4>
+  <mat-form-field appearance="outline" class="full-width" floatLabel="always">
+    <mat-label>Product Name</mat-label>
+    <input matInput formControlName="name" />
+  </mat-form-field>
+
+     <div class="field-row">
+      <div class="third-width">
+        <mat-form-field appearance="outline" class="third-width" floatLabel="always">
+          <mat-label>
+            <span
+              class="label-tooltip"
+              matTooltip="Number of servings per individual package unit. Example: 4 servings per box"
+              matTooltipClass="help-tooltip"
+              matTooltipPosition="above"
+              matTooltipShowDelay="200"
+              tabindex="0"
+              aria-describedby="servings-per-package-help"
+            >
+              Servings per Package
+            </span>
+          </mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="servingsPerPackage"
+            aria-describedby="servings-per-package-help"
+            min="0.01"
+            step="0.01"
+          />
+          <span id="servings-per-package-help" class="visually-hidden">
+            Number of servings per package. Example: 4 if each package contains 4 servings.
+          </span>
+          <mat-error *ngIf="form.get('servingsPerPackage')?.hasError('min')">
+            Must be greater than zero.
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="third-width">  
+      <mat-form-field appearance="outline" class="full-width" floatLabel="always">
+        <mat-label>SKU (optional)</mat-label>
+        <input matInput formControlName="sku" placeholder="<auto-generate>" (blur)="checkSkuAvailability()" />
+        <mat-error *ngIf="skuAvailable === false">SKU already in use</mat-error>
+      </mat-form-field>
+    </div>
+    <div class="third-width">  
+      <mat-form-field appearance="outline" class="third-width" floatLabel="always">
+        <mat-label>
+          <span class="label-tooltip" matTooltip="Price of the product based on the recipe. Example: $2.75"
+                matTooltipClass="help-tooltip" matTooltipPosition="above" matTooltipShowDelay="200"
+                tabindex="0" aria-describedby="unit-price-help">
+            Price per Serving
+          </span>
+        </mat-label>
+
+        <input
+          matInput
+          type="text"
+          inputmode="decimal"
+          pattern="[0-9]*[.,]?[0-9]*"
+          currencyInput
+          formControlName="unitPrice"
+          aria-describedby="unit-price-help" />
+
+        <span id="unit-price-help" class="visually-hidden">
+          This is the unit price of the product based on the recipe cost but can be overridden. Example: 2.75
+        </span>
+
+        <mat-error *ngIf="form.get('unitPrice')?.hasError('min')">
+          Must be zero or greater.
+        </mat-error>
+      </mat-form-field>
+
+    </div>
+  </div>
+    <div class="field-row">
+        <mat-form-field appearance="outline" class="third-width" floatLabel="always">
+          <mat-label>
+            <span
+              class="label-tooltip"
+              matTooltip="Number of finished output units produced by one batch.  Example: 24"
+              matTooltipClass="help-tooltip"
+              matTooltipPosition="above"
+              matTooltipShowDelay="200"
+              tabindex="0"
+              aria-describedby="yield-help"
+            >
+              Batch Yield (output units)
+            </span>
+          </mat-label>
+          <input matInput type="number" formControlName="outputUnitCount" aria-describedby="yield-help" />
+          <!-- optional hidden description for screen readers -->
+          <span id="yield-help" class="visually-hidden">
+            Enter the number of finished output units produced by one batch.  Enter 24 if the batch produces 24 muffins.
+          </span>
+          <mat-error *ngIf="form.get('outputUnitCount')?.hasError('min')">
+            Must be zero or greater.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="third-width" floatLabel="always">
+          <mat-label>
+            <span
+              class="label-tooltip"
+              matTooltip="Serving unit for one portion, such as g, ml, or each."
+              matTooltipClass="help-tooltip"
+              matTooltipPosition="above"
+              matTooltipShowDelay="200"
+              tabindex="0"
+            >
+              Output Unit
+            </span>
+          </mat-label>
+          <mat-select formControlName="outputUnitMsr" aria-describedby="unit-hint">
+            <mat-option *ngFor="let u of unitOptions" [value]="u">{{ u }}</mat-option>
+          </mat-select>
+          <!-- optional hidden description for screen readers -->
+          <span id="unit-help" class="visually-hidden">
+            Select the unit used for one output unit, such as g, or ml.
+          </span>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="third-width" floatLabel="always">
+          <mat-label>
+            <span
+              class="label-tooltip"
+              matTooltip="Inventory base units per output unit. Example: 1000 if unit is g; 1 if unit is kg."
+              matTooltipClass="help-tooltip"
+              matTooltipPosition="above"
+              matTooltipShowDelay="200"
+              tabindex="0"
+            >
+              Base Units per Output Unit
+            </span>
+          </mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="yieldToUnitConversion"
+            aria-describedby="yield-conv-hint"
+            min="0"
+            step="any"
+          />
+          <span id="yield-conv-hint" class="visually-hidden">
+            Inventory base units per output unit. Example: 1000 if unit is g; 1 if unit is kg
+          </span>
+          <mat-error *ngIf="form.get('yieldToUnitConversion')?.hasError('min')">
+            Must be zero or greater.
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <!-- computed preview -->
+      <div class="muted preview" aria-live="polite">
+        <small>
+          Normalized batch yield:
+          <strong>{{ normalizedBatchYield | number:'1.0-2' }}</strong>
+          {{ inventoryBaseUom }}
+          ({{ form.value.outputUnitCount || 0 }} × {{ form.value.yieldToUnitConversion || 0 }} {{ inventoryBaseUom }})
+        </small>
+      </div>
+
+
+
+    <div class="field-row split">
+      <div class="left">
+        <mat-checkbox formControlName="isListedForSale">Sellable Good?</mat-checkbox>
+      </div>
+      <div class="right">  
+        <mat-checkbox formControlName="isRecipeComponent">Recipe Component?</mat-checkbox>
+      </div>
+    </div>
+
+    <div class="actions split">
+      <div class="left">
+        <button mat-button type="button" (click)="onCancel()">Cancel</button>
+      </div>
+      <div class="right">
+        <button mat-button color="primary" type="submit">Create</button>
+      </div>
+    </div>
+
+</form>

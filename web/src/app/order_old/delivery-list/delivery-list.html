@@ -1,0 +1,11 @@
+<div class="delivery-list">
+	<h2>Delivery Management</h2>
+	<ul>
+		<li *ngFor="let delivery of deliveries">
+			<span>Order #{{ delivery.orderId }} - {{ delivery.customer }}</span>
+			<span>Date: {{ delivery.date }}</span>
+			<span>Status: {{ delivery.status }}</span>
+			<button (click)="viewDelivery(delivery.id)">View</button>
+		</li>
+	</ul>
+</div>

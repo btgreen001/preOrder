@@ -1,0 +1,616 @@
+<div class="recipe-editor-container" [class.view-only]="isViewOnly" [class.cook-mode]="isCookMode" [class.cook-dark]="isCookMode && cookTheme === 'dark'">
+
+  <div *ngIf="loading" class="loading-state">
+    <mat-progress-spinner diameter="50"></mat-progress-spinner>
+    <p>Loading recipe...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    <strong>Error:</strong> {{ error }}
+  </div>
+
+  <ng-container *ngIf="!loading">
+  <div *ngIf="!isCookMode; else cookModeShell" class="editor-content">
+    <!-- Recipe Details Card (Collapsible) -->
+    <mat-card class="recipe-card">
+      <mat-card-header class="collapsible-header" (click)="toggleRecipeDetailsCollapsed()">
+        <mat-icon class="collapse-icon">{{ recipeDetailsCollapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+        <mat-card-title>{{ isViewOnly ? 'Recipe Details (View)' : (isEditing ? 'Recipe Details (Edit) ' : 'Recipe Details (New)') }}</mat-card-title>
+        <div class="spacer"></div>
+
+        <!-- Version selector + status + actions (only for existing recipes) -->
+        <div *ngIf="isEditing && versions.length > 0" class="header-version-controls" (click)="$event.stopPropagation()">
+          <span class="version-label">VERSION</span>
+          <mat-form-field appearance="outline" class="version-select-field" floatLabel="always">
+            <mat-select
+              [value]="recipeId"
+              (selectionChange)="onVersionChange($event.value)">
+              <mat-select-trigger>
+                <span class="status-badge status-{{ currentVersion?.status | lowercase }} trigger-badge">
+                  {{ statusLabel }} ({{ currentVersion?.versionNumber }})
+                </span>
+              </mat-select-trigger>
+              <mat-option *ngFor="let v of versions" [value]="v.externalId" [ngClass]="{'selected-version-option': recipeId === v.externalId}">
+                {{ versionLabel(v) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <!-- View mode: non-draft → offer to create/open draft -->
+          <button *ngIf="isViewOnly && !isDraft && isAdmin" class="version-action-btn" (click)="createOrNavigateToDraft()" [disabled]="creatingDraft">
+            <mat-icon>edit_note</mat-icon>
+            {{ creatingDraft ? 'Creating Draft...' : hasDraftVersion ? 'Edit Draft' : 'Create Draft' }}
+          </button>
+          <!-- View mode: draft → go straight to edit -->
+          <button *ngIf="isViewOnly && isDraft && isAdmin" class="version-action-btn" [routerLink]="['/recipes/edit', recipeId]">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <!-- Edit mode: draft → currently editing -->
+          <span *ngIf="!isViewOnly && isDraft && isAdmin" class="editing-draft-indicator">
+            <mat-icon>edit</mat-icon> Editing
+          </span>
+          <!-- Edit mode: non-draft guard (shouldn't normally happen) -->
+          <span *ngIf="!isViewOnly && !isDraft && isAdmin" class="read-only-warning">
+            <mat-icon>warning</mat-icon> This version is read-only — only drafts can be edited
+          </span>
+        </div>
+
+        <button mat-icon-button class="header-close-btn" (click)="$event.stopPropagation(); onCancel()"
+          matTooltip="{{ isViewOnly ? 'Exit' : (isEditing ? 'Discard and Exit' : 'Exit without Saving') }}">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-card-header>
+      <div *ngIf="draftError" class="draft-error draft-error-inline">{{ draftError }}</div>
+
+      <mat-card-content *ngIf="!recipeDetailsCollapsed">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="recipe-form">
+          <div class="name-status-row">
+            <mat-form-field appearance="outline" class="name-field" floatLabel="always">
+              <mat-label>Recipe Name</mat-label>
+              <input 
+                matInput 
+                formControlName="name"
+                data-testid="recipe-name-input">
+              <mat-error *ngIf="nameError">{{ nameError }}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="status-inline-field" floatLabel="always">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="recipeStatusCd" data-testid="recipe-status-select">
+                <mat-option value="D">Draft</mat-option>
+                <mat-option value="A">Active</mat-option>
+                <mat-option value="X">Archived</mat-option>
+                <mat-option value="B">Abandoned</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        <mat-form-field appearance="outline" class="full-width" floatLabel="always">
+          <mat-label>Description</mat-label>
+          <textarea 
+            matInput 
+            formControlName="description"
+            rows="4"
+            data-testid="recipe-description-input"></textarea>
+        </mat-form-field>
+
+
+
+        <div class="row recipe-metrics-row">
+          <mat-form-field appearance="outline" class="quarter-width" floatLabel="always">
+            <mat-label>Yield (servings / batch)</mat-label>
+            <input 
+              matInput 
+               type="number"
+              formControlName="yieldServingCnt"
+              placeholder="e.g. 20 if 20 muffins per batch"
+              data-testid="yield-quantity-input">
+            <!-- <mat-hint>Change yield and click Save to recompute Cost Per Unit</mat-hint> -->
+             <mat-error *ngIf="form.get('yieldServingCnt')?.hasError('min')">Must be zero or greater.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="quarter-width" floatLabel="always">
+            <mat-label>Serving Size (unit)</mat-label>
+            <mat-select formControlName="yieldUnit" data-testid="yield-unit-select">
+              <mat-option *ngFor="let u of unitOptions" [value]="u">{{ u }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="quarter-width" floatLabel="always">
+            <mat-label>Units per Serving</mat-label>
+            <input 
+              matInput 
+               type="number"
+              formControlName="unitsPerServing"
+              placeholder="e.g. 100 if 100g per serving"
+              data-testid="units-per-serving-input">
+            <!-- <mat-hint>Change yield and click Save to recompute Cost Per Unit</mat-hint> -->
+             <mat-error *ngIf="form.get('unitsPerServing')?.hasError('min')">Must be zero or greater.</mat-error>
+          </mat-form-field>
+
+           <mat-form-field appearance="outline" class="quarter-width" floatLabel="always">
+             <mat-label>Shelf Life (days)</mat-label>
+             <input
+               matInput
+               type="number"
+               formControlName="shelfLifeDayCnt"
+               placeholder="e.g. 7 if 7 days shelf life"
+               data-testid="shelf-life-day-cnt-input">
+             <mat-error *ngIf="form.get('shelfLifeDayCnt')?.hasError('min')">Must be zero or greater.</mat-error>
+           </mat-form-field>
+
+          <mat-form-field *ngIf="isAdmin" appearance="outline" class="quarter-width cost-field-with-badge" floatLabel="always">
+            <mat-label>
+              Cost Per Unit *
+              <button type="button" class="cost-badge-button" (click)="toggleCostOverride()" [disabled]="isViewOnly" matTooltip="Toggle override">
+                <span class="cost-badge">{{ costOverride ? 'Overridden' : (costWasComputed ? 'Computed' : 'Stored') }}</span>
+                <mat-icon class="cost-badge-icon">{{ costOverride ? 'edit_off' : 'edit' }}</mat-icon>
+              </button>
+              <button *ngIf="!costWasComputed && !costOverride && !isViewOnly" type="button" class="revert-cost-button" (click)="revertToComputedConfirm()" matTooltip="Revert to computed value">
+                <mat-icon>restore</mat-icon>
+              </button>
+            </mat-label>
+            <div class="cost-per-unit-row">
+              <ng-container *ngIf="costOverride; else readOnlyCost">
+                <input
+                  #costInput
+                  matInput
+                  type="number"
+                  step="0.01"
+                  formControlName="costPerUnit"
+                  data-testid="cost-per-unit-input">
+              </ng-container>
+              <ng-template #readOnlyCost>
+                <input
+                  matInput
+                  [value]="form.get('costPerUnit')?.value != null ? (form.get('costPerUnit')?.value | currency:'USD':'symbol':'1.2-2') : ''"
+                  disabled
+                  aria-hidden="true"
+                  class="cost-readonly">
+              </ng-template>
+            </div>
+            <mat-error *ngIf="costPerUnitError">{{ costPerUnitError }}</mat-error>
+          </mat-form-field>
+        </div>
+      <div class="muted preview" aria-live="polite">
+        <small>
+          Normalized batch yield:
+          <strong>{{ normalizedBatchYield | number:'1.0-2' }}</strong>
+          {{ inventoryBaseUom }}
+          ({{ form.value.yieldServingCnt || 0 }} × {{ form.value.unitsPerServing || 0 }} {{ inventoryBaseUom }})
+        </small>
+      </div>
+        <!-- Product (Finished Good) picker -->
+        <div class="product-field">
+          <span class="product-field-label">Product (Finished Good)</span>
+
+          <!-- Display row: shown when not actively changing -->
+          <div *ngIf="!changingProduct" class="product-display-row">
+            <span class="product-name-chip" [class.unlinked]="!productName">
+              <mat-icon>{{ productName ? 'inventory_2' : 'link_off' }}</mat-icon>
+              {{ productName || 'No finished good or recipe output linked' }}
+            </span>
+            <button *ngIf="!isViewOnly" type="button" class="product-action-link" (click)="openProductPicker()">
+              {{ productName ? 'Change' : 'Link now' }}
+            </button>
+            <button *ngIf="!isViewOnly && productName" type="button" class="product-action-link danger" (click)="clearProduct()">
+              Remove
+            </button>
+          </div>
+
+          <!-- Autocomplete row: shown when changing -->
+          <div *ngIf="changingProduct" class="product-search-row">
+            <mat-form-field appearance="outline" class="product-search-field" floatLabel="always">
+              <mat-label>Search products</mat-label>
+              <input matInput
+                #productAutoTrigger="matAutocompleteTrigger"
+                [formControl]="productSearchCtrl"
+                [matAutocomplete]="productAuto"
+                placeholder="Type a name or SKU…"
+                autocomplete="off">
+              <mat-spinner *ngIf="productsLoading" matSuffix diameter="18"></mat-spinner>
+              <mat-autocomplete #productAuto="matAutocomplete" (optionSelected)="onProductSelected($event.option.value)">
+                <mat-option *ngFor="let p of filteredProducts" [value]="p">
+                  <ng-container *ngIf="p.externalId === '__new'; else normalOption">
+                    <mat-icon class="new-option-icon" aria-hidden="true">add</mat-icon>
+                    <em class="new-option-text">{{ p.name }}</em>
+                  </ng-container>
+                  <ng-template #normalOption>
+                    <span class="product-option-name">{{ p.name }}</span>
+                    <span *ngIf="p.sku" class="product-option-sku">{{ p.sku }}</span>
+                  </ng-template>
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <button type="button" class="product-action-link" (click)="cancelProductChange()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Time Breakdown Section -->
+        <section class="time-breakdown-section">
+          <h3 class="section-title">Time Breakdown</h3>
+          <div class="time-fields-row">
+            <mat-form-field appearance="outline" class="time-field" floatLabel="always">
+              <mat-label>Prep (min)</mat-label>
+              <input matInput type="number" min="0" formControlName="prepTimeMin" data-testid="prep-time-input">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field" floatLabel="always">
+              <mat-label>Active (min)</mat-label>
+              <input matInput type="number" min="0" formControlName="activeTimeMin" data-testid="active-time-input">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field" floatLabel="always">
+              <mat-label>Cook (min)</mat-label>
+              <input matInput type="number" min="0" formControlName="cookTimeMin" data-testid="cook-time-input">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field" floatLabel="always">
+              <mat-label>Rest (min)</mat-label>
+              <input matInput type="number" min="0" formControlName="restTimeMin" data-testid="rest-time-input">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field" floatLabel="always">
+              <mat-label>Inactive (min)</mat-label>
+              <input matInput type="number" min="0" formControlName="inactiveTimeMin" data-testid="inactive-time-input">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field" floatLabel="always">
+              <mat-label>Total (min)</mat-label>
+              <input matInput type="number" min="0" formControlName="totalTimeMin" data-testid="total-time-input">
+            </mat-form-field>
+          </div>
+        </section>
+
+        <div class="button-group">
+          <button 
+            *ngIf="!isViewOnly"
+            mat-stroked-button 
+            type="button"
+            (click)="saveAndStay()"
+            [disabled]="form.invalid || saving"
+            color="accent"
+            data-testid="save-stay-recipe-btn">
+            <mat-icon *ngIf="saving">hourglass_bottom</mat-icon>
+            <span *ngIf="!saving">Save</span>
+            <span *ngIf="saving">Saving...</span>
+          </button>
+          <button 
+            *ngIf="!isViewOnly"
+            mat-stroked-button 
+            type="submit"
+            [disabled]="form.invalid || saving"
+            color="primary"
+            data-testid="save-recipe-btn">
+            <mat-icon *ngIf="saving">hourglass_bottom</mat-icon>
+            <span *ngIf="!saving">Save &amp; Exit</span>
+            <span *ngIf="saving">Saving...</span>
+          </button>
+          <button 
+            *ngIf="(isDraft|| isViewOnly) && recipeId && isAdmin"
+            mat-stroked-button
+            type="button"
+            (click)="duplicateRecipe()"
+            [disabled]="duplicating"
+            color="primary"
+            data-testid="duplicate-recipe-btn">
+            <mat-icon>content_copy</mat-icon>
+            {{ duplicating ? 'Duplicating...' : 'Duplicate' }}
+          </button>
+          <div *ngIf="duplicateError" class="error-message" style="margin-top:4px">{{ duplicateError }}</div>
+          <button 
+            *ngIf="isViewOnly && recipeId  && isDraft && isAdmin"
+            mat-stroked-button
+            type="button"
+            [routerLink]="['/recipes/edit', recipeId]"
+            color="primary"
+            data-testid="switch-to-edit-btn">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button
+            *ngIf="recipeId"
+            mat-stroked-button
+            type="button"
+            (click)="openCookMode()"
+            color="primary"
+            data-testid="cook-mode-btn">
+            <mat-icon>soup_kitchen</mat-icon>
+            Cook Mode
+          </button>
+          <button 
+            mat-stroked-button 
+            type="button"
+            (click)="onCancel()"
+            [disabled]="saving"
+            data-testid="cancel-recipe-btn">
+            {{ isViewOnly ? 'Back' : 'Cancel' }}
+          </button>
+          <button 
+            *ngIf="!isViewOnly && isEditing && recipeId && isAdmin"
+            mat-stroked-button
+            class="delete-far-right"
+            type="button"
+            (click)="deleteRecipe()"
+            [disabled]="deleting || saving"
+            color="warn"
+            data-testid="delete-recipe-btn">
+            <mat-icon>delete</mat-icon>
+            {{ deleting ? 'Deleting...' : 'Delete' }}
+          </button>
+          <div *ngIf="deleteError" class="error-message" style="margin-top:4px">{{ deleteError }}</div>
+        </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Preparation Ingredients - Full Width, Collapsible -->
+    <mat-card class="ingredients-card">
+      <mat-card-header class="collapsible-header" (click)="toggleIngredientsCollapsed()">
+        <mat-icon class="collapse-icon">{{ ingredientsCollapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+        <mat-card-title>Preparation Ingredients</mat-card-title>
+        <div class="spacer"></div>
+      </mat-card-header>
+
+      <mat-card-content *ngIf="!ingredientsCollapsed">
+        <app-ingredient-panel 
+          [ingredients]="ingredients"
+          [readOnly]="isViewOnly"
+          [recipeExternalId]="recipeId || ''"
+          (ingredientAdded)="onAddIngredient($event)"
+          (ingredientUpdated)="onUpdateIngredient($event)"
+          (ingredientRemoved)="onRemoveIngredient($event)"
+          (ingredientsReordered)="onIngredientsReordered($event)">
+        </app-ingredient-panel>
+
+        <div *ngIf="!isViewOnly" class="panel-save-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="saveAndStay()"
+            [disabled]="form.invalid || saving"
+            color="accent"
+            data-testid="save-stay-ingredients-btn">
+            <mat-icon *ngIf="saving">hourglass_bottom</mat-icon>
+            <span *ngIf="!saving">Save</span>
+            <span *ngIf="saving">Saving...</span>
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="onSubmit()"
+            [disabled]="form.invalid || saving"
+            color="primary"
+            data-testid="save-exit-ingredients-btn">
+            <mat-icon *ngIf="saving">hourglass_bottom</mat-icon>
+            <span *ngIf="!saving">Save &amp; Exit</span>
+            <span *ngIf="saving">Saving...</span>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Recipe Instructions & Sub-Recipes) - Full Width, Collapsible -->
+    <mat-card class="sections-card">
+      <mat-card-header class="collapsible-header" (click)="togglecompositionsCollapsed()">
+        <mat-icon class="collapse-icon">{{ compositionsCollapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+        <mat-card-title>Composition</mat-card-title>
+        <div class="spacer"></div>
+      </mat-card-header>
+
+      <mat-card-content *ngIf="!compositionsCollapsed">
+        <app-composition-panel 
+          [sections]="sections"
+          [readOnly]="isViewOnly"
+          (sectionsChanged)="onCompositionChanged($event)"
+          (itemAdded)="onItemAdded($event)"
+          (itemRemoved)="onItemRemoved($event)"
+          (itemSelected)="onItemSelected($event)">
+        </app-composition-panel>
+
+
+        <div class="button-group">
+          <button 
+            *ngIf="!isViewOnly"
+            mat-stroked-button 
+            type="button"
+            (click)="saveAndStay()"
+            [disabled]="form.invalid || saving"
+            color="accent"
+            data-testid="save-stay-recipe-btn">
+            <mat-icon *ngIf="saving">hourglass_bottom</mat-icon>
+            <span *ngIf="!saving">Save</span>
+            <span *ngIf="saving">Saving...</span>
+          </button>
+          <button 
+            *ngIf="!isViewOnly"
+            mat-stroked-button 
+            type="button"
+            (click)="onSubmit()"
+            [disabled]="form.invalid || saving"
+            color="primary"
+            data-testid="save-recipe-btn">
+            <mat-icon *ngIf="saving">hourglass_bottom</mat-icon>
+            <span *ngIf="!saving">Save &amp; Exit</span>
+            <span *ngIf="saving">Saving...</span>
+          </button>
+          <button 
+            *ngIf="(isDraft|| isViewOnly) && recipeId && isAdmin"
+            mat-stroked-button
+            type="button"
+            (click)="duplicateRecipe()"
+            [disabled]="duplicating"
+            color="primary"
+            data-testid="duplicate-recipe-btn">
+            <mat-icon>content_copy</mat-icon>
+            {{ duplicating ? 'Duplicating...' : 'Duplicate' }}
+          </button>
+          <div *ngIf="duplicateError" class="error-message" style="margin-top:4px">{{ duplicateError }}</div>
+          <button 
+            *ngIf="isViewOnly && recipeId  && isDraft && isAdmin"
+            mat-stroked-button
+            type="button"
+            [routerLink]="['/recipes/edit', recipeId]"
+            color="primary"
+            data-testid="switch-to-edit-btn">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button
+            *ngIf="recipeId"
+            mat-stroked-button
+            type="button"
+            (click)="openCookMode()"
+            color="primary"
+            data-testid="cook-mode-btn">
+            <mat-icon>soup_kitchen</mat-icon>
+            Cook Mode
+          </button>
+          <button 
+            mat-stroked-button 
+            type="button"
+            (click)="onCancel()"
+            [disabled]="saving"
+            data-testid="cancel-recipe-btn">
+            {{ isViewOnly ? 'Back' : 'Cancel' }}
+          </button>
+          <button 
+            *ngIf="!isViewOnly && isEditing && recipeId && isAdmin"
+            mat-stroked-button
+            class="delete-far-right"
+            type="button"
+            (click)="deleteRecipe()"
+            [disabled]="deleting || saving"
+            color="warn"
+            data-testid="delete-recipe-btn">
+            <mat-icon>delete</mat-icon>
+            {{ deleting ? 'Deleting...' : 'Delete' }}
+          </button>
+          <div *ngIf="deleteError" class="error-message" style="margin-top:4px">{{ deleteError }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <ng-template #cookModeShell>
+    <section class="cook-shell" aria-label="Cook mode">
+      <header class="cook-summary">
+        <div class="cook-summary-main">
+          <h1>{{ cookSummaryName }}</h1>
+          <p *ngIf="cookSummaryDescription">{{ cookSummaryDescription }}</p>
+        </div>
+        <div class="cook-toolbar">
+          <button mat-stroked-button type="button" (click)="toggleCookTheme()" data-testid="cook-theme-toggle-btn">
+            <mat-icon>{{ cookTheme === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
+            {{ cookTheme === 'light' ? 'Dark mode' : 'Light mode' }}
+          </button>
+          <button mat-stroked-button type="button" (click)="exitCookMode()" data-testid="cook-exit-btn">
+            <mat-icon>close</mat-icon>
+            Exit Cook mode
+          </button>
+        </div>
+        <div class="cook-status" *ngIf="keepAwakeEnabled && !keepAwakeActive">
+          Screen wake lock is pending or unsupported in this browser.
+        </div>
+        <div class="cook-metrics">
+          <div class="cook-metric">
+            <span>Prep Time</span>
+            <strong>{{ prepTimeLabel }}</strong>
+          </div>
+          <div class="cook-metric">
+            <span>Cook Time</span>
+            <strong>{{ cookTimeLabel }}</strong>
+          </div>
+          <div class="cook-metric">
+            <span>Total</span>
+            <strong>{{ totalTimeLabel }}</strong>
+          </div>
+          <div class="cook-metric">
+            <span>Yield</span>
+            <strong>{{ yieldLabel }}</strong>
+          </div>
+        </div>
+      </header>
+
+      <div class="cook-columns">
+        <section class="cook-panel cook-ingredients" aria-label="Ingredients">
+          <h2>Ingredients</h2>
+          <div *ngIf="cookIngredientsBySection.length === 0" class="cook-empty">No ingredients yet.</div>
+          <div *ngFor="let group of cookIngredientsBySection" class="cook-group">
+            <h3>{{ group.title }}</h3>
+            <ul>
+              <li *ngFor="let ingredient of group.items">
+                <span class="ingredient-qty">{{ ingredient.quantityRequired }} {{ ingredient.unit }}</span>
+                <span class="ingredient-name">{{ getCookIngredientDisplayName(ingredient) }}</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="cook-panel cook-instructions" aria-label="Instructions">
+          <h2>Instructions</h2>
+          <div *ngIf="cookInstructionSections.length === 0" class="cook-empty">No instruction steps yet.</div>
+          <div *ngFor="let section of cookInstructionSections; let  si = index" class="cook-group">
+            <h3 *ngIf="cookInstructionSections.length > 1">{{ section.title }}</h3>
+            <ol class="cook-steps">
+              <li *ngFor="let item of section.items; let pi = index" [class.has-subrecipe]="item.type === 'recipe'">
+                <ng-container [ngSwitch]="item.type">
+                  <span *ngSwitchCase="'step'">{{ item.stepText }}</span>
+                  <span *ngSwitchCase="'recipe'">
+                    <details class="subrecipe-details">
+                      <summary>Make ({{ item.recipeAmount }})
+                        {{ item.recipeName }}
+                        <span *ngIf="item.recipeAmount"></span>
+                      </summary>
+                      <div class="subrecipe-body">
+                        <!-- <div class="subrecipe-ingredients" *ngIf="getSubRecipeIngredients(item.externalId).length > 0">
+                          <h4>Ingredients</h4>
+                          <ul>
+                            <li *ngFor="let subIngredient of getSubRecipeIngredients(item.externalId)">
+                              <span class="ingredient-qty">{{ subIngredient.quantityRequired }} {{ subIngredient.unit }}</span>
+                              <span class="ingredient-name">{{ subIngredient.inventoryItemName }}</span>
+                            </li>
+                          </ul>
+                        </div> -->
+                        <ng-container *ngIf="getSubRecipeInstructionSections(item.externalId) as subSections">
+                          <div *ngFor="let subSection of subSections; let ssi = index" class="subrecipe-section">
+                            <h4 *ngIf="subSections.length > 1">{{ subSection.title }}</h4>
+                            <ol class="subrecipe-steps">
+                              <li *ngFor="let subItem of subSection.items; let ci = index" class="subrecipe-step-item">
+                                <span class="step-number">{{ (pi + 1) + '.' + (ci + 1) }}</span>
+                                <ng-container [ngSwitch]="subItem.type">
+                                  <span *ngSwitchCase="'step'">{{ subItem.stepText }}</span>
+                                  <span *ngSwitchCase="'recipe'" class="subrecipe-step-recipe">
+                                    <details class="subrecipe-details nested-subrecipe-details">
+                                      <summary>Make ({{ subItem.recipeAmount }})
+                                        {{ subItem.recipeName }}
+                                      </summary>
+                                      <div class="subrecipe-body">
+                                        <ng-container *ngIf="getSubRecipeInstructionSections(subItem.externalId) as deepSections">
+                                          <div *ngFor="let deepSection of deepSections; let dsi = index" class="subrecipe-section">
+                                            <h4 *ngIf="deepSections.length > 1">{{ deepSection.title }}</h4>
+                                            <ol class="subrecipe-steps">
+                                              <li *ngFor="let deepItem of deepSection.items; let di = index" class="subrecipe-step-item">
+                                                <span class="step-number">{{ (pi + 1) + '.' + (ci + 1) + '.' + (di + 1) }}</span>
+                                                <ng-container [ngSwitch]="deepItem.type">
+                                                  <span *ngSwitchCase="'step'">{{ deepItem.stepText }}</span>
+                                                  <span *ngSwitchCase="'recipe'">Sub-recipe: {{ deepItem.recipeName }}</span>
+                                                </ng-container>
+                                              </li>
+                                            </ol>
+                                          </div>
+                                        </ng-container>
+                                      </div>
+                                    </details>
+                                  </span>
+                                </ng-container>
+                              </li>
+                            </ol>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </details>
+                  </span>
+                </ng-container>
+              </li>
+            </ol>
+          </div>
+        </section>
+      </div>
+    </section>
+  </ng-template>
+  </ng-container>
+</div>

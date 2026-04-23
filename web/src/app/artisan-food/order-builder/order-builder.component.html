@@ -1,0 +1,209 @@
+<div class="order-builder">
+  <h1>Order Builder</h1>
+  <ng-container *ngIf="isStaffOrAdmin">
+    <a routerLink="/quick-order" class="quick-order-link">Switch to Quick Order Entry</a>
+  </ng-container>
+  
+  <!-- Progress Indicator -->
+  <div class="progress-bar">
+    <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+      <div class="step-number">1</div>
+      <div class="step-label">Select Items</div>
+    </div>
+    <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+      <div class="step-number">2</div>
+      <div class="step-label">Customer Info</div>
+    </div>
+    <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+      <div class="step-number">3</div>
+      <div class="step-label">Delivery</div>
+    </div>
+    <div class="step" [class.active]="currentStep >= 4">
+      <div class="step-number">4</div>
+      <div class="step-label">Review</div>
+    </div>
+  </div>
+
+  <div class="builder-content">
+    <!-- Step 1: Product Selection -->
+    <div *ngIf="currentStep === 1" class="step-content">
+      <h2>Select Products</h2>
+      
+      <div class="product-selection">
+        <div class="available-products">
+          <h3>Available Products</h3>
+          <div class="product-grid">
+            <div *ngFor="let product of availableProducts" class="product-item">
+              <div class="product-info">
+                <h4>{{ product.name }}</h4>
+                <p class="category">{{ product.category | titlecase }}</p>
+                <p class="price">${{ product.basePrice }}</p>
+              </div>
+              <button class="btn btn-primary" (click)="addToCart(product)">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cart-sidebar">
+          <h3>Cart ({{ cartCount }} items)</h3>
+          <div class="cart-items">
+            <div *ngFor="let item of cart" class="cart-item">
+              <div class="item-info">
+                <h4>{{ item.name }}</h4>
+                <p class="item-price">${{ item.totalPrice }}</p>
+              </div>
+              <div class="quantity-controls">
+                <button (click)="updateQuantity(item.id, item.quantity - 1)">-</button>
+                <span>{{ item.quantity }}</span>
+                <button (click)="updateQuantity(item.id, item.quantity + 1)">+</button>
+                <button class="remove-btn" (click)="removeFromCart(item.id)">×</button>
+              </div>
+            </div>
+          </div>
+          <div class="cart-total">
+            <strong>Total: ${{ cartTotal }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Customer Information -->
+    <div *ngIf="currentStep === 2" class="step-content">
+      <h2>Customer Information</h2>
+      
+      <div class="customer-form">
+        <div class="form-group">
+          <label for="customerName">Name *</label>
+          <input id="customerName" type="text" [(ngModel)]="customer.name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="customerEmail">Email *</label>
+          <input id="customerEmail" type="email" [(ngModel)]="customer.email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="customerPhone">Phone *</label>
+          <input id="customerPhone" type="tel" [(ngModel)]="customer.phone" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="customerNotes">Special Notes</label>
+          <textarea id="customerNotes" [(ngModel)]="customer.notes" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Delivery Options -->
+    <div *ngIf="currentStep === 3" class="step-content">
+      <h2>Delivery Options</h2>
+      
+      <div class="delivery-form">
+        <div class="form-group">
+          <div class="radio-group">
+            <label>
+              <input type="radio" [(ngModel)]="deliveryMethod" value="pickup"> Pickup
+            </label>
+            <label>
+              <input type="radio" [(ngModel)]="deliveryMethod" value="delivery"> Delivery
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="deliveryMethod === 'delivery'" class="form-group">
+          <label for="deliveryAddress">Delivery Address</label>
+          <textarea id="deliveryAddress" [(ngModel)]="customer.deliveryAddress" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="deliveryDate">{{ deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery' }} Date *</label>
+          <input id="deliveryDate" type="date" [(ngModel)]="selectedDeliveryDate" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="deliveryTime">{{ deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery' }} Time *</label>
+          <select id="deliveryTime" [(ngModel)]="selectedDeliveryTime" required>
+            <option value="">Select time</option>
+            <option value="08:00">8:00 AM</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="17:00">5:00 PM</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="rushOrder"> Rush Order (+20% fee)
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="specialInstructions">Special Instructions</label>
+          <textarea id="specialInstructions" [(ngModel)]="specialInstructions" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Review -->
+    <div *ngIf="currentStep === 4" class="step-content">
+      <h2>Order Review</h2>
+      
+      <div class="order-review">
+        <div class="review-section">
+          <h3>Customer Information</h3>
+          <p><strong>Name:</strong> {{ customer.name }}</p>
+          <p><strong>Email:</strong> {{ customer.email }}</p>
+          <p><strong>Phone:</strong> {{ customer.phone }}</p>
+          <p *ngIf="customer.notes"><strong>Notes:</strong> {{ customer.notes }}</p>
+        </div>
+
+        <div class="review-section">
+          <h3>Order Items</h3>
+          <div *ngFor="let item of cart" class="review-item">
+            <span>{{ item.name }} × {{ item.quantity }}</span>
+            <span>${{ item.totalPrice }}</span>
+          </div>
+          <div class="review-total">
+            <strong>Subtotal: ${{ cartTotal }}</strong>
+            <div *ngIf="rushOrder">Rush Fee: ${{ (cartTotal * 0.2) | number:'1.2-2' }}</div>
+            <div class="final-total">
+              <strong>Total: ${{ rushOrder ? (cartTotal * 1.2) : cartTotal | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h3>{{ deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery' }} Details</h3>
+          <p><strong>Method:</strong> {{ deliveryMethod | titlecase }}</p>
+          <p><strong>Date:</strong> {{ selectedDeliveryDate }}</p>
+          <p><strong>Time:</strong> {{ selectedDeliveryTime }}</p>
+          <p *ngIf="deliveryMethod === 'delivery' && customer.deliveryAddress">
+            <strong>Address:</strong> {{ customer.deliveryAddress }}
+          </p>
+          <p *ngIf="specialInstructions"><strong>Special Instructions:</strong> {{ specialInstructions }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="navigation-buttons">
+    <button *ngIf="currentStep > 1" class="btn btn-secondary" (click)="previousStep()">
+      Previous
+    </button>
+    <button *ngIf="currentStep < totalSteps" class="btn btn-primary" (click)="nextStep()" [disabled]="!canProceedToNext()">
+      Next
+    </button>
+    <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="submitOrder()">
+      Submit Order
+    </button>
+  </div>
+</div>

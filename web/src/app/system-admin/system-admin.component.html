@@ -1,0 +1,46 @@
+<div class="system-admin">
+  <h2>System Administration</h2>
+
+  <div *ngIf="loading">Loading…</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <section class="organizations">
+    <h3>Organizations</h3>
+    <input placeholder="Filter orgs" [(ngModel)]="orgFilter" />
+    <div *ngFor="let org of filteredOrgs">
+      <div class="org-row">
+        <div class="org-name">{{ org.organizationName }}</div>
+        <div class="org-license">
+          <select [value]="org.licenseTier" (change)="handleLicenseChange(org.organizationId, $any($event.target).value)">
+            <option *ngFor="let tier of licenseTiers" [value]="tier">{{ tier }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="users">
+    <h3>Users</h3>
+    <input placeholder="Filter users" [(ngModel)]="userFilter" />
+    <div *ngFor="let user of filteredUsers">
+      <div class="user-row">
+        <div class="user-name">{{ user.userName }} ({{ user.emailAddress }})</div>
+        <div class="user-role">
+          <select [(ngModel)]="user.userRole" [compareWith]="compareRoles" (ngModelChange)="handleUserRoleChange(user.userId, $event)">
+            <option *ngFor="let role of userRoles" [value]="role.value">{{ role.display }}</option>
+          </select>
+        </div>
+        <div class="user-enabled">
+          <input type="checkbox" [checked]="user.isEnabled" (change)="onUserEnabledChange($event, user.userId)" />
+        </div>
+        <div class="user-actions">
+          <button (click)="handleEmulateUser(user.userId)">Emulate</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div *ngIf="isEmulating">
+    <button (click)="handleRevertToAdmin()">Revert to Admin</button>
+  </div>
+</div>

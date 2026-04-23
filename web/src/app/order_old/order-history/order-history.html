@@ -1,0 +1,12 @@
+<div class="order-history">
+	<h2>Order History</h2>
+	<ul>
+		<li *ngFor="let order of orders">
+			<span>Order #{{ order.id }}</span>
+			<span>Date: {{ order.date }}</span>
+			<span>Total: ${{ order.total.toFixed(2) }}</span>
+			<span>Status: {{ order.status }}</span>
+			<button (click)="viewOrder(order.id)">View</button>
+		</li>
+	</ul>
+</div>

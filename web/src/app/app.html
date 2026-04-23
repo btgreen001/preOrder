@@ -1,0 +1,49 @@
+<div class="app-shell">
+  <app-loading-overlay></app-loading-overlay>
+  <nav class="topnav">
+    <mat-icon class="brand-icon">bakery_dining</mat-icon>
+    <span class="app-title">Artisan Food</span>
+    <span class="spacer"></span>
+    <div class="nav-controls">
+      <span class="current-role">
+        <mat-icon class="role-icon">badge</mat-icon>
+        {{ currentRole | titlecase }}
+      </span>
+      <button class="change-user-btn" (click)="changeUser()" title="Change User" data-testid="change-user-button">
+        <mat-icon>manage_accounts</mat-icon>
+        Change User
+      </button>
+      <button class="logout-btn" [matMenuTriggerFor]="logoutMenu" title="Logout" data-testid="logout-button">
+        <mat-icon>logout</mat-icon>
+        Logout
+      </button>
+      <mat-menu #logoutMenu="matMenu">
+        <button mat-menu-item (click)="logoutThisSession()">
+          <mat-icon>logout</mat-icon>
+          This Session Only
+        </button>
+        <button mat-menu-item (click)="logoutAllSessions()">
+          <mat-icon>logout</mat-icon>
+          All Sessions
+        </button>
+      </mat-menu>
+    </div>
+  </nav>
+  <div class="main-layout">
+    <aside class="sidebar">
+      <ul>
+        <li *ngFor="let nav of sidebarNav"
+            [class.active]="isActive(nav.route)"
+            [class.child]="nav.isChild">
+          <a [routerLink]="nav.route">
+            <mat-icon class="nav-icon">{{ nav.icon }}</mat-icon>
+            <span class="nav-label">{{ nav.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

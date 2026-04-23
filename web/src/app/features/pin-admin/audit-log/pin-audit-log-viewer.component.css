@@ -1,0 +1,274 @@
+.pin-audit-log-viewer {
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.loading {
+  margin: 40px auto;
+  display: block;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c62828;
+}
+
+.filter-card {
+  margin-bottom: 30px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-card mat-card-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.filter-card mat-card-content {
+  padding: 20px;
+}
+
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.logs-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.logs-card mat-card-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.logs-card mat-card-content {
+  padding: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+.logs-list {
+  padding: 0;
+}
+
+.log-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  border-left: 4px solid #ddd;
+  transition: background-color 0.2s;
+}
+
+.log-item:hover {
+  background-color: #f9f9f9;
+}
+
+.log-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timestamp {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.days-ago {
+  color: #999;
+  font-size: 12px;
+}
+
+.action-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  min-width: 120px;
+}
+
+.action-badge.action-create_user {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.action-badge.action-update_user {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.action-badge.action-delete_user {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.action-badge.action-reset_pin {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.action-badge.action-unlock_user {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.action-badge.action-lock_user {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.action-badge.action-login_attempt {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.action-badge.action-login_failed {
+  background-color: #ffebee;
+  color: #b71c1c;
+}
+
+.log-details {
+  color: #555;
+  font-size: 14px;
+  padding-left: 8px;
+}
+
+.log-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #999;
+  font-size: 12px;
+}
+
+.performed-by {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.performed-by mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+::ng-deep .mat-mdc-paginator {
+  border-top: 1px solid #eee;
+  background-color: #f9f9f9;
+}
+
+.navigation-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .header-actions button {
+    width: 100%;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .log-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .navigation-footer {
+    flex-direction: column;
+  }
+
+  .navigation-footer button {
+    width: 100%;
+  }
+}

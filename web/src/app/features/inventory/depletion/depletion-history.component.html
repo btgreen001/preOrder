@@ -1,0 +1,42 @@
+<div class="depletion-history-container">
+  <h2>Inventory Depletion History</h2>
+
+  <div class="filters">
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Product ID</mat-label>
+      <input matInput [(ngModel)]="selectedProductId" placeholder="Select product ID" data-testid="product-id-input" />
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" (click)="loadDepletionHistory()" data-testid="load-history-btn">
+      Load History
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && depletionHistory.length === 0" class="empty-state">
+    <p>No depletion history found.</p>
+  </div>
+
+  <mat-card *ngIf="!loading && depletionHistory.length > 0" class="history-card">
+    <mat-card-header>
+      <mat-card-title>Depletion History ({{depletionHistory.length}} records)</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="depletion-list">
+        <div *ngFor="let record of depletionHistory" class="depletion-item">
+          <div class="item-header">
+            <strong>{{record.depletionDate | date:'short'}}</strong> - Cost: <span class="cost">${{formatCost(record.depletionCost)}}</span>
+          </div>
+          <div class="item-details">
+            <p>Batch: {{record.batchExternalId | slice:0:8}}...</p>
+            <p>Depleted By: {{record.depletedBy}}</p>
+            <p>Details: {{record.details}}</p>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

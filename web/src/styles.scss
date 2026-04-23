@@ -1,0 +1,334 @@
+/* Autocomplete panel - solid background so it doesn't bleed through on scroll */
+.mat-mdc-autocomplete-panel {
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(40, 40, 60, 0.13) !important;
+}
+
+:root {
+  --bakery-bg: #f7f8fc;         /* soft blue-grey page bg */
+  --bakery-surface: #ffffff;    /* card surface */
+  --bakery-accent: #ffd9c7;     /* soft peach */
+  --bakery-accent-2: #fff0d9;   /* pale cream */
+  --bakery-accent-transparent: rgba(255,217,199,0.45);
+  --bakery-primary: #c8703a;    /* warm terracotta */
+  --bakery-primary-light: #f3e8e0; /* very light tint for hover bg */
+  --bakery-text: #3b3b3b;       /* muted charcoal */
+  --bakery-text-emph: #1e1e2e;  /* dark text for emphasis */
+  --bakery-text-muted: #6b7280; /* lighter muted text */
+  --bakery-border: #e5e7eb;     /* subtle border */
+  --bakery-success: #4caf50;    /* success green */
+  --bakery-warning: #f59e0b;    /* warning amber */
+  --bakery-error: #ef4444;      /* error red */
+  --bakery-shadow-soft: 0 2px 8px rgba(40, 40, 60, 0.07);
+  --bakery-shadow-card: 0 4px 16px rgba(40, 40, 60, 0.09);
+  --bakery-radius: 12px;        /* global card radius */
+  --bakery-radius-sm: 8px;      /* small element radius */
+  --bakery-radius-pill: 24px;   /* pill buttons */
+
+  /* Material shape tokens - apply rounded feel globally */
+  --mdc-elevated-card-container-shape: var(--bakery-radius);
+  --mdc-outlined-card-container-shape: var(--bakery-radius);
+  --mdc-protected-button-container-shape: var(--bakery-radius-pill);
+  --mdc-filled-button-container-shape: var(--bakery-radius-pill);
+  --mdc-outlined-button-container-shape: var(--bakery-radius-pill);
+  --mdc-text-button-container-shape: var(--bakery-radius-pill);
+  --mdc-outlined-text-field-container-shape: var(--bakery-radius-sm);
+  --mdc-filled-text-field-container-shape: var(--bakery-radius-sm) var(--bakery-radius-sm) 0 0;
+  --mdc-chip-container-shape: 16px;
+}
+
+/* ── Select/dropdown panel: solid background so options are readable ── */
+.mat-mdc-select-panel {
+  background: #ffffff !important;
+}
+
+.mat-mdc-snack-bar-container {
+--mdc-snackbar-container-color: #333 !important; /* solid background */
+opacity: 1 !important; /* ensure no transparency */
+}
+
+/* Global tooltip style for field helper text (overlay-safe) */
+.help-tooltip,
+.help-tooltip .mdc-tooltip__surface,
+.mat-mdc-tooltip.help-tooltip,
+.mat-mdc-tooltip.help-tooltip .mdc-tooltip__surface {
+  --mdc-plain-tooltip-container-color: #1f1f1f;
+  --mdc-plain-tooltip-supporting-text-color: #ffffff;
+  background-color: #1f1f1f !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.35;
+  border-radius: 6px;
+  z-index: 2000;
+}
+
+/* Product picker shared styles (moved from recipe-editor component to reduce component CSS size) */
+.product-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid #c8d0e0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.product-field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.product-display-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.product-name-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1d24;
+}
+
+.product-name-chip mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+}
+
+.product-name-chip.unlinked {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.product-action-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a4fa3;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.product-action-link:hover { color: #0d37a0; }
+.product-action-link.danger { color: #b91c1c; }
+.product-action-link.danger:hover { color: #991b1b; }
+
+.product-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-search-field {
+  flex: 1;
+  font-size: 0.9rem;
+  margin-bottom: -1.25em;
+}
+
+.product-option-name { font-weight: 500; }
+.product-option-sku {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Visual styling for the virtual "New" autocomplete option */
+.new-option-icon {
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 8px;
+  color: #1976d2;
+}
+.new-option-text {
+  font-style: italic;
+  color: #1a73e8;
+}
+
+.view-only .product-field {
+  border-color: transparent;
+  background: #f0f4fb;
+  border-radius: 6px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bakery-bg);
+  color: var(--bakery-text);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Only style non-Material native buttons */
+button:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([mat-icon-button]):not([mat-stroked-button]):not([mat-fab]):not([mat-mini-fab]):not([matMenuTriggerFor]) {
+  background: var(--bakery-primary-light);
+  border: 1px solid var(--bakery-border);
+  padding: 0.45rem 1rem;
+  border-radius: var(--bakery-radius-sm);
+  color: var(--bakery-text-emph);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+button:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([mat-icon-button]):not([mat-stroked-button]):not([mat-fab]):not([mat-mini-fab]):not([matMenuTriggerFor]):hover {
+  background: var(--bakery-primary);
+  color: #fff;
+  border-color: var(--bakery-primary);
+}
+
+.card {
+  background: var(--bakery-surface);
+  border-radius: var(--bakery-radius);
+  box-shadow: var(--bakery-shadow-card);
+  border: 1px solid var(--bakery-border);
+  padding: 1rem;
+}
+
+/* Inventory module helper classes */
+.inventory-scan { display: flex; gap: .5rem; align-items: center; }
+
+/* Snackbar/Toast notification styles */
+.error-snackbar {
+  background: var(--bakery-error) !important;
+  color: white !important;
+  
+  .mat-mdc-button {
+    color: white !important;
+  }
+}
+
+.success-snackbar {
+  background: var(--bakery-success) !important;
+  color: white !important;
+  
+  .mat-mdc-button {
+    color: white !important;
+  }
+}
+
+.warning-snackbar {
+  background: var(--bakery-warning) !important;
+  color: var(--bakery-text-emph) !important;
+  
+  .mat-mdc-button {
+    color: var(--bakery-text-emph) !important;
+  }
+}
+
+.info-snackbar {
+  background: var(--bakery-primary) !important;
+  color: white !important;
+  
+  .mat-mdc-button {
+    color: white !important;
+  }
+}
+/* ─── Material form field overrides ─────────────────────────────── */
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-color: var(--bakery-surface);
+  --mdc-outlined-text-field-outline-color: var(--bakery-border);
+  --mdc-outlined-text-field-hover-outline-color: var(--bakery-primary);
+  --mdc-outlined-text-field-focus-outline-color: var(--bakery-primary);
+  --mdc-outlined-text-field-input-text-color: var(--bakery-text-emph);
+  --mdc-outlined-text-field-label-text-color: var(--bakery-text-muted);
+  --mat-form-field-container-horizontal-padding: 6px;
+}
+
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-flex {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ─── Material card overrides ────────────────────────────────────── */
+.mat-mdc-card {
+  --mdc-elevated-card-container-color: var(--bakery-surface);
+  color: var(--bakery-text-emph);
+  border: 1px solid var(--bakery-border) !important;
+  box-shadow: var(--bakery-shadow-card) !important;
+}
+
+/* ─── Material table overrides ───────────────────────────────────── */
+.mat-mdc-table {
+  background: var(--bakery-surface);
+  border-radius: var(--bakery-radius);
+  overflow: hidden;
+  border: 1px solid var(--bakery-border);
+}
+
+.mat-mdc-header-row {
+  background: var(--bakery-bg);
+  border-bottom: 2px solid var(--bakery-border);
+}
+
+.mat-mdc-header-cell {
+  color: var(--bakery-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.mat-mdc-row:hover {
+  background: var(--bakery-primary-light);
+}
+
+.mat-mdc-cell {
+  color: var(--bakery-text-emph);
+  font-size: 0.875rem;
+}
+
+/* ─── Material toolbar overrides ─────────────────────────────────── */
+.mat-toolbar.mat-primary {
+  background: var(--bakery-primary) !important;
+  color: white;
+}
+
+/* ─── Material sidenav overrides ─────────────────────────────────── */
+.mat-sidenav-container {
+  background: var(--bakery-bg);
+  color: var(--bakery-text);
+}
+
+.mat-sidenav {
+  background: var(--bakery-surface);
+  border-right: 1px solid var(--bakery-border);
+}
+
+/* ─── Material chip overrides ────────────────────────────────────── */
+.mat-mdc-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ─── Native form inputs ─────────────────────────────────────────── */
+input:not([matInput]), textarea:not([matInput]), select {
+  background: var(--bakery-surface);
+  color: var(--bakery-text-emph);
+  border: 1px solid var(--bakery-border);
+  border-radius: var(--bakery-radius-sm);
+  padding: 8px 12px;
+  font-family: inherit;
+}
+
+input:not([matInput]):focus, textarea:not([matInput]):focus, select:focus {
+  outline: none;
+  border-color: var(--bakery-primary);
+  box-shadow: 0 0 0 2px var(--bakery-accent-transparent);
+}

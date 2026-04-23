@@ -1,0 +1,205 @@
+.pin-signin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.pin-signin-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  color: white;
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 1rem;
+
+    .back-button {
+      position: absolute;
+      left: 0;
+      color: white;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    .header-title {
+      flex: 1;
+    }
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 300;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+  }
+
+  .error-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(244, 67, 54, 0.9);
+    border-radius: 4px;
+    font-size: 0.95rem;
+    animation: slideDown 0.3s ease-out;
+  }
+}
+
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  width: 100%;
+  margin-bottom: 2rem;
+
+  .loading-spinner {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    color: white;
+
+    .spinner {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      animation: spin 2s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      margin: 0;
+    }
+  }
+}
+
+.user-tile {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  padding: 1.5rem;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 0;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 500;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .user-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.footer-actions {
+  margin-top: 2rem;
+  
+  button {
+    min-width: 200px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+/* Tablet and mobile adjustments */
+@media (max-width: 768px) {
+  .pin-signin-header h1 {
+    font-size: 2rem;
+  }
+
+  .user-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .user-tile {
+    padding: 1rem;
+
+    .avatar {
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+    }
+
+    .user-name {
+      font-size: 0.95rem;
+    }
+  }
+}
+
+/* Touch-friendly sizing for tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .user-tile {
+    padding: 1.25rem;
+
+    .avatar {
+      width: 70px;
+      height: 70px;
+      font-size: 1.75rem;
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

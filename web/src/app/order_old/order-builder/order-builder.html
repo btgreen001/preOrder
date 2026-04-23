@@ -1,0 +1,38 @@
+<div class="order-builder">
+	<h2>Order Builder</h2>
+	<div class="products">
+		<h3>Available Products</h3>
+		<ul>
+			<li *ngFor="let product of products">
+				<span>{{ product.name }}</span>
+				<span>
+					${{ product.price.toFixed(2) }}
+					<span *ngIf="!product.available" style="color: #c00;">(Out of stock)</span>
+				</span>
+				<button 
+					*ngIf="product.available" 
+					(click)="addToCart(product)">
+					Add to Cart
+				</button>
+			</li>
+		</ul>
+	</div>
+	<div class="cart">
+		<h3>Your Cart</h3>
+		<ul>
+			<li *ngFor="let item of cart">
+				<span>{{ item.name }}</span>
+				<span>Qty: {{ item.qty }}</span>
+				<span>Total: ${{ (item.price * item.qty).toFixed(2) }}</span>
+				<button (click)="removeFromCart(item.id)">Remove</button>
+			</li>
+		</ul>
+		<div *ngIf="cart.length">
+			<strong>Cart Total: ${{ getCartTotal().toFixed(2) }}</strong>
+			<button (click)="checkout()">Checkout</button>
+		</div>
+		<div *ngIf="!cart.length">
+			<em>Your cart is empty.</em>
+		</div>
+	</div>
+</div>

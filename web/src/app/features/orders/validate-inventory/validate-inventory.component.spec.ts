@@ -1,0 +1,134 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ValidateInventoryComponent } from './validate-inventory.component';
+import { OrdersService } from './services/orders.service';
+import { of, throwError } from 'rxjs';
+
+describe('ValidateInventoryComponent', () => {
+  let component: ValidateInventoryComponent;
+  let fixture: ComponentFixture<ValidateInventoryComponent>;
+  let mockOrdersService: jasmine.SpyObj<OrdersService>;
+
+  beforeEach(async () => {
+    mockOrdersService = jasmine.createSpyObj('OrdersService', ['validateOrderInventory']);
+    mockOrdersService.validateOrderInventory.and.returnValue(
+      of({
+        isValid: true,
+        missingItems: [],
+        message: 'All items available'
+      })
+    );
+
+    await TestBed.configureTestingModule({
+      imports: [ValidateInventoryComponent],
+      providers: [{ provide: OrdersService, useValue: mockOrdersService }]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ValidateInventoryComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should initialize in standalone mode when no items provided', () => {
+    expect(component.isModalMode).toBe(false);
+    expect(component.items.length).toBe(0);
+  });
+
+  it('should add item to list', () => {
+    component.newProductId = 'product-123';
+    component.newQuantity = 5;
+    component.addItem();
+
+    expect(component.items.length).toBe(1);
+  expect(component.items[0].sellableProductId).toBe('product-123');
+    expect(component.items[0].quantity).toBe(5);
+    expect(component.newProductId).toBe('');
+    expect(component.newQuantity).toBeNull();
+  });
+
+  it('should not add item with invalid data', () => {
+    component.newProductId = '';
+    component.newQuantity = 0;
+    component.addItem();
+
+    expect(component.items.length).toBe(0);
+    expect(component.errorMessage).toBeTruthy();
+  });
+
+  it('should remove item from list', () => {
+    component.items = [
+  { sellableProductId: 'prod-1', quantity: 2 },
+  { sellableProductId: 'prod-2', quantity: 3 }
+    ];
+
+    component.removeItem(0);
+    expect(component.items.length).toBe(1);
+  expect(component.items[0].sellableProductId).toBe('prod-2');
+  });
+
+  it('should validate inventory', (done) => {
+  component.items = [{ sellableProductId: 'prod-123', quantity: 5 }];
+    component.validateInventory();
+
+    expect(component.isLoading).toBe(true);
+    expect(mockOrdersService.validateOrderInventory).toHaveBeenCalledWith(component.items);
+
+    // Wait for async operation
+    setTimeout(() => {
+      expect(component.isLoading).toBe(false);
+      expect(component.validationResult?.isValid).toBe(true);
+      done();
+    }, 100);
+  });
+
+  it('should handle validation error', (done) => {
+    mockOrdersService.validateOrderInventory.and.returnValue(
+      throwError(() => ({ error: { message: 'API error' } }))
+    );
+
+  component.items = [{ sellableProductId: 'prod-123', quantity: 5 }];
+    component.validateInventory();
+
+    setTimeout(() => {
+      expect(component.isLoading).toBe(false);
+      expect(component.errorMessage).toContain('API error');
+      done();
+    }, 100);
+  });
+
+  it('should initialize in modal mode with input items', () => {
+    component.orderedItems = [
+  { sellableProductId: 'prod-1', quantity: 2 },
+  { sellableProductId: 'prod-2', quantity: 3 }
+    ];
+
+    component.ngOnInit();
+
+    expect(component.isModalMode).toBe(true);
+    expect(component.items.length).toBe(2);
+    expect(mockOrdersService.validateOrderInventory).toHaveBeenCalled();
+  });
+
+  it('should emit validationComplete when proceed called', () => {
+    spyOn(component.validationComplete, 'emit');
+    component.validationResult = {
+      isValid: true,
+      missingItems: [],
+      message: 'Valid'
+    };
+
+    component.onProceed();
+
+    expect(component.validationComplete.emit).toHaveBeenCalledWith(component.validationResult);
+  });
+
+  it('should emit cancelled when cancel called', () => {
+    spyOn(component.cancelled, 'emit');
+    component.onCancel();
+
+    expect(component.cancelled.emit).toHaveBeenCalled();
+  });
+});

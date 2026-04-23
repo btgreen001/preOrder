@@ -1,0 +1,224 @@
+/* ─── App Shell ───────────────────────────────────────────────────── */
+.app-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+}
+
+/* ─── Top Navigation Bar ─────────────────────────────────────────── */
+.topnav {
+  background: linear-gradient(90deg, #b85e2e 0%, #c8703a 60%, #d4835e 100%);
+  color: white;
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(40, 30, 20, 0.18);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0.95;
+}
+
+.app-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  opacity: 0.97;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ─── Topnav controls ─────────────────────────────────────────────── */
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-role {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  .role-icon {
+    font-size: 0.95rem;
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+}
+
+.change-user-btn,
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.13);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 5px 12px 5px 9px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background 0.18s ease, border-color 0.18s ease;
+
+  mat-icon {
+    font-size: 1.05rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    vertical-align: middle;
+  }
+}
+
+.change-user-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.logout-btn:hover {
+  background: rgba(255, 80, 60, 0.35);
+  border-color: rgba(255, 150, 130, 0.5);
+}
+
+/* ─── Main Layout ────────────────────────────────────────────────── */
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  background: var(--bakery-surface);
+  border-right: 1px solid var(--bakery-border);
+  padding: 12px 0 20px;
+  height: 100%;
+  overflow-y: auto;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bakery-border) transparent;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--bakery-border);
+    border-radius: 2px;
+  }
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  margin: 1px 8px;
+}
+
+/* nav links */
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--bakery-text-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar .nav-icon {
+  font-size: 1.05rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+  opacity: 0.65;
+  transition: opacity 0.15s;
+}
+
+.sidebar .nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar a:hover {
+  background: var(--bakery-primary-light);
+  color: var(--bakery-primary);
+}
+
+.sidebar a:hover .nav-icon {
+  opacity: 1;
+}
+
+/* Active state */
+.sidebar li.active > a {
+  background: var(--bakery-primary);
+  color: white;
+}
+
+.sidebar li.active > a .nav-icon {
+  opacity: 1;
+}
+
+/* Child / sub-items */
+.sidebar li.child {
+  margin-left: 20px;
+}
+
+.sidebar li.child > a {
+  font-size: 0.79rem;
+  font-weight: 400;
+  padding: 6px 10px;
+}
+
+.sidebar li.child .nav-icon {
+  font-size: 0.85rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  opacity: 0.5;
+}
+
+.sidebar li.child.active > a {
+  background: rgba(200, 112, 58, 0.11);
+  color: var(--bakery-primary);
+  font-weight: 600;
+}
+
+/* ─── Main content area ───────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;
+  background: var(--bakery-bg);
+  color: var(--bakery-text);
+}
+
+/* ─── Native select ──────────────────────────────────────────────── */
+select {
+  padding: 0.5rem;
+  border: 1px solid var(--bakery-border);
+  border-radius: var(--bakery-radius-sm, 8px);
+  background: var(--bakery-surface);
+  color: var(--bakery-text);
+}

@@ -1,0 +1,283 @@
+.fifo-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Metrics Card */
+.metrics-card {
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.metrics-card mat-card-content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.metric-card.critical {
+  background: rgba(255, 87, 87, 0.3);
+}
+
+.metric-card.warning {
+  background: rgba(255, 193, 7, 0.3);
+}
+
+.metric-card.good {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.metric-label {
+  font-size: 12px;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Form Card */
+.form-card {
+  margin-bottom: 24px;
+}
+
+.fifo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.button-row button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* Results Card */
+.results-card {
+  margin-bottom: 24px;
+  border-left: 4px solid #667eea;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.fifo-table,
+.selection-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fifo-table th,
+.selection-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.fifo-table td,
+.selection-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.fifo-table tr:hover,
+.selection-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Status and Days Badge */
+.days-badge,
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  min-width: 60px;
+}
+
+.days-badge {
+  font-size: 14px;
+}
+
+/* Status Colors */
+.status-expired {
+  background-color: #f44336 !important;
+}
+
+.status-critical {
+  background-color: #ff5252 !important;
+}
+
+.status-warning {
+  background-color: #ffc107 !important;
+  color: #333 !important;
+}
+
+.status-good {
+  background-color: #4caf50 !important;
+}
+
+/* Selection Summary */
+.selection-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.summary-item .label {
+  font-weight: 500;
+  color: #666;
+}
+
+.summary-item .value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: #f9f9f9;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: #ccc;
+}
+
+.empty-state p {
+  color: #999;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .fifo-container {
+    padding: 12px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .button-row {
+    flex-direction: column;
+  }
+
+  .button-row button {
+    width: 100%;
+  }
+
+  .table-container {
+    font-size: 12px;
+  }
+
+  .fifo-table th,
+  .selection-table th,
+  .fifo-table td,
+  .selection-table td {
+    padding: 8px;
+  }
+
+  .selection-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading State */
+mat-spinner {
+  display: inline-block !important;
+  margin: 0 8px 0 0;
+}
+
+/* Data Test IDs for E2E Testing */
+[data-testid="product-select"],
+[data-testid="quantity-input"],
+[data-testid="get-fifo-btn"],
+[data-testid="rotate-btn"],
+[data-testid="clear-btn"],
+[data-testid="info-btn"],
+[data-testid="fifo-batches-table"],
+[data-testid="selection-table"] {
+  /* Visible for testing */
+}

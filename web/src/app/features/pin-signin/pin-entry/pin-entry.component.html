@@ -1,0 +1,67 @@
+<div class="pin-entry-container" data-testid="pin-entry-container">
+  <mat-card class="pin-entry-card" data-testid="pin-entry-card">
+    <mat-card-content>
+      <div class="header">
+        <button 
+          mat-icon-button 
+          (click)="onCancel()" 
+          data-testid="back-button" 
+          title="Back to User List">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="user-info">
+          <h2>Enter PIN</h2>
+          <p class="user-name" data-testid="user-name-header">{{ userName }}</p>
+        </div>
+      </div>
+      
+      <div class="change-user-link">
+        <button mat-button (click)="onCancel()" data-testid="change-user-link" color="primary">
+          <mat-icon>person_outline</mat-icon>
+          Change User
+        </button>
+      </div>
+
+      <div class="pin-dots" data-testid="pin-dots">
+        <div 
+          *ngFor="let dot of pin; let i = index" 
+          class="pin-dot"
+          [class.filled]="isPinDotFilled(i)"
+          [attr.data-testid]="'pin-dot'">
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="showError" data-testid="error-message">
+        <mat-icon>error</mat-icon>
+        Invalid PIN. Please try again.
+      </div>
+
+      <div class="number-pad" data-testid="pin-keypad">
+        <button 
+          *ngFor="let num of numberPad"
+          mat-raised-button
+          class="number-button"
+          (click)="onNumberClick(num)"
+          [attr.data-testid]="'pin-button-' + num">
+          {{ num }}
+        </button>
+        <button 
+          mat-raised-button
+          class="action-button"
+          (click)="onClear()"
+          data-testid="clear-button">
+          <mat-icon>clear</mat-icon>
+          Clear
+        </button>
+        <button 
+          mat-raised-button
+          class="action-button"
+          (click)="onBackspace()"
+          data-testid="backspace-button">
+          <mat-icon>backspace</mat-icon>
+          Delete
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,11 @@
+<div class="storefront">
+	<h2>Bakery Storefront</h2>
+	<ul>
+		<li *ngFor="let product of products">
+			<span>{{ product.name }}</span>
+			<span>Price: ${{ product.price.toFixed(2) }}</span>
+			<span *ngIf="!product.available" style="color: #c00;">(Out of stock)</span>
+			<button *ngIf="product.available" (click)="viewProduct(product.id)">View</button>
+		</li>
+	</ul>
+</div>
