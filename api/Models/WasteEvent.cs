@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Waste/spoilage events. Tracks when inventory items or batches are wasted, why, and the cost impact.

@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Service for managing terminal locks and logging terminal activity to AUDIT_LOG
@@ -69,7 +69,7 @@ public interface ITerminalLockService
 }
 public class TerminalLockService : ITerminalLockService
 {
-    private readonly OrderMgmt.Data.OrderMgmtDbContext _context;
+    private readonly PreOrderApp.Data.AppDbContext _context;
     private readonly ILogger<TerminalLockService> _logger;
 
     /// <summary>
@@ -84,7 +84,7 @@ public class TerminalLockService : ITerminalLockService
         return terminal;
     }
 
-    public TerminalLockService(OrderMgmt.Data.OrderMgmtDbContext context, ILogger<TerminalLockService> logger)
+    public TerminalLockService(PreOrderApp.Data.AppDbContext context, ILogger<TerminalLockService> logger)
     {
         _context = context;
         _logger = logger;

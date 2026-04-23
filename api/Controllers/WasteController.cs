@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.Services;
-using OrderMgmt.Filters;
+using PreOrderApp.Services;
+using PreOrderApp.Filters;
 
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

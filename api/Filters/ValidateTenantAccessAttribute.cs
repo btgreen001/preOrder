@@ -1,4 +1,4 @@
-namespace OrderMgmt.Filters;
+namespace PreOrderApp.Filters;
 
 /// <summary>
 /// Attribute that marks an endpoint for automatic tenant access validation.

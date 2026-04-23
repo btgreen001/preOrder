@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.DTOs;
-using OrderMgmt.Services;
+using PreOrderApp.DTOs;
+using PreOrderApp.Services;
 using System.Security.Claims;
-using OrderMgmt.Filters;
-namespace OrderMgmt.Controllers;
+using PreOrderApp.Filters;
+namespace PreOrderApp.Controllers;
 
 /// <summary>
 /// Product movement tracking API endpoints

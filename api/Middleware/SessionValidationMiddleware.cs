@@ -1,10 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Middleware;
+namespace PreOrderApp.Middleware;
 
 public class SessionValidationMiddleware
 {
@@ -17,7 +17,7 @@ public class SessionValidationMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, OrderMgmtDbContext dbContext)
+    public async Task InvokeAsync(HttpContext context, AppDbContext dbContext)
     {
         try
         {

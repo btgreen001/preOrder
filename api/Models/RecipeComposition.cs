@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Recipe composition sections (e.g., dough, filling, frosting for a cake).

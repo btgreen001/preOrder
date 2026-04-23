@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Production batches of finished goods. Tracks each batch from production through sale/waste.

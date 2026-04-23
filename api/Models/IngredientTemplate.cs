@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Master template for common bakery ingredients. 

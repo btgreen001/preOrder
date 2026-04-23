@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Services;
-using OrderMgmt.Models;
-namespace OrderMgmt.Controllers
+using PreOrderApp.Services;
+using PreOrderApp.Models;
+namespace PreOrderApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -11,9 +11,9 @@ namespace OrderMgmt.Controllers
     public class OrganizationController : ControllerBase
     {
         private readonly IOrganizationService _organizationService;
-        private readonly OrderMgmt.Data.OrderMgmtDbContext _context;
+        private readonly PreOrderApp.Data.AppDbContext _context;
 
-        public OrganizationController(IOrganizationService organizationService, OrderMgmt.Data.OrderMgmtDbContext context)
+        public OrganizationController(IOrganizationService organizationService, PreOrderApp.Data.AppDbContext context)
         {
             _organizationService = organizationService;
             _context = context;

@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.DTOs;
-using OrderMgmt.Services;
-using OrderMgmt.Filters;
-using OrderMgmt.Models;
+using PreOrderApp.DTOs;
+using PreOrderApp.Services;
+using PreOrderApp.Filters;
+using PreOrderApp.Models;
 using System.Security.Claims;
 
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
 /// <summary>
 /// InventoryLot management API endpoints

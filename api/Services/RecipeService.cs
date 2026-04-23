@@ -1,10 +1,10 @@
-using OrderMgmt.Models;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.DTOs;
-using OrderMgmt.Infrastructure;
+using PreOrderApp.DTOs;
+using PreOrderApp.Infrastructure;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IRecipeService
 {
@@ -33,11 +33,11 @@ public interface IRecipeService
 
 public class RecipeService : IRecipeService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<RecipeService> _logger;
 
 
-    public RecipeService(OrderMgmtDbContext context, ILogger<RecipeService> logger)
+    public RecipeService(AppDbContext context, ILogger<RecipeService> logger)
     {
         _context = context;
         _logger = logger;

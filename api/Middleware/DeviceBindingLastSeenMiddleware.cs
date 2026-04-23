@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Caching.Memory;
-using OrderMgmt.Services;
+using PreOrderApp.Services;
 
-namespace OrderMgmt.Middleware;
+namespace PreOrderApp.Middleware;
 
 /// <summary>
 /// Updates terminal device binding LastSeenAt for authenticated API requests.

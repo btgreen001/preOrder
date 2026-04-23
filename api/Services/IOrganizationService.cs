@@ -1,6 +1,6 @@
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IOrganizationService
 {

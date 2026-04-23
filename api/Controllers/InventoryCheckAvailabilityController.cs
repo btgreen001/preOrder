@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.Services;
-using OrderMgmt.Services.Interfaces;
-using OrderMgmt.Filters;
-using OrderMgmt.Models;
+using PreOrderApp.Services;
+using PreOrderApp.Services.Interfaces;
+using PreOrderApp.Filters;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Controllers
+namespace PreOrderApp.Controllers
 {
     /// <summary>
     /// Inventory Check Availability Controller - Provides endpoints for checking inventory item availability

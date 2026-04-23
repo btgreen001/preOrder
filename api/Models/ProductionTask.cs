@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Production tasks for managing workflow from recipe through batch completion.

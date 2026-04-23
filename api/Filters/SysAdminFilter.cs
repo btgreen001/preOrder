@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Filters;
+namespace PreOrderApp.Filters;
 
 /// <summary>
 /// Authorization filter that restricts access to system admin roles for endpoints marked with [RequireSysAdmin].

@@ -1,6 +1,6 @@
 using System;
 
-namespace OrderMgmt.Controllers
+namespace PreOrderApp.Controllers
 {
     /// <summary>
     /// Shared request DTOs used across multiple controllers

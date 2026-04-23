@@ -1,8 +1,8 @@
-using OrderMgmt.Models;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IWasteService
 {
@@ -14,10 +14,10 @@ public interface IWasteService
 
 public class WasteService : IWasteService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<WasteService> _logger;
 
-    public WasteService(OrderMgmtDbContext context, ILogger<WasteService> logger)
+        public WasteService(AppDbContext context, ILogger<WasteService> logger)
     {
         _context = context;
         _logger = logger;

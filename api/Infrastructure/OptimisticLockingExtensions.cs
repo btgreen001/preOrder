@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace OrderMgmt.Infrastructure;
+namespace PreOrderApp.Infrastructure;
 
 /// <summary>
 /// Reusable extension methods for optimistic locking with version_nbr field

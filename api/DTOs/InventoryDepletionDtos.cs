@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 /// <summary>
 /// Depletion history record - tracks ingredient usage during production

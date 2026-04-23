@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using OrderMgmt.Data;
+using PreOrderApp.Data;
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
-    [DbContext(typeof(OrderMgmtDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20251019163800_AddProductInventoryOrderItemTables")]
     partial class AddProductInventoryOrderItemTables
     {
@@ -25,7 +25,7 @@ namespace OrderMgmt.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OrderMgmt.Models.InventoryItem", b =>
+            modelBuilder.Entity("PreOrderApp.Models.InventoryItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -104,7 +104,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("inventory_item");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.InventoryMovement", b =>
+            modelBuilder.Entity("PreOrderApp.Models.InventoryMovement", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -174,7 +174,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("inventory_movement");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.OrderItem", b =>
+            modelBuilder.Entity("PreOrderApp.Models.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -241,7 +241,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("order_item");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Product", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -321,16 +321,16 @@ namespace OrderMgmt.Migrations
                     b.ToTable("product");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.InventoryItem", b =>
+            modelBuilder.Entity("PreOrderApp.Models.InventoryItem", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Organization", "Organization")
+                    b.HasOne("PreOrderApp.Models.Organization", "Organization")
                         .WithMany("InventoryItems")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("organization__inventory_item__FK");
 
-                    b.HasOne("OrderMgmt.Models.Product", "Product")
+                    b.HasOne("PreOrderApp.Models.Product", "Product")
                         .WithMany("InventoryItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -341,16 +341,16 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.InventoryMovement", b =>
+            modelBuilder.Entity("PreOrderApp.Models.InventoryMovement", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.InventoryItem", "InventoryItem")
+                    b.HasOne("PreOrderApp.Models.InventoryItem", "InventoryItem")
                         .WithMany("Movements")
                         .HasForeignKey("InventoryItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("inventory_item__inventory_movement__FK");
 
-                    b.HasOne("OrderMgmt.Models.Organization", "Organization")
+                    b.HasOne("PreOrderApp.Models.Organization", "Organization")
                         .WithMany("InventoryMovements")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -361,16 +361,16 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.OrderItem", b =>
+            modelBuilder.Entity("PreOrderApp.Models.OrderItem", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Order", "Order")
+                    b.HasOne("PreOrderApp.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("customer_order__order_item__FK");
 
-                    b.HasOne("OrderMgmt.Models.Product", "Product")
+                    b.HasOne("PreOrderApp.Models.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -381,9 +381,9 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Product", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Product", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Organization", "Organization")
+                    b.HasOne("PreOrderApp.Models.Organization", "Organization")
                         .WithMany("Products")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -393,19 +393,19 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Organization", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Organization", b =>
                 {
                     b.Navigation("InventoryItems");
                     b.Navigation("InventoryMovements");
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Order", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Order", b =>
                 {
                     b.Navigation("OrderItems");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Product", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Product", b =>
                 {
                     b.Navigation("InventoryItems");
                     b.Navigation("OrderItems");

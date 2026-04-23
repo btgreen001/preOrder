@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Master recipe for a finished product. Links ingredients to finished goods with portion/yield info and costing.

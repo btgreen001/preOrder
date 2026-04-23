@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using OrderMgmt.Services;
+using PreOrderApp.Services;
 
-namespace OrderMgmt.Filters;
+namespace PreOrderApp.Filters;
 
 /// <summary>
 /// Authorization filter that validates tenant access for endpoints marked with [ValidateTenantAccess].

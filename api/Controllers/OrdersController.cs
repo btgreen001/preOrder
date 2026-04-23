@@ -3,10 +3,10 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.Services;
-using OrderMgmt.Services.Interfaces;
-using OrderMgmt.Filters;
-namespace OrderMgmt.Controllers
+using PreOrderApp.Services;
+using PreOrderApp.Services.Interfaces;
+using PreOrderApp.Filters;
+namespace PreOrderApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

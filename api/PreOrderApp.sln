@@ -2,7 +2,7 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderMgmt", "OrderMgmt.csproj", "{9B7D83B7-C493-844A-471B-DC67CA6B7FBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreOrderApp", "PreOrderApp.csproj", "{9B7D83B7-C493-844A-471B-DC67CA6B7FBC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

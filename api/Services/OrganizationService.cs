@@ -1,14 +1,14 @@
-using OrderMgmt.Data;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public class OrganizationService : IOrganizationService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
 
-    public OrganizationService(OrderMgmtDbContext context)
+    public OrganizationService(AppDbContext context)
     {
         _context = context;
     }

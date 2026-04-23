@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
+using PreOrderApp.Data;
 using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OrderMgmt.Middleware
+namespace PreOrderApp.Middleware
 {
     public class BasicAuthMiddleware
     {
@@ -122,7 +122,7 @@ namespace OrderMgmt.Middleware
             }
 
             // Resolve DbContext per request
-            var dbContext = context.RequestServices.GetService(typeof(OrderMgmt.Data.OrderMgmtDbContext)) as OrderMgmt.Data.OrderMgmtDbContext;
+            var dbContext = context.RequestServices.GetService(typeof(PreOrderApp.Data.AppDbContext)) as PreOrderApp.Data.AppDbContext;
             logger?.LogDebug("[BasicAuth] Looking up user in DB: {Username}", username);
             if (dbContext == null)
             {

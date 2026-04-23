@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 /// <summary>
 /// DTO for batch information in FIFO order.

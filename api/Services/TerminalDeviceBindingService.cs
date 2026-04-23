@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface ITerminalDeviceBindingService
 {
@@ -23,14 +23,14 @@ public interface ITerminalDeviceBindingService
 
 public class TerminalDeviceBindingService : ITerminalDeviceBindingService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly IAuditService _auditLog;
     private readonly IMemoryCache _cache;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TerminalDeviceBindingService> _logger;
 
     public TerminalDeviceBindingService(
-        OrderMgmtDbContext context,
+        AppDbContext context,
         IAuditService auditLog,
         IMemoryCache cache,
         IConfiguration configuration,

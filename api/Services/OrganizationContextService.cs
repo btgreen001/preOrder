@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Centralized service for retrieving the current user's organization context from JWT claims.
@@ -65,10 +65,10 @@ public interface IOrganizationContextService
 public class OrganizationContextService : IOrganizationContextService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<OrganizationContextService> _logger;
 
-    public OrganizationContextService(IHttpContextAccessor httpContextAccessor, OrderMgmtDbContext context, ILogger<OrganizationContextService> logger)
+    public OrganizationContextService(IHttpContextAccessor httpContextAccessor, AppDbContext context, ILogger<OrganizationContextService> logger)
     {
         _httpContextAccessor = httpContextAccessor;
         _context = context;

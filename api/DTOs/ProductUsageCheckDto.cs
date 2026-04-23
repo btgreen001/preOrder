@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 /// <summary>
 /// RECIPE(7) FIX: Response for checking if a product is used as a finished good in recipes.

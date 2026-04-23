@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
     /// <inheritdoc />
     public partial class SqliteSchemaFix : Migration

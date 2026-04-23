@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
     /// <inheritdoc />
     public partial class Phase3_1_CreateRecipeAndBatchTables : Migration

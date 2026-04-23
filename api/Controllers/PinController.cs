@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.Services;
-using OrderMgmt.Models;
-using OrderMgmt.Filters;
+using PreOrderApp.Services;
+using PreOrderApp.Models;
+using PreOrderApp.Filters;
 using Microsoft.Extensions.Logging;
-using OrderMgmt.Services.Interfaces;
+using PreOrderApp.Services.Interfaces;
 
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
 [ApiController]
 [Route("api/auth/pin")]
@@ -17,7 +17,7 @@ public class PinController : ControllerBase
     private readonly ITerminalLockService _terminalLockService;
     private readonly ILogger<PinController> _logger;
     private readonly IAuthService _authService;
-    private readonly OrderMgmt.Data.OrderMgmtDbContext _context;
+    private readonly PreOrderApp.Data.AppDbContext _context;
 
     public PinController(
         IPinService pinService,
@@ -25,7 +25,7 @@ public class PinController : ControllerBase
         ITerminalLockService terminalLockService,
         ILogger<PinController> logger,
         IAuthService authService,
-        OrderMgmt.Data.OrderMgmtDbContext context)
+        PreOrderApp.Data.AppDbContext context)
     {
         _pinService = pinService;
         _orgContext = orgContext;

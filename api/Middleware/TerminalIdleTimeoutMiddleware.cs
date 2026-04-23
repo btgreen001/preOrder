@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using OrderMgmt.Data;
-using OrderMgmt.Services;
-using OrderMgmt.Services.Interfaces;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Services;
+using PreOrderApp.Services.Interfaces;
+using PreOrderApp.Models;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace OrderMgmt.Middleware;
+namespace PreOrderApp.Middleware;
 
 /// <summary>
 /// Middleware to check for idle terminals and auto-lock them after inactivity timeout.
@@ -35,7 +35,7 @@ public class TerminalIdleTimeoutMiddleware
 
     public async Task InvokeAsync(
         HttpContext context,
-        OrderMgmtDbContext dbContext,
+        AppDbContext dbContext,
         ITerminalLockService terminalLockService,
         IAuthService authService)
     {

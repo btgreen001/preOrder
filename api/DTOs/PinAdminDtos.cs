@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 public class PinUserDto
 {

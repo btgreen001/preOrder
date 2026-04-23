@@ -1,7 +1,7 @@
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
-using OrderMgmt.DTOs;
-using OrderMgmt.Services;
+using PreOrderApp.DTOs;
+using PreOrderApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 

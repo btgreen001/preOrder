@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services
+namespace PreOrderApp.Services
 {
     public interface IRecipeStepService
     {

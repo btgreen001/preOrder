@@ -1,4 +1,4 @@
-namespace OrderMgmt.Services
+namespace PreOrderApp.Services
 {
     // AuthServiceExtensions previously contained JWT helper methods.
     // JWT generation was removed in favor of HTTP Basic authentication.

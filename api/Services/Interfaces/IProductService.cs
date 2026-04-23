@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace OrderMgmt.Services.Interfaces
+namespace PreOrderApp.Services.Interfaces
 {
     public interface ISellableProductService
     {

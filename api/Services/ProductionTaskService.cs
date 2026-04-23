@@ -1,9 +1,9 @@
-using OrderMgmt.Models;
-using OrderMgmt.DTOs;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.DTOs;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Service for production task management.
@@ -20,10 +20,10 @@ public interface IProductionTaskService
 
 public class ProductionTaskService : IProductionTaskService
 {
-    private readonly OrderMgmtDbContext _context;
-    private readonly ILogger<ProductionTaskService> _logger;
+        private readonly AppDbContext _context;
+        private readonly ILogger<ProductionTaskService> _logger;
 
-    public ProductionTaskService(OrderMgmtDbContext context, ILogger<ProductionTaskService> logger)
+        public ProductionTaskService(AppDbContext context, ILogger<ProductionTaskService> logger)
     {
         _context = context;
         _logger = logger;

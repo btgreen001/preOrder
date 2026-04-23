@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Represents a physical terminal in an organization (e.g., kitchen, counter, office)

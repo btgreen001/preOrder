@@ -2,11 +2,11 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using OrderMgmt.Models;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.Data;
 using BCrypt.Net;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IAuthService
 {
@@ -32,14 +32,14 @@ public interface IAuthService
 public class AuthService : IAuthService
 {
     internal readonly IConfiguration _configuration;
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly IPasetoTokenService _tokenService;
     private readonly ITerminalLockService _terminalLockService;
     private readonly ILogger<AuthService> _logger;
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuthService(IConfiguration configuration, OrderMgmtDbContext context, IPasetoTokenService tokenService, ITerminalLockService terminalLockService, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor)
+    public AuthService(IConfiguration configuration, AppDbContext context, IPasetoTokenService tokenService, ITerminalLockService terminalLockService, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor)
     {
         _configuration = configuration;
         _context = context;

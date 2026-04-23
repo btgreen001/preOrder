@@ -1,4 +1,4 @@
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 public class RegistrationCode
 {
     public Guid CodeId { get; set; }
@@ -19,7 +19,7 @@ public class RegistrationCode
     public SystemUser? UsedByUser { get; set; }
 }
 
-namespace OrderMgmt.Models
+namespace PreOrderApp.Models
 {
 
 public static class UserRoles

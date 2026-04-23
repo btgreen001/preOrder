@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 /// <summary>
 /// Recipe ingredient DTO for public API (NO cost data for security).

@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using OrderMgmt.Data;
+using PreOrderApp.Data;
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
-    [DbContext(typeof(OrderMgmtDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20251022174500_AddInventoryItemColumns")]
     partial class AddInventoryItemColumns
     {

@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 using System;
 using System.Threading.Tasks;
 
-namespace OrderMgmt.Services
+namespace PreOrderApp.Services
 {
     public interface IAuditService
     {
@@ -24,11 +24,11 @@ namespace OrderMgmt.Services
 
     public class AuditService : IAuditService
     {
-        private readonly OrderMgmtDbContext _context;
+        private readonly AppDbContext _context;
         private readonly ILogger<AuditService> _logger;
         private readonly bool _isProduction;
 
-        public AuditService(OrderMgmtDbContext context, ILogger<AuditService> logger, 
+        public AuditService(AppDbContext context, ILogger<AuditService> logger, 
                           IWebHostEnvironment environment)
         {
             _context = context;

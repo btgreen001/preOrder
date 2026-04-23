@@ -1,4 +1,4 @@
-namespace OrderMgmt.Filters;
+namespace PreOrderApp.Filters;
 
 /// <summary>
 /// Attribute that restricts an endpoint to tenant admin roles: CompanyAdmin ("admin") and SystemAdmin.

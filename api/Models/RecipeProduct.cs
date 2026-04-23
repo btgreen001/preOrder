@@ -1,4 +1,4 @@
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 /// <summary>
 /// Links recipes to sellable products (many-to-many). A product may have multiple recipes (variations),

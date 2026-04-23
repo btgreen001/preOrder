@@ -1,9 +1,9 @@
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IProductMovementService
 {
@@ -21,10 +21,10 @@ public interface IProductMovementService
 
 public class ProductMovementService : IProductMovementService
 {
-    private readonly OrderMgmtDbContext _context;
-    private readonly ILogger<ProductMovementService> _logger;
+        private readonly AppDbContext _context;
+        private readonly ILogger<ProductMovementService> _logger;
 
-    public ProductMovementService(OrderMgmtDbContext context, ILogger<ProductMovementService> logger)
+        public ProductMovementService(AppDbContext context, ILogger<ProductMovementService> logger)
     {
         _context = context;
         _logger = logger;

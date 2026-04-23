@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
     /// <inheritdoc />
     [Migration("20251023125200_RenameSystemUserToAppUser")]

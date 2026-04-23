@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
-using OrderMgmt.Services.Interfaces;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
+using PreOrderApp.Services.Interfaces;
 
-namespace OrderMgmt.Services
+namespace PreOrderApp.Services
 {
     public class InventoryService : IInventoryService
     {
-        private readonly OrderMgmtDbContext _context;
+        private readonly AppDbContext _context;
         private readonly ILogger<InventoryService> _logger;
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace OrderMgmt.Services
                 .ToList();
             return composite;
         }
-        public InventoryService(OrderMgmtDbContext context, ILogger<InventoryService> logger)
+        public InventoryService(AppDbContext context, ILogger<InventoryService> logger)
         {
             _context = context;
             _logger = logger;

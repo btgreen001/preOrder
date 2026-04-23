@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using OrderMgmt.Data;
+using PreOrderApp.Data;
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
-    [DbContext(typeof(OrderMgmtDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20250915113642_SqliteSchemaFix")]
     partial class SqliteSchemaFix
     {
@@ -20,7 +20,7 @@ namespace OrderMgmt.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
 
-            modelBuilder.Entity("OrderMgmt.Models.LicenseSubscription", b =>
+            modelBuilder.Entity("PreOrderApp.Models.LicenseSubscription", b =>
                 {
                     b.Property<Guid>("SubscriptionId")
                         .ValueGeneratedOnAdd()
@@ -57,7 +57,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("LicenseSubscription", (string)null);
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Order", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Order", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -79,7 +79,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("Order", (string)null);
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Organization", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Organization", b =>
                 {
                     b.Property<Guid>("OrganizationId")
                         .ValueGeneratedOnAdd()
@@ -138,7 +138,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("Organization", (string)null);
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.SystemUser", b =>
+            modelBuilder.Entity("PreOrderApp.Models.SystemUser", b =>
                 {
                     b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
@@ -190,9 +190,9 @@ namespace OrderMgmt.Migrations
                     b.ToTable("SystemUser", (string)null);
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.LicenseSubscription", b =>
+            modelBuilder.Entity("PreOrderApp.Models.LicenseSubscription", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Organization", "Organization")
+                    b.HasOne("PreOrderApp.Models.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -201,9 +201,9 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Order", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Order", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Organization", "Organization")
+                    b.HasOne("PreOrderApp.Models.Organization", "Organization")
                         .WithMany("Orders")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -212,16 +212,16 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.SystemUser", b =>
+            modelBuilder.Entity("PreOrderApp.Models.SystemUser", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Organization", null)
+                    b.HasOne("PreOrderApp.Models.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Organization", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Organization", b =>
                 {
                     b.Navigation("Orders");
                 });

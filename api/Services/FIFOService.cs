@@ -1,9 +1,9 @@
-using OrderMgmt.Models;
-using OrderMgmt.DTOs;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.DTOs;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Service for FIFO (First-In-First-Out) inventory rotation.
@@ -29,10 +29,10 @@ public interface IFIFOService
 
 public class FIFOService : IFIFOService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<FIFOService> _logger;
 
-    public FIFOService(OrderMgmtDbContext context, ILogger<FIFOService> logger)
+        public FIFOService(AppDbContext context, ILogger<FIFOService> logger)
     {
         _context = context;
         _logger = logger;

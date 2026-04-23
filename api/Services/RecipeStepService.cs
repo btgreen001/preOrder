@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services
+namespace PreOrderApp.Services
 {
     public class RecipeStepService : IRecipeStepService
     {
-        private readonly OrderMgmtDbContext _context;
+        private readonly AppDbContext _context;
         private readonly ILogger<RecipeStepService> _logger;
 
-        public RecipeStepService(OrderMgmtDbContext context, ILogger<RecipeStepService> logger)
+        public RecipeStepService(AppDbContext context, ILogger<RecipeStepService> logger)
         {
             _context = context;
             _logger = logger;

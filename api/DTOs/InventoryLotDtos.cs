@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 /// <summary>Create InventoryLot request DTO</summary>
 public record CreateInventoryLotDto(

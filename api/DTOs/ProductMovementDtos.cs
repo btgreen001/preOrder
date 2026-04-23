@@ -1,4 +1,4 @@
-namespace OrderMgmt.DTOs;
+namespace PreOrderApp.DTOs;
 
 /// <summary>Create ProductMovement request DTO</summary>
 public record CreateProductMovementDto(

@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
-using OrderMgmt.Infrastructure;
-using OrderMgmt.Services.Interfaces;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
+using PreOrderApp.Infrastructure;
+using PreOrderApp.Services.Interfaces;
 
-namespace OrderMgmt.Services
+namespace PreOrderApp.Services
 {
     public class OrderService : IOrderService
     {
-        private readonly OrderMgmtDbContext _context;
+        private readonly AppDbContext _context;
         private readonly ILogger<OrderService> _logger;
         private readonly IInventoryService _inventoryService;
 
-        public OrderService(OrderMgmtDbContext context, ILogger<OrderService> logger, IInventoryService inventoryService)
+        public OrderService(AppDbContext context, ILogger<OrderService> logger, IInventoryService inventoryService)
         {
             _context = context;
             _logger = logger;

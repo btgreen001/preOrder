@@ -20,8 +20,8 @@ jobs:
 
     - name: Restore and build backend
       run: |
-        dotnet restore api/OrderMgmt.sln
-        dotnet build api/OrderMgmt.sln --configuration Release --no-restore
+        dotnet restore api/PreOrderApp.sln
+        dotnet build api/PreOrderApp.sln --configuration Release --no-restore
 
     - name: Setup Node.js
       uses: actions/setup-node@v4

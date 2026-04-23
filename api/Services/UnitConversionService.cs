@@ -1,10 +1,10 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IUnitConversionService
 {
@@ -20,7 +20,7 @@ public interface IUnitConversionService
 
 public class UnitConversionService : IUnitConversionService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<UnitConversionService> _logger;
 
     private static readonly HashSet<string> AllowedCategories = new(StringComparer.OrdinalIgnoreCase)
@@ -49,7 +49,7 @@ public class UnitConversionService : IUnitConversionService
         }
     };
 
-    public UnitConversionService(OrderMgmtDbContext context, ILogger<UnitConversionService> logger)
+    public UnitConversionService(AppDbContext context, ILogger<UnitConversionService> logger)
     {
         _context = context;
         _logger = logger;

@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 using System.Text.RegularExpressions;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public class PinService : IPinService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly IPasetoTokenService _tokenService;
     private readonly IAuditService _auditService;
     private const int MaxPinAttempts = 5;
@@ -16,7 +16,7 @@ public class PinService : IPinService
     private const int MaxPinLength = 6;
 
     public PinService(
-        OrderMgmtDbContext context,
+        AppDbContext context,
         IPasetoTokenService tokenService,
         IAuditService auditService)
     {

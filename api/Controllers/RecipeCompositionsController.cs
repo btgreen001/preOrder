@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.DTOs;
-using OrderMgmt.Services;
-using OrderMgmt.Filters;
+using PreOrderApp.DTOs;
+using PreOrderApp.Services;
+using PreOrderApp.Filters;
 
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
 [ApiController]
 [Route("api/recipe-compositions")]

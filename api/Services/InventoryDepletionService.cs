@@ -1,9 +1,9 @@
-using OrderMgmt.Models;
-using OrderMgmt.DTOs;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.DTOs;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Service for automatic inventory depletion when production occurs.
@@ -22,12 +22,12 @@ public class InventoryDepletionService : IInventoryDepletionService
 {
     private sealed record RecipeDepletionResult(decimal TotalCost, List<string> Details);
 
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<InventoryDepletionService> _logger;
     private readonly IRecipeService _recipeService;
 
     public InventoryDepletionService(
-        OrderMgmtDbContext context,
+        AppDbContext context,
         ILogger<InventoryDepletionService> logger,
         IRecipeService recipeService)
     {

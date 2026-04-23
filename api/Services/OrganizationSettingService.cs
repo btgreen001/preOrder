@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Service for managing organization-level settings as key-value pairs
@@ -53,13 +53,13 @@ public interface IOrganizationSettingService
 
 public class OrganizationSettingService : IOrganizationSettingService
 {
-    private readonly OrderMgmt.Data.OrderMgmtDbContext _context;
+    private readonly PreOrderApp.Data.AppDbContext _context;
     private readonly ILogger<OrganizationSettingService> _logger;
 
     // Default values
     private const int DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 110;
 
-    public OrganizationSettingService(OrderMgmt.Data.OrderMgmtDbContext context, ILogger<OrganizationSettingService> logger)
+    public OrganizationSettingService(PreOrderApp.Data.AppDbContext context, ILogger<OrganizationSettingService> logger)
     {
         _context = context;
         _logger = logger;

@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace OrderMgmt.Models
+namespace PreOrderApp.Models
 {
     public class AuditLog
     {

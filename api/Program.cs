@@ -9,14 +9,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Sqlite;
-using OrderMgmt.Data;
-using OrderMgmt.Services;
-using OrderMgmt.Services.Interfaces;
-using OrderMgmt.Middleware;
-using OrderMgmt.Filters;
+using PreOrderApp.Data;
+using PreOrderApp.Services;
+using PreOrderApp.Services.Interfaces;
+using PreOrderApp.Middleware;
+using PreOrderApp.Filters;
 using System.IO;
-using IAuditService = OrderMgmt.Services.IAuditService;
-using AuditService = OrderMgmt.Services.AuditService;
+using IAuditService = PreOrderApp.Services.IAuditService;
+using AuditService = PreOrderApp.Services.AuditService;
 
 // Load environment variables from .env file in parent directory
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
@@ -54,7 +54,7 @@ Console.WriteLine($"  Database: {dbName}");
 Console.WriteLine($"  User: {dbUser}");
 
 // Register services
-builder.Services.AddDbContext<OrderMgmtDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddMemoryCache(); // For rate limiting
@@ -80,6 +80,7 @@ builder.Services.AddScoped<IProductionDashboardService, ProductionDashboardServi
 builder.Services.AddScoped<IPinAdminService, PinAdminService>();
 builder.Services.AddScoped<ITerminalService, TerminalService>();
 builder.Services.AddScoped<IUnitConversionService, UnitConversionService>();
+builder.Services.AddScoped<IMvpPreOrderService, MvpPreOrderService>();
 
 // Configure HTTPS enforcement
 builder.Services.AddHttpsRedirection(options =>
@@ -165,7 +166,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "OrderMgmt API",
+        Title = "PreOrder API",
         Version = "v1"
     });
 });
@@ -187,8 +188,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "ordermgmt",
-            ValidAudience = "ordermgmt-api",
+            ValidIssuer = "preorderapp",
+            ValidAudience = "preorderapp-api",
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.FromSeconds(10) // Allow 10 seconds of clock skew for time sync issues
         };
@@ -260,7 +261,7 @@ var app = builder.Build();
 // Ensure database is created and apply migrations
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<OrderMgmt.Data.OrderMgmtDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
     
     // Apply any pending migrations
     db.Database.Migrate();
@@ -269,12 +270,12 @@ using (var scope = app.Services.CreateScope())
 // Seed a default Admin user if none exist
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<OrderMgmt.Data.OrderMgmtDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
     if (!db.SystemUsers.Any())
     {
         // Seed a default organization
         var orgId = Guid.NewGuid();
-        var org = new OrderMgmt.Models.Organization
+        var org = new PreOrderApp.Models.Organization
         {
             OrganizationId = orgId,
             OrganizationName = "Default Organization",
@@ -293,7 +294,7 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
 
         // Seed the admin user with the org's OrganizationId
-        var adminUser = new OrderMgmt.Models.SystemUser
+        var adminUser = new PreOrderApp.Models.SystemUser
         {
             UserId = Guid.NewGuid(),
             UserName = "admin",
@@ -384,7 +385,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "OrderMgmt API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PreOrder API v1");
     });
 }
 else
@@ -435,31 +436,31 @@ app.UseCors("AllowReact");
 app.UseRouting();
 
 // Rate limiting for auth endpoints
-app.UseMiddleware<OrderMgmt.Middleware.RateLimitingMiddleware>();
+app.UseMiddleware<PreOrderApp.Middleware.RateLimitingMiddleware>();
 
 // Basic authentication middleware - converts Basic Auth to HttpContext.Items
-app.UseMiddleware<OrderMgmt.Middleware.BasicAuthMiddleware>();
+app.UseMiddleware<PreOrderApp.Middleware.BasicAuthMiddleware>();
 
 app.UseAuthentication();
 
 // Per-request session validation against UserSessions (active + not expired)
-app.UseMiddleware<OrderMgmt.Middleware.SessionValidationMiddleware>();
+app.UseMiddleware<PreOrderApp.Middleware.SessionValidationMiddleware>();
 
 app.UseAuthorization();
 
 // Terminal idle timeout middleware - auto-locks terminals after inactivity
-app.UseMiddleware<OrderMgmt.Middleware.TerminalIdleTimeoutMiddleware>();
+app.UseMiddleware<PreOrderApp.Middleware.TerminalIdleTimeoutMiddleware>();
 
 // Terminal lock enforcement - checks if terminal is locked before allowing requests
-app.UseMiddleware<OrderMgmt.Middleware.TerminalLockEnforcementMiddleware>();
+app.UseMiddleware<PreOrderApp.Middleware.TerminalLockEnforcementMiddleware>();
 
 // Device binding heartbeat - throttled LastSeenAt updates for bound devices
-app.UseMiddleware<OrderMgmt.Middleware.DeviceBindingLastSeenMiddleware>();
+app.UseMiddleware<PreOrderApp.Middleware.DeviceBindingLastSeenMiddleware>();
 
 app.MapControllers();
 
 // Health check endpoints
-app.MapGet("/", () => Results.Ok("OrderMgmt API Running"));
+app.MapGet("/", () => Results.Ok("PreOrder API Running"));
 app.MapGet("/health", () => Results.Ok("Healthy"));
 app.MapGet("/ping", () => Results.Ok("pong"));
 

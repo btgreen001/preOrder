@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Data;
+namespace PreOrderApp.Data;
 
-public class OrderMgmtDbContext : DbContext
-{
-    public OrderMgmtDbContext(DbContextOptions<OrderMgmtDbContext> options) 
+
+public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
+    {
+      public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options) { }
 
     public DbSet<Order> Orders { get; set; } = null!;
@@ -24,6 +25,13 @@ public class OrderMgmtDbContext : DbContext
     public DbSet<RegistrationCode> RegistrationCodes { get; set; } = null!;
     public DbSet<UserSession> UserSessions { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+
+      // Holiday pre-order MVP entities
+      public DbSet<HolidayEvent> HolidayEvents { get; set; } = null!;
+      public DbSet<MenuItem> MenuItems { get; set; } = null!;
+      public DbSet<PickupSlot> PickupSlots { get; set; } = null!;
+      public DbSet<PreOrder> PreOrders { get; set; } = null!;
+      public DbSet<PreOrderLine> PreOrderLines { get; set; } = null!;
 
     // Phase 3.1: Recipe and batch management
     public DbSet<RecipeDetail> RecipeDetails { get; set; } = null!;
@@ -160,6 +168,140 @@ public class OrderMgmtDbContext : DbContext
             entity.HasIndex(e => e.OrganizationId).HasDatabaseName("customer_order__organization_id__IX");
             entity.HasIndex(e => e.CustomerId).HasDatabaseName("customer_order__customer_id__IX");
             entity.HasIndex(e => e.OrderStatus).HasDatabaseName("customer_order__status__IX");
+        });
+
+        modelBuilder.Entity<HolidayEvent>(entity =>
+        {
+            entity.ToTable("holiday_event", schema: "public");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(200);
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.OpensOnUtc).HasColumnName("opens_on_utc");
+            entity.Property(e => e.ClosesOnUtc).HasColumnName("closes_on_utc");
+            entity.Property(e => e.PickupStartDateUtc).HasColumnName("pickup_start_date_utc");
+            entity.Property(e => e.PickupEndDateUtc).HasColumnName("pickup_end_date_utc");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.HasOne(e => e.Organization)
+                  .WithMany()
+                  .HasForeignKey(e => e.OrganizationId)
+                  .HasConstraintName("organization__holiday_event__FK");
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("holiday_event__external_id__UIX");
+            entity.HasIndex(e => e.OrganizationId).HasDatabaseName("holiday_event__organization_id__IX");
+        });
+
+        modelBuilder.Entity<MenuItem>(entity =>
+        {
+            entity.ToTable("menu_item", schema: "public");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.HolidayEventId).HasColumnName("holiday_event_id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(200);
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Price).HasColumnName("price").HasPrecision(10, 2);
+            entity.Property(e => e.MaxPerOrder).HasColumnName("max_per_order");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.SortOrder).HasColumnName("sort_order");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.HasOne(e => e.Organization)
+                  .WithMany()
+                  .HasForeignKey(e => e.OrganizationId)
+                  .HasConstraintName("organization__menu_item__FK");
+            entity.HasOne(e => e.HolidayEvent)
+                  .WithMany(h => h.MenuItems)
+                  .HasForeignKey(e => e.HolidayEventId)
+                  .HasConstraintName("holiday_event__menu_item__FK");
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("menu_item__external_id__UIX");
+            entity.HasIndex(e => new { e.OrganizationId, e.HolidayEventId }).HasDatabaseName("menu_item__organization_holiday_event__IX");
+        });
+
+        modelBuilder.Entity<PickupSlot>(entity =>
+        {
+            entity.ToTable("pickup_slot", schema: "public");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.HolidayEventId).HasColumnName("holiday_event_id");
+            entity.Property(e => e.SlotStartUtc).HasColumnName("slot_start_utc");
+            entity.Property(e => e.SlotEndUtc).HasColumnName("slot_end_utc");
+            entity.Property(e => e.Capacity).HasColumnName("capacity");
+            entity.Property(e => e.ReservedCount).HasColumnName("reserved_count");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.HasOne(e => e.Organization)
+                  .WithMany()
+                  .HasForeignKey(e => e.OrganizationId)
+                  .HasConstraintName("organization__pickup_slot__FK");
+            entity.HasOne(e => e.HolidayEvent)
+                  .WithMany(h => h.PickupSlots)
+                  .HasForeignKey(e => e.HolidayEventId)
+                  .HasConstraintName("holiday_event__pickup_slot__FK");
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("pickup_slot__external_id__UIX");
+            entity.HasIndex(e => new { e.OrganizationId, e.HolidayEventId }).HasDatabaseName("pickup_slot__organization_holiday_event__IX");
+        });
+
+        modelBuilder.Entity<PreOrder>(entity =>
+        {
+            entity.ToTable("pre_order", schema: "public");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.HolidayEventId).HasColumnName("holiday_event_id");
+            entity.Property(e => e.PickupSlotId).HasColumnName("pickup_slot_id");
+            entity.Property(e => e.CustomerName).HasColumnName("customer_name").HasMaxLength(200);
+            entity.Property(e => e.CustomerEmail).HasColumnName("customer_email").HasMaxLength(255);
+            entity.Property(e => e.CustomerPhone).HasColumnName("customer_phone").HasMaxLength(30);
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50);
+            entity.Property(e => e.TotalAmount).HasColumnName("total_amount").HasPrecision(10, 2);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.HasOne(e => e.Organization)
+                  .WithMany()
+                  .HasForeignKey(e => e.OrganizationId)
+                  .HasConstraintName("organization__pre_order__FK");
+            entity.HasOne(e => e.HolidayEvent)
+                  .WithMany(h => h.PreOrders)
+                  .HasForeignKey(e => e.HolidayEventId)
+                  .HasConstraintName("holiday_event__pre_order__FK");
+            entity.HasOne(e => e.PickupSlot)
+                  .WithMany(s => s.PreOrders)
+                  .HasForeignKey(e => e.PickupSlotId)
+                  .HasConstraintName("pickup_slot__pre_order__FK");
+            entity.HasMany(e => e.Lines)
+                  .WithOne(l => l.PreOrder)
+                  .HasForeignKey(l => l.PreOrderId)
+                  .HasConstraintName("pre_order__pre_order_line__FK");
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("pre_order__external_id__UIX");
+            entity.HasIndex(e => new { e.OrganizationId, e.HolidayEventId }).HasDatabaseName("pre_order__organization_holiday_event__IX");
+        });
+
+        modelBuilder.Entity<PreOrderLine>(entity =>
+        {
+            entity.ToTable("pre_order_line", schema: "public");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.PreOrderId).HasColumnName("pre_order_id");
+            entity.Property(e => e.MenuItemId).HasColumnName("menu_item_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.UnitPrice).HasColumnName("unit_price").HasPrecision(10, 2);
+            entity.HasOne(e => e.MenuItem)
+                  .WithMany(m => m.PreOrderLines)
+                  .HasForeignKey(e => e.MenuItemId)
+                  .HasConstraintName("menu_item__pre_order_line__FK");
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("pre_order_line__external_id__UIX");
+            entity.HasIndex(e => e.PreOrderId).HasDatabaseName("pre_order_line__pre_order_id__IX");
         });
 
 modelBuilder.Entity<RecipeStep>(entity =>

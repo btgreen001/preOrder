@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.Data;
-using OrderMgmt.Filters;
-using OrderMgmt.Models;
-using OrderMgmt.Services;
+using PreOrderApp.Data;
+using PreOrderApp.Filters;
+using PreOrderApp.Models;
+using PreOrderApp.Services;
 
-namespace OrderMgmt.Controllers
+namespace PreOrderApp.Controllers
 {
     [ApiController]
     [ValidateTenantAccess] 

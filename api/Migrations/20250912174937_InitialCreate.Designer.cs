@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using OrderMgmt.Data;
+using PreOrderApp.Data;
 
 #nullable disable
 
-namespace OrderMgmt.Migrations
+namespace PreOrderApp.Migrations
 {
-    [DbContext(typeof(OrderMgmtDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20250912174937_InitialCreate")]
     partial class InitialCreate
     {
@@ -25,7 +25,7 @@ namespace OrderMgmt.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OrderMgmt.Models.Order", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Order", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,7 +47,7 @@ namespace OrderMgmt.Migrations
                     b.ToTable("Order", (string)null);
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Organization", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Organization", b =>
                 {
                     b.Property<Guid>("OrganizationId")
                         .ValueGeneratedOnAdd()
@@ -106,9 +106,9 @@ namespace OrderMgmt.Migrations
                     b.ToTable("Organization", (string)null);
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Order", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Order", b =>
                 {
-                    b.HasOne("OrderMgmt.Models.Organization", "Organization")
+                    b.HasOne("PreOrderApp.Models.Organization", "Organization")
                         .WithMany("Orders")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -117,7 +117,7 @@ namespace OrderMgmt.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("OrderMgmt.Models.Organization", b =>
+            modelBuilder.Entity("PreOrderApp.Models.Organization", b =>
                 {
                     b.Navigation("Orders");
                 });

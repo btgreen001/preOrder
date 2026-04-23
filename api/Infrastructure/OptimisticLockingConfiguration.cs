@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
+using PreOrderApp.Data;
 
-namespace OrderMgmt.Infrastructure;
+namespace PreOrderApp.Infrastructure;
 
 /// <summary>
 /// Configures optimistic locking (concurrency tokens) for all entities with VersionNbr property
-/// Call this in OrderMgmtDbContext.OnModelCreating to enable automatic EF Core concurrency checking
+/// Call this in DbContext.OnModelCreating to enable automatic EF Core concurrency checking
 /// </summary>
 public static class OptimisticLockingConfiguration
 {

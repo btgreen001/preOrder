@@ -1,7 +1,7 @@
 using System.Text.Json;
-using OrderMgmt.Services;
+using PreOrderApp.Services;
 
-namespace OrderMgmt.Middleware;
+namespace PreOrderApp.Middleware;
 
 /// <summary>
 /// Middleware to enforce terminal locks

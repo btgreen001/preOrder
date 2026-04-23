@@ -3,12 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
-using OrderMgmt.Models;
-using OrderMgmt.Services;
+using PreOrderApp.Models;
+using PreOrderApp.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
 public class PinUser
 {
@@ -24,7 +24,7 @@ public class PinUser
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly OrderMgmt.Data.OrderMgmtDbContext _context;
+    private readonly PreOrderApp.Data.AppDbContext _context;
     private readonly ITerminalLockService _terminalLockService;
     private readonly IOrganizationContextService _orgContext;
     private readonly ILogger<AuthController> _logger;
@@ -32,7 +32,7 @@ public class AuthController : ControllerBase
 
     public AuthController(
         IAuthService authService, 
-        OrderMgmt.Data.OrderMgmtDbContext context,
+        PreOrderApp.Data.AppDbContext context,
         ITerminalLockService terminalLockService,
         IOrganizationContextService orgContext,
         ILogger<AuthController> logger,

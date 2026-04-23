@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OrderMgmt.Services;
-using OrderMgmt.DTOs;
-using OrderMgmt.Filters;
-using OrderMgmt.Models;
+using PreOrderApp.Services;
+using PreOrderApp.DTOs;
+using PreOrderApp.Filters;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Controllers;
+namespace PreOrderApp.Controllers;
 
 /// <summary>
 /// Inventory Depletion Management API

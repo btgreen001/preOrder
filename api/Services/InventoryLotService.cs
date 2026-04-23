@@ -1,10 +1,10 @@
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Infrastructure;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Infrastructure;
+using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IInventoryLotService
 {
@@ -19,10 +19,10 @@ public interface IInventoryLotService
 
 public class InventoryLotService : IInventoryLotService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<InventoryLotService> _logger;
 
-    public InventoryLotService(OrderMgmtDbContext context, ILogger<InventoryLotService> logger)
+        public InventoryLotService(AppDbContext context, ILogger<InventoryLotService> logger)
     {
         _context = context;
         _logger = logger;

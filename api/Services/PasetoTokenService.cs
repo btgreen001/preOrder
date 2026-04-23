@@ -3,9 +3,9 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using OrderMgmt.Models;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IPasetoTokenService
 {
@@ -40,16 +40,16 @@ public class PasetoTokenService : IPasetoTokenService
             new Claim("role", user.UserRole),
             new Claim("org_id", user.OrganizationId.ToString()),
             new Claim("terminal_id", terminalId?.ToString() ?? ""),
-            new Claim(JwtRegisteredClaimNames.Iss, "ordermgmt"),
-            new Claim(JwtRegisteredClaimNames.Aud, "ordermgmt-api")
+            new Claim(JwtRegisteredClaimNames.Iss, "preorderapp"),
+            new Claim(JwtRegisteredClaimNames.Aud, "preorderapp-api")
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
             Expires = expiration,
-            Issuer = "ordermgmt",
-            Audience = "ordermgmt-api",
+            Issuer = "preorderapp",
+            Audience = "preorderapp-api",
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(_secretKey),
                 SecurityAlgorithms.HmacSha256)
@@ -77,8 +77,8 @@ public class PasetoTokenService : IPasetoTokenService
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "ordermgmt",
-            ValidAudience = "ordermgmt-api",
+            ValidIssuer = "preorderapp",
+            ValidAudience = "preorderapp-api",
             IssuerSigningKey = new SymmetricSecurityKey(_secretKey),
             ClockSkew = TimeSpan.Zero
         };

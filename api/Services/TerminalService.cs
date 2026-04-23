@@ -1,8 +1,8 @@
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
@@ -61,10 +61,10 @@ public interface ITerminalService
 /// </summary>
 public class TerminalService : ITerminalService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<TerminalService> _logger;
 
-    public TerminalService(OrderMgmtDbContext context, ILogger<TerminalService> logger)
+        public TerminalService(AppDbContext context, ILogger<TerminalService> logger)
     {
         _context = context;
         _logger = logger;

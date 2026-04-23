@@ -6,12 +6,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using OrderMgmt.Data;
-using OrderMgmt.Services.Interfaces;
-using OrderMgmt.Services;
-using OrderMgmt.Filters;
+using PreOrderApp.Data;
+using PreOrderApp.Services.Interfaces;
+using PreOrderApp.Services;
+using PreOrderApp.Filters;
 
-namespace OrderMgmt.Controllers
+namespace PreOrderApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -22,10 +22,10 @@ namespace OrderMgmt.Controllers
     {
         private readonly ISellableProductService _sellableProductService;
         private readonly ILogger<ProductsController> _logger;
-        private readonly OrderMgmtDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
         private readonly IOrganizationContextService _orgContext;
 
-        public ProductsController(ISellableProductService sellableProductService, ILogger<ProductsController> logger, OrderMgmtDbContext dbContext, IOrganizationContextService orgContext)
+        public ProductsController(ISellableProductService sellableProductService, ILogger<ProductsController> logger, AppDbContext dbContext, IOrganizationContextService orgContext)
         {
             _sellableProductService = sellableProductService;
             _logger = logger;

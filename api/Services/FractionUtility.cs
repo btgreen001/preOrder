@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public static class FractionUtility
 {

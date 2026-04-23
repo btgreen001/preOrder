@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IPinAdminService
 {
@@ -24,10 +24,10 @@ public interface IPinAdminService
 
 public class PinAdminService : IPinAdminService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<PinAdminService> _logger;
 
-    public PinAdminService(OrderMgmtDbContext context, ILogger<PinAdminService> logger)
+    public PinAdminService(AppDbContext context, ILogger<PinAdminService> logger)
     {
         _context = context;
         _logger = logger;

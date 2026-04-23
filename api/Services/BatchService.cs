@@ -1,8 +1,8 @@
-using OrderMgmt.Models;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IBatchService
 {
@@ -16,10 +16,10 @@ public interface IBatchService
 
 public class BatchService : IBatchService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<BatchService> _logger;
 
-    public BatchService(OrderMgmtDbContext context, ILogger<BatchService> logger)
+    public BatchService(AppDbContext context, ILogger<BatchService> logger)
     {
         _context = context;
         _logger = logger;

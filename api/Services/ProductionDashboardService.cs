@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using OrderMgmt.Data;
-using OrderMgmt.DTOs;
-using OrderMgmt.Models;
+using PreOrderApp.Data;
+using PreOrderApp.DTOs;
+using PreOrderApp.Models;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 public interface IProductionDashboardService
 {
@@ -20,10 +20,10 @@ public interface IProductionDashboardService
 
 public class ProductionDashboardService : IProductionDashboardService
 {
-    private readonly OrderMgmtDbContext _context;
-    private readonly ILogger<ProductionDashboardService> _logger;
+        private readonly AppDbContext _context;
+        private readonly ILogger<ProductionDashboardService> _logger;
 
-    public ProductionDashboardService(OrderMgmtDbContext context, ILogger<ProductionDashboardService> logger)
+        public ProductionDashboardService(AppDbContext context, ILogger<ProductionDashboardService> logger)
     {
         _context = context;
         _logger = logger;

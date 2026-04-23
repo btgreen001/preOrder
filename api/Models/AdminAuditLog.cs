@@ -1,6 +1,6 @@
 using System;
 
-namespace OrderMgmt.Models;
+namespace PreOrderApp.Models;
 
 public class AdminAuditLog
 {

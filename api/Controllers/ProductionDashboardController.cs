@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderMgmt.DTOs;
-using OrderMgmt.Services;
-using OrderMgmt.Filters;
-namespace OrderMgmt.Controllers;
+using PreOrderApp.DTOs;
+using PreOrderApp.Services;
+using PreOrderApp.Filters;
+namespace PreOrderApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -1,9 +1,9 @@
-using OrderMgmt.Models;
-using OrderMgmt.DTOs;
-using OrderMgmt.Data;
+using PreOrderApp.Models;
+using PreOrderApp.DTOs;
+using PreOrderApp.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderMgmt.Services;
+namespace PreOrderApp.Services;
 
 /// <summary>
 /// Service for recipe costing calculations, batch cost computation, and yield management.
@@ -35,11 +35,11 @@ public interface IRecipeCostingService
 
 public class RecipeCostingService : IRecipeCostingService
 {
-    private readonly OrderMgmtDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<RecipeCostingService> _logger;
     private readonly IUnitConversionService _unitConversionService;
 
-    public RecipeCostingService(OrderMgmtDbContext context, ILogger<RecipeCostingService> logger, IUnitConversionService unitConversionService)
+    public RecipeCostingService(AppDbContext context, ILogger<RecipeCostingService> logger, IUnitConversionService unitConversionService)
     {
         _context = context;
         _logger = logger;
