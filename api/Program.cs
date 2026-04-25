@@ -59,6 +59,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddMemoryCache(); // For rate limiting
 builder.Services.AddHttpContextAccessor(); // Required for OrganizationContextService
+// Data Protection API: safe to ignore "unencrypted keys" warning in local development
+// For production, configure with Azure Key Vault or similar via environment-specific configuration
+builder.Services.AddDataProtection();
 builder.Services.AddScoped<IOrganizationContextService, OrganizationContextService>(); // Centralized multi-tenant filtering
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
@@ -265,6 +268,7 @@ using (var scope = app.Services.CreateScope())
     
     // Apply any pending migrations
     db.Database.Migrate();
+
 }
 
 // Seed a default Admin user if none exist
@@ -377,9 +381,14 @@ using (var scope = app.Services.CreateScope())
         var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
         logger?.LogWarning(ex, "Error applying unit conversion bootstrap SQL");
     }
+
+    
 }
 
 // Configure middleware
+// Global exception handler - must be early to catch all errors
+app.UseMiddleware<PreOrderApp.Infrastructure.GlobalExceptionHandlerMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -395,11 +404,11 @@ else
 }
 
 // Enable buffering on the request stream so middleware can read the body without consuming it
-app.Use(async (context, next) =>
-{
-    context.Request.EnableBuffering();
-    await next();
-});
+// app.Use(async (context, next) =>
+// {
+//     context.Request.EnableBuffering();
+//     await next();
+// });
 
 if (useHttps)
 {

@@ -26,6 +26,5 @@ public class SellableProduct
     public int VersionNbr { get; set; } = 1;
 
     public virtual Organization? Organization { get; set; }
-    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ProductCategory? ProductCategory { get; set; }
 }

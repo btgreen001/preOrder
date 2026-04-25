@@ -45,9 +45,9 @@ namespace PreOrderApp.Services.Interfaces
     {
         public long Id { get; set; }
         public Guid ExternalId { get; set; }
-        public long SellableProductId { get; set; }
-        public Guid? ProductExternalId { get; set; }
-        public string ProductName { get; set; } = string.Empty;
+        public long MenuItemId { get; set; }
+        public Guid? MenuItemExternalId { get; set; }
+        public string MenuItemName { get; set; } = string.Empty;
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal LineTotal { get; set; }
@@ -63,7 +63,7 @@ namespace PreOrderApp.Services.Interfaces
 
     public class CreateOrderItemRequest
     {
-        public Guid SellableProductExternalId { get; set; }
+        public Guid MenuItemExternalId { get; set; }
         public decimal Quantity { get; set; }
         public string? Customizations { get; set; }
     }

@@ -35,16 +35,18 @@ export class AuthInterceptor implements HttpInterceptor {
       this.loadingService.show();
     }
     
+    const isPublicPreorderRequest = request.url.includes('/api/public/preorders');
+
     // Clone the request and add the Bearer token + credentials for cookies
     const modifiedRequest = accessToken 
       ? request.clone({
           setHeaders: {
             Authorization: `Bearer ${accessToken}`
           },
-          withCredentials: true // Include HttpOnly cookie for refresh token
+          withCredentials: !isPublicPreorderRequest // Avoid auth cookie flow on anonymous public preorder endpoints
         })
       : request.clone({
-          withCredentials: true // Include HttpOnly cookie even without access token
+          withCredentials: !isPublicPreorderRequest // Anonymous public preorder endpoints should not trigger auth refresh behavior
         });
     
     return next.handle(modifiedRequest).pipe(
@@ -66,6 +68,10 @@ export class AuthInterceptor implements HttpInterceptor {
             return throwError(() => new Error('Session expired due to inactivity'));
           }
           
+          if (request.url.includes('/api/public/preorders')) {
+            return throwError(() => error);
+          }
+
           // Not an idle timeout, attempt normal token refresh
           this.logger.log('[AuthInterceptor] Not idle timeout - attempting normal token refresh');
           return this.handle401Error(request, next);
@@ -96,10 +102,11 @@ export class AuthInterceptor implements HttpInterceptor {
       return throwError(() => new Error('Authentication failed'));
     }
 
-    // Anonymous endpoints: 401 means a middleware blocked it (e.g. BasicAuthMiddleware).
+    // Anonymous endpoints: 401 means endpoint or middleware rejected the request.
     // Don't navigate or retry — let the caller's catchError handle it.
-    if (request.url.includes('/api/terminal/device-context')) {
-      return throwError(() => new Error('Device context unavailable'));
+    if (request.url.includes('/api/terminal/device-context') ||
+        request.url.includes('/api/public/preorders')) {
+      return throwError(() => new Error('Anonymous endpoint unavailable'));
     }
 
     // Logout endpoints: 401 means the token was already gone — just clear and navigate, no retry

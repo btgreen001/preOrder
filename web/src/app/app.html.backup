@@ -1,6 +1,6 @@
 <div class="app-shell">
   <nav class="topnav">
-    <span class="app-title">Artisan Food Order Management</span>
+    <span class="app-title">Order Management</span>
     <span class="spacer"></span>
     <div class="nav-controls">
       <label for="role-switch">Role:</label>

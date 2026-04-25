@@ -9,8 +9,8 @@ public class OrderItem
     [System.ComponentModel.DataAnnotations.Schema.Column("customer_order_id")]
     public long OrderId { get; set; }  // BIGINT FK to customer_order (column: customer_order_id)
     
-    [System.ComponentModel.DataAnnotations.Schema.Column("product_id")]
-    public long SellableProductId { get; set; }  // BIGINT FK to sellable_product (column: product_id)
+    [System.ComponentModel.DataAnnotations.Schema.Column("menu_item_id")]
+    public long MenuItemId { get; set; }  // BIGINT FK to menu_item (column: menu_item_id)
     
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
@@ -25,5 +25,5 @@ public class OrderItem
     public int VersionNbr { get; set; } = 1;
 
     public virtual Order? Order { get; set; }
-    public virtual SellableProduct? SellableProduct { get; set; }
+    public virtual MenuItem? MenuItem { get; set; }
 }

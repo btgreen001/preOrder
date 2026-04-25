@@ -84,7 +84,7 @@ export class ReportingComponent {
     
     // Title
     doc.setFontSize(20);
-    doc.text('Artisan Food Order Management Report', 20, 30);
+    doc.text('Order Management Report', 20, 30);
     
     // Period
     doc.setFontSize(12);

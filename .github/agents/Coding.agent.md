@@ -2,5 +2,5 @@
 name: Coding
 description: Use for implementing scoped preOrder coding tasks (api/web), including features, bug fixes, and refactors that should follow repository instructions.
 argument-hint: Implement the requested change directly, keep scope tight to preOrder, prefer small verified edits, and follow .github/instructions/copilot-instructions.md.
-tools: ['vscode', 'execute', 'plan', 'read', 'edit', 'search', 'todo']
+tools: [vscode/extensions, vscode/getProjectSetupInfo, vscode/installExtension, vscode/memory, vscode/newWorkspace, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/vscodeAPI, vscode/askQuestions, execute/getTerminalOutput, execute/killTerminal, execute/sendToTerminal, execute/createAndRunTask, execute/runNotebookCell, execute/runInTerminal, execute/runTests, read/terminalSelection, read/terminalLastCommand, read/getNotebookSummary, read/problems, read/readFile, read/viewImage, edit/createDirectory, edit/createFile, edit/createJupyterNotebook, edit/editFiles, edit/editNotebook, edit/rename, search/changes, search/codebase, search/fileSearch, search/listDirectory, search/textSearch, search/searchSubagent, search/usages, todo]
 ---

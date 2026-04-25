@@ -17,7 +17,7 @@ export class App {
   private roleService = inject(RoleService);
   private licenseService = inject(LicenseService);
 
-  protected readonly title = signal('Artisan Food Order Management');
+  protected readonly title = signal('BakeAhead Pre-Order Management');
   currentRole: UserRole;
   availableRoles: UserRole[];
   sidebarNav: { label: string, route: string, roles: UserRole[] }[];

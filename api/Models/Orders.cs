@@ -6,6 +6,11 @@ public class Order
     public Guid ExternalId { get; set; }  // UUID external ID (for APIs)
     public Guid OrganizationId { get; set; }
     public long CustomerId { get; set; }  // BIGINT FK to customer
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerEmail { get; set; } = string.Empty;
+    public string? CustomerPhone { get; set; }
+    public long? HolidayEventId { get; set; }
+    public long? PickupSlotId { get; set; }
     public Guid? DeliveryId { get; set; }
     public DateTime OrderDate { get; set; }
     public string OrderStatus { get; set; } = "PENDING"; // PENDING, CONFIRMED, COMPLETED, CANCELLED
@@ -23,5 +28,7 @@ public class Order
     
     public virtual Organization? Organization { get; set; }
     public virtual Customer? Customer { get; set; }
+    public virtual HolidayEvent? HolidayEvent { get; set; }
+    public virtual PickupSlot? PickupSlot { get; set; }
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }

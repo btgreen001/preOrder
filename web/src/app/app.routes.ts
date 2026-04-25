@@ -9,9 +9,10 @@ export const routes: Routes = [
 	{ path: 'shop', loadComponent: () => import('./artisan-food/order-builder/order-builder.component').then(m => m.OrderBuilderComponent) },
 
 	{ path: 'admin/dashboard', loadComponent: () => import('./artisan-food/dashboard/dashboard.component').then(m => m.ArtisanDashboardComponent), canActivate: [AuthGuard] },
-	{ path: 'admin/events', loadComponent: () => import('./artisan-food/dashboard/dashboard.component').then(m => m.ArtisanDashboardComponent), canActivate: [AuthGuard, AdminGuard] },
-	{ path: 'admin/menu', loadComponent: () => import('./features/products/products-list/products-list.component').then(m => m.ProductsListComponent), canActivate: [AuthGuard, AdminGuard] },
-	{ path: 'admin/orders', loadComponent: () => import('./features/orders/orders-list/orders-list.component').then(m => m.OrdersListComponent), canActivate: [AuthGuard, AdminGuard] },
+	{ path: 'admin/events', loadComponent: () => import('./features/preorder-admin/events/preorder-events-admin.component').then(m => m.PreorderEventsAdminComponent), canActivate: [AuthGuard, AdminGuard] },
+	{ path: 'admin/menu', loadComponent: () => import('./features/preorder-admin/menu/preorder-menu-admin.component').then(m => m.PreorderMenuAdminComponent), canActivate: [AuthGuard, AdminGuard] },
+	{ path: 'admin/slots', loadComponent: () => import('./features/preorder-admin/slots/preorder-slots-admin.component').then(m => m.PreorderSlotsAdminComponent), canActivate: [AuthGuard, AdminGuard] },
+	{ path: 'admin/orders', loadComponent: () => import('./features/preorder-admin/orders/preorder-orders-admin.component').then(m => m.PreorderOrdersAdminComponent), canActivate: [AuthGuard, AdminGuard] },
 
 	{ path: '', redirectTo: '/shop', pathMatch: 'full' },
 	{ path: '**', redirectTo: '/shop' }

@@ -1,0 +1,104 @@
+<section class="preorder-admin">
+  <header class="page-head">
+    <div>
+      <h1>Pre-Order Events</h1>
+      <p>Manage pre-order event windows and pickup ranges.</p>
+    </div>
+    <nav class="admin-links">
+      <a routerLink="/admin/menu">Menu</a>
+      <a routerLink="/admin/slots">Slots</a>
+      <a routerLink="/admin/orders">Orders</a>
+    </nav>
+  </header>
+
+  <section class="editor">
+    <h2>{{ editingExternalId ? 'Edit Event' : 'Create Event' }}</h2>
+    <div class="grid">
+      <label>
+        Event Name
+        <input [(ngModel)]="form.name" type="text" />
+      </label>
+
+      <label>
+        Active
+        <select [(ngModel)]="form.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </label>
+
+      <label class="span-2">
+        Description
+        <textarea [(ngModel)]="form.description" rows="2"></textarea>
+      </label>
+
+      <label>
+        Opens
+        <input [(ngModel)]="form.opensAt" type="datetime-local" />
+      </label>
+
+      <label>
+        Closes
+        <input [(ngModel)]="form.closesAt" type="datetime-local" />
+      </label>
+
+      <label>
+        Pickup Start Date
+        <input [(ngModel)]="form.pickupStartDt" type="date" />
+      </label>
+
+      <label>
+        Pickup End Date
+        <input [(ngModel)]="form.pickupEndDt" type="date" />
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" (click)="saveEvent()" [disabled]="isSaving">
+        {{ editingExternalId ? 'Save Changes' : 'Create Event' }}
+      </button>
+      <button type="button" (click)="startCreate()" [disabled]="isSaving">Reset</button>
+      <button type="button" (click)="loadEvents()" [disabled]="isLoading">Refresh</button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+  <p *ngIf="successMessage" class="success-message">{{ successMessage }}</p>
+
+  <section class="table-wrap" *ngIf="!isLoading; else loading">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Opens</th>
+          <th>Closes</th>
+          <th>Pickup Window</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let event of events">
+          <td>{{ event.name }}</td>
+          <td>{{ event.opensAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ event.closesAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ event.pickupStartDt | date: 'yyyy-MM-dd' }} -> {{ event.pickupEndDt | date: 'yyyy-MM-dd' }}</td>
+          <td>{{ event.isActive ? 'Active' : 'Inactive' }}</td>
+          <td>
+            <button type="button" (click)="startEdit(event)">Edit</button>
+            <button type="button" (click)="deleteEvent(event)" class="delete-btn" [disabled]="isSaving">
+              {{ event.isActive ? 'Deactivate' : 'Delete' }}
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="events.length === 0">
+          <td colspan="6" class="empty">No pre-order events found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <ng-template #loading>
+    <p class="loading">Loading events...</p>
+  </ng-template>
+</section>

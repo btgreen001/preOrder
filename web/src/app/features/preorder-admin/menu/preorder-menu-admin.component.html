@@ -1,0 +1,126 @@
+<section class="preorder-admin">
+  <header class="page-head">
+    <div>
+      <h1>Pre-Order Menu</h1>
+      <p>Create and update menu items for each event, including product links.</p>
+    </div>
+    <nav class="admin-links">
+      <a routerLink="/admin/events">Events</a>
+      <a routerLink="/admin/slots">Slots</a>
+      <a routerLink="/admin/orders">Orders</a>
+    </nav>
+  </header>
+
+  <section class="filter-row">
+    <label>
+      Pre-Order Event
+      <select [(ngModel)]="selectedHolidayEventExternalId" (change)="onEventChange()">
+        <option value="" disabled>Select an event</option>
+        <option *ngFor="let event of holidayEvents" [value]="event.externalId">{{ event.name }}</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="editor">
+    <h2>{{ editingExternalId ? 'Edit Menu Item' : 'Create Menu Item' }}</h2>
+    <p class="warning-message">
+      Leaving Product Link blank will automatically attach this menu item to the <strong>Unlinked</strong> sellable product.
+    </p>
+    <div class="grid">
+      <label>
+        Item Name
+        <input [(ngModel)]="form.name" type="text" />
+      </label>
+
+      <label>
+        Product Link
+        <select [(ngModel)]="form.productExternalId">
+          <option [ngValue]="null">Auto-assign Unlinked</option>
+          <option *ngFor="let product of sellableProducts" [ngValue]="product.externalId">{{ product.name }}</option>
+        </select>
+      </label>
+
+      <label>
+        Price
+        <input [(ngModel)]="form.price" type="number" min="0" step="0.01" />
+      </label>
+
+      <label>
+        Max Per Order
+        <input [(ngModel)]="form.maxPerOrder" type="number" min="1" step="1" />
+      </label>
+
+      <label>
+        Sort Order
+        <input [(ngModel)]="form.sortOrder" type="number" step="1" />
+      </label>
+
+      <label>
+        Active
+        <select [(ngModel)]="form.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </label>
+
+      <label class="span-2">
+        Description
+        <textarea [(ngModel)]="form.description" rows="2"></textarea>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" (click)="saveMenuItem()" [disabled]="isSaving">{{ editingExternalId ? 'Save Changes' : 'Create Item' }}</button>
+      <button type="button" (click)="startCreate()" [disabled]="isSaving">Reset</button>
+      <button type="button" (click)="loadMenuItems()" [disabled]="isLoading">Refresh</button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+  <p *ngIf="successMessage" class="success-message">{{ successMessage }}</p>
+  <p *ngIf="unlinkedMenuItems.length > 0" class="warning-message">
+    {{ unlinkedMenuItems.length }} menu item(s) are still attached to <strong>Unlinked</strong>. Review them before final production/inventory planning.
+  </p>
+
+  <section class="table-wrap" *ngIf="!isLoading; else loading">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Max/Order</th>
+          <th>Sort</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of menuItems">
+          <td>{{ item.name }}</td>
+          <td>
+            {{ resolveProductName(item) }}
+            <span *ngIf="isUsingUnlinkedProduct(item)" class="warning-badge">Needs review</span>
+          </td>
+          <td>{{ item.price | currency }}</td>
+          <td>{{ item.maxPerOrder ?? 'None' }}</td>
+          <td>{{ item.sortOrder }}</td>
+          <td>{{ item.isActive ? 'Active' : 'Inactive' }}</td>
+          <td>
+            <button type="button" (click)="startEdit(item)">Edit</button>
+            <button type="button" (click)="deleteMenuItem(item)" class="delete-btn" [disabled]="isSaving">
+              {{ item.isActive ? 'Deactivate' : 'Delete' }}
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="menuItems.length === 0">
+          <td colspan="7" class="empty">No menu items found for selected event.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <ng-template #loading>
+    <p class="loading">Loading menu items...</p>
+  </ng-template>
+</section>

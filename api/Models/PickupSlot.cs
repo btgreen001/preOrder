@@ -6,8 +6,8 @@ public class PickupSlot
     public Guid ExternalId { get; set; }
     public Guid OrganizationId { get; set; }
     public long HolidayEventId { get; set; }
-    public DateTime SlotStartUtc { get; set; }
-    public DateTime SlotEndUtc { get; set; }
+    public DateTime SlotStartAt { get; set; }
+    public DateTime SlotEndAt { get; set; }
     public int Capacity { get; set; }
     public int ReservedCount { get; set; }
     public bool IsActive { get; set; } = true;

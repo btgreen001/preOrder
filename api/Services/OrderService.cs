@@ -32,7 +32,7 @@ namespace PreOrderApp.Services
                 .Where(o => o.OrganizationId == organizationId)
                 .Include(o => o.Customer)
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.SellableProduct)
+                .ThenInclude(oi => oi.MenuItem)
                 .Select(o => new OrderDto
                 {
                     Id = o.Id,
@@ -57,7 +57,7 @@ namespace PreOrderApp.Services
             var order = await _context.Orders
                 .Where(o => o.OrganizationId == organizationId)
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.SellableProduct)
+                .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
@@ -110,19 +110,19 @@ namespace PreOrderApp.Services
             {
                 foreach (var item in request.Items)
                 {
-                    var product = await _context.SellableProducts.AsNoTracking().FirstOrDefaultAsync(p => p.ExternalId == item.SellableProductExternalId);
-                    if (product != null)
+                    var menuItem = await _context.MenuItems.AsNoTracking().FirstOrDefaultAsync(m => m.ExternalId == item.MenuItemExternalId);
+                    if (menuItem != null)
                     {
-                        var lineTotal = product.UnitPrice * (decimal)item.Quantity;
+                        var lineTotal = menuItem.Price * (decimal)item.Quantity;
                         totalAmount += lineTotal;
 
                         order.OrderItems.Add(new OrderItem
                         {
                             ExternalId = Guid.NewGuid(),
                             OrderId = order.Id,
-                            SellableProductId = product.Id,
+                            MenuItemId = menuItem.Id,
                             Quantity = (int)item.Quantity,
-                            UnitPrice = product.UnitPrice,
+                            UnitPrice = menuItem.Price,
                             // NOTE: LineTotal removed - calculated value (UnitPrice × Quantity) not persisted in DB
                             Customizations = item.Customizations,
                             CreatedAt = DateTime.UtcNow,
@@ -145,7 +145,7 @@ namespace PreOrderApp.Services
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.SellableProduct)
+                    .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
             
@@ -192,7 +192,7 @@ namespace PreOrderApp.Services
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.SellableProduct)
+                    .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
             
@@ -225,9 +225,9 @@ namespace PreOrderApp.Services
                 {
                     Id = oi.Id,
                     ExternalId = oi.ExternalId,
-                    SellableProductId = oi.SellableProductId,
-                    ProductExternalId = oi.SellableProduct?.ExternalId,
-                    ProductName = oi.SellableProduct?.Name ?? "",
+                    MenuItemId = oi.MenuItemId,
+                    MenuItemExternalId = oi.MenuItem?.ExternalId,
+                    MenuItemName = oi.MenuItem?.Name ?? "",
                     Quantity = oi.Quantity,
                     UnitPrice = oi.UnitPrice,
                     // NOTE: LineTotal calculated dynamically = UnitPrice × Quantity
@@ -245,30 +245,53 @@ namespace PreOrderApp.Services
             
             var response = new AvailabilityCheckResponse { AllItemsAvailable = true, Items = new() };
 
-            // Group items by SellableProductExternalId to sum quantities per product
-            var groupedItems = items.GroupBy(i => i.SellableProductExternalId).ToList();
+            // Group by menu item external id and resolve to the linked sellable product for stock checks.
+            var groupedItems = items.GroupBy(i => i.MenuItemExternalId).ToList();
 
-            foreach (var productGroup in groupedItems)
+            foreach (var menuItemGroup in groupedItems)
             {
-                var productExternalId = productGroup.Key;
-                var totalRequestedQuantity = productGroup.Sum(i => i.Quantity);
+                var menuItemExternalId = menuItemGroup.Key;
+                var totalRequestedQuantity = menuItemGroup.Sum(i => i.Quantity);
 
-                // Fetch the SellableProduct to check finished goods quantity_on_hand
-                var product = await _context.SellableProducts
+                var menuItem = await _context.MenuItems
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(sp => sp.ExternalId == productExternalId && sp.OrganizationId == organizationId);
+                    .FirstOrDefaultAsync(m => m.ExternalId == menuItemExternalId && m.OrganizationId == organizationId);
 
-
-                if (product == null)
+                if (menuItem == null || !menuItem.SellableProductId.HasValue)
                 {
-                    //_logger.LogInformation($"Product query result for {productExternalId}: {(product != null ? product.Name : "NULL")}");
                     response.AllItemsAvailable = false;
-                    foreach (var item in productGroup)
+                    foreach (var item in menuItemGroup)
                     {
                         response.Items.Add(new ItemAvailability
                         {
                             ProductId = 0,
-                            ProductExternalId = productExternalId,
+                            ProductExternalId = Guid.Empty,
+                            ProductName = "Unknown Product",
+                            RequestedQuantity = item.Quantity,
+                            AvailableQuantity = 0,
+                            IsAvailable = false
+                        });
+                    }
+
+                    continue;
+                }
+
+                // Fetch the SellableProduct to check finished goods quantity_on_hand
+                var product = await _context.SellableProducts
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(sp => sp.Id == menuItem.SellableProductId.Value && sp.OrganizationId == organizationId);
+
+
+                if (product == null)
+                {
+                    //_logger.LogInformation($"Product query result for menu item {menuItemExternalId}: {(product != null ? product.Name : "NULL")}");
+                    response.AllItemsAvailable = false;
+                    foreach (var item in menuItemGroup)
+                    {
+                        response.Items.Add(new ItemAvailability
+                        {
+                            ProductId = 0,
+                            ProductExternalId = Guid.Empty,
                             ProductName = "Unknown Product",
                             RequestedQuantity = item.Quantity,
                             AvailableQuantity = 0,
@@ -283,7 +306,7 @@ namespace PreOrderApp.Services
                 var isAvailable = product.QuantityOnHand >= totalRequestedQuantity;
 
                 // Add each item from this product group to response with per-product availability
-                foreach (var item in productGroup)
+                foreach (var item in menuItemGroup)
                 {
                     response.Items.Add(new ItemAvailability
                     {
@@ -322,7 +345,7 @@ namespace PreOrderApp.Services
             var order = await _context.Orders
                 .Where(o => o.OrganizationId == organizationId)
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.SellableProduct)
+                    .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.ExternalId == orderExternalId);
@@ -344,15 +367,16 @@ namespace PreOrderApp.Services
 
             foreach (var orderItem in order.OrderItems)
             {
-                var product = orderItem.SellableProduct;
+                var menuItem = orderItem.MenuItem;
+                var product = menuItem?.SellableProduct;
                 var pickListItem = new PickListItemDto
                 {
                     OrderItemId = orderItem.Id,
                     OrderItemExternalId = orderItem.ExternalId,
-                    ProductName = product?.Name ?? "Unknown",
+                    ProductName = menuItem?.Name ?? "Unknown",
                     Sku = product?.Sku,
                     Quantity = orderItem.Quantity,
-                    UnitOfMeasure = string.IsNullOrWhiteSpace(product?.OutputUnitMsr) ? "units" : product!.OutputUnitMsr!,
+                    UnitOfMeasure = string.IsNullOrWhiteSpace(product?.OutputUnitMsr) ? "units" : product?.OutputUnitMsr ?? "units",
                     Customizations = orderItem.Customizations
                 };
                 
@@ -369,7 +393,7 @@ namespace PreOrderApp.Services
             
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.SellableProduct)
+                    .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
 
@@ -400,7 +424,7 @@ namespace PreOrderApp.Services
             
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.SellableProduct)
+                    .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
 

@@ -31,59 +31,18 @@ export class App implements OnInit, OnDestroy {
   private userSubscription?: Subscription;
   private routeIdleSyncSubscription?: Subscription;
 
-  protected readonly title = signal('Artisan Food Order Management');
+  protected readonly title = signal('Pre-Order');
   currentRole: UserRole = 'customer'; // Default fallback
   sidebarNav: { label: string, route: string, roles: UserRole[], icon: string, isChild?: boolean }[] = [];
 
   private allNavItems = [
-    { label: 'Dashboard',           route: '/dashboard',                    roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'dashboard' },
-    { label: 'Orders',              route: '/orders/list',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'receipt_long' },
-    { label: 'Order Builder',       route: '/orders/builder',               roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'add_shopping_cart',   isChild: true },
+    { label: 'Events',              route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'event' },
+    { label: 'Menu',                route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'restaurant_menu' },
+    { label: 'Pickup Slots',        route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'schedule' },
+    { label: 'Orders',              route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'receipt_long' },
 
-    // Phase 2 - Orders Business Logic
-    { label: 'Validate Inventory',  route: '/orders/validate-inventory',    roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'inventory',           isChild: true },
-    { label: 'Check Availability',  route: '/orders/check-availability',    roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'event_available',     isChild: true },
-    { label: 'Pick List',           route: '/orders/pick-list',             roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'checklist',           isChild: true },
-    { label: 'Complete Order',      route: '/orders/completion',            roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'check_circle_outline', isChild: true },
-    { label: 'Cancel Order',        route: '/orders/cancellation',          roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'cancel',              isChild: true },
-    { label: 'Filter by Status',    route: '/orders/by-status',             roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'filter_list',         isChild: true },
-
-    // Phase 3.1 - Recipes, Batches, Waste
-    { label: 'Recipes',             route: '/recipes/list',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'menu_book' },
-    { label: 'Batches',             route: '/batches',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'science' },
-    { label: 'Batch List',          route: '/batches/list',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'list',                isChild: true },
-    { label: 'New Batch',           route: '/batches/add',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'add',                 isChild: true },
-
-    // Inventory Management
-    { label: 'Inventory',           route: '/inventory/list',               roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'inventory_2' },
-    { label: 'Low Stock',           route: '/inventory/low-stock',          roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'warning_amber',       isChild: true },
-    { label: 'Expiring Items',      route: '/inventory/expiring',           roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'schedule',            isChild: true },
-    { label: 'Reservations',        route: '/inventory/reservations',       roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'bookmark_outline',    isChild: true },
-    { label: 'Items & Scan',        route: '/inventory/items',              roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'qr_code_scanner',     isChild: true },
-    { label: 'Inventory Batches',   route: '/inventory/batches',            roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'science',             isChild: true },
-    { label: 'Stock Alerts',        route: '/inventory/alerts',             roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'notifications_active', isChild: true },
-    { label: 'Inventory Reports',   route: '/inventory/reports',            roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'summarize',           isChild: true },
-    { label: 'Unit Conversions',    route: '/inventory/unit-conversions',   roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                                    icon: 'swap_horiz',          isChild: true },
-
-
-    { label: 'Waste Tracking',      route: '/waste',                        roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'delete_sweep' },
-    { label: 'Log Waste',           route: '/waste/log',                    roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'add',                 isChild: true },
-    { label: 'Waste List',          route: '/waste/list',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'list',                isChild: true },
-    { label: 'Waste Analytics',     route: '/waste/analytics',              roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'analytics',           isChild: true },
-
-    { label: 'Delivery Dispatch',   route: '/delivery',                     roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'local_shipping' },
-    { label: 'Product Catalog',     route: '/products',                     roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'storefront' },
-    { label: 'Production Calendar', route: '/calendar',                     roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'delivery'] as UserRole[],               icon: 'calendar_month' },
-    { label: 'Reporting',           route: '/reporting',                    roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'bar_chart' },
-    { label: 'Communication Hub',   route: '/communication',                roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'delivery'] as UserRole[],               icon: 'chat_bubble_outline' },
-
-
-    { label: 'Role Management',     route: '/system-admin',                 roles: ['SystemAdmin'] as UserRole[],                                             icon: 'manage_accounts' },
-    { label: 'Data Export',         route: '/data-export',                  roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                                    icon: 'download' },
-    { label: 'Storefront',          route: '/storefront',                   roles: ['SystemAdmin', 'customer'] as UserRole[],                                 icon: 'store' },
-    { label: 'Order History',       route: '/order-history',                roles: ['SystemAdmin', 'customer'] as UserRole[],                                 icon: 'history' },
-    { label: 'Availability',        route: '/availability',                 roles: ['SystemAdmin', 'customer'] as UserRole[],                                 icon: 'event_available' }
-  ];
+    { label: 'Shop (Customer Portal)',                route: '/shop',                         roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'add_shopping_cart'}
+];
 
   constructor() {
     // Initial setup

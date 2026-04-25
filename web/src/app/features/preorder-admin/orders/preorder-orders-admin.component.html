@@ -1,0 +1,71 @@
+<section class="preorder-admin">
+  <header class="page-head">
+    <div>
+      <h1>Event Orders</h1>
+      <p>Review incoming preorders and export day-of-pickup operations CSV files.</p>
+    </div>
+    <nav class="admin-links">
+      <a routerLink="/admin/events">Events</a>
+      <a routerLink="/admin/menu">Menu</a>
+      <a routerLink="/admin/slots">Slots</a>
+    </nav>
+  </header>
+
+  <section class="filters">
+    <label>
+      Pre-Order event
+      <select [(ngModel)]="selectedHolidayEventExternalId" (change)="loadPreOrders()">
+        <option value="">All events</option>
+        <option *ngFor="let event of holidayEvents" [value]="event.externalId">
+          {{ event.name }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      Pickup day
+      <input type="date" [(ngModel)]="selectedPickupDateUtc" />
+    </label>
+
+    <div class="actions">
+      <button type="button" (click)="loadPreOrders()" [disabled]="isLoading">Refresh</button>
+      <button type="button" (click)="exportCsv()" [disabled]="isExporting">Export CSV</button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+
+  <section class="orders-table" *ngIf="!isLoading; else loading">
+    <table>
+      <thead>
+        <tr>
+          <th>Created</th>
+          <th>Customer</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Pick Up</th>
+          <th>Items</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of preOrders">
+          <td>{{ order.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ order.customerName }}</td>
+          <td>{{ order.customerEmail }}</td>
+          <td><span class="status">{{ order.status }}</span></td>
+          <td>{{ (order.pickupSlot?.slotStartAt || null) | date: 'yyyy-MM-dd' }}</td>
+          <td>{{ order.lines.length }}</td>
+          <td>{{ formatCurrency(order.totalAmount) }}</td>
+        </tr>
+        <tr *ngIf="preOrders.length === 0">
+          <td colspan="7" class="empty">No preorder operations found for current filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <ng-template #loading>
+    <p class="loading">Loading preorder operations...</p>
+  </ng-template>
+</section>

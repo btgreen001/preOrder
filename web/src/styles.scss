@@ -166,6 +166,8 @@ opacity: 1 !important; /* ensure no transparency */
 
 html, body {
   height: 100%;
+  margin: 0;
+  padding: 0;
   background: var(--bakery-bg);
   color: var(--bakery-text);
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;

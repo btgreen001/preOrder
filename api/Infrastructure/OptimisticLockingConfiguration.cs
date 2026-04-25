@@ -73,7 +73,7 @@ public static class OptimisticLockingConfiguration
         modelBuilder.Entity<Models.OrderItem>()
             .Property(o => o.VersionNbr)
             .IsConcurrencyToken();
-        
+
         // Add more as needed...
     }
 }

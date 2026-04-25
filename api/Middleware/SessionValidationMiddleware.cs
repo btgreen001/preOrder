@@ -91,7 +91,7 @@ public class SessionValidationMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in SessionValidationMiddleware");
-            await WriteUnauthorizedAsync(context, "Session validation failed", "session_validation_error");
+            throw;
         }
     }
 
@@ -107,7 +107,8 @@ public class SessionValidationMiddleware
                path.StartsWith("/api/auth/pin-users") ||
                path.StartsWith("/api/auth/register") ||
                path.StartsWith("/api/auth/check-username") ||
-               path.StartsWith("/api/auth/refresh-token");
+               path.StartsWith("/api/auth/refresh-token") ||
+               path.StartsWith("/api/public/preorders");
     }
 
     private static async Task WriteUnauthorizedAsync(HttpContext context, string message, string reason)

@@ -7,10 +7,10 @@ public class HolidayEvent
     public Guid OrganizationId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public DateTime OpensOnUtc { get; set; }
-    public DateTime ClosesOnUtc { get; set; }
-    public DateTime PickupStartDateUtc { get; set; }
-    public DateTime PickupEndDateUtc { get; set; }
+    public DateTime OpensAt { get; set; }
+    public DateTime ClosesAt { get; set; }
+    public DateTime PickupStartDt { get; set; }
+    public DateTime PickupEndDt { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
