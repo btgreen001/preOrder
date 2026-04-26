@@ -1,6 +1,9 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
+/shop is BROKE....the org is not honoring who I am after I register and login.
+Need a forget user/password; and need page to be able to perform change password
+
 As part of company registration we need to ensure license is setup.
 AS Part of Initial prod deployment Fix this to 30 -  "BindRateLimitCount": 300,
 AS Part of Initial prod deployment This to 120 - "BindRateLimitWindowSeconds": 12,

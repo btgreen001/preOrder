@@ -162,7 +162,7 @@ export class CompanyRegisterComponent {
       next: () => {
         this.isLoading = false;
         // Navigate to dashboard or confirmation page
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/admin/events']);
       },
       error: (error) => {
         this.isLoading = false;
