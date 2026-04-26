@@ -2,7 +2,7 @@
   <header class="page-head">
     <div>
       <h1>Pre-Order Menu</h1>
-      <p>Create and update menu items for each event, including product links.</p>
+      <p>Create and update menu items for each event.</p>
     </div>
     <nav class="admin-links">
       <a routerLink="/admin/events">Events</a>
@@ -23,22 +23,22 @@
 
   <section class="editor">
     <h2>{{ editingExternalId ? 'Edit Menu Item' : 'Create Menu Item' }}</h2>
-    <p class="warning-message">
+    <!-- <p class="warning-message">
       Leaving Product Link blank will automatically attach this menu item to the <strong>Unlinked</strong> sellable product.
-    </p>
+    </p> -->
     <div class="grid">
       <label>
         Item Name
         <input [(ngModel)]="form.name" type="text" />
       </label>
 
-      <label>
+      <!-- <label>
         Product Link
         <select [(ngModel)]="form.productExternalId">
           <option [ngValue]="null">Auto-assign Unlinked</option>
           <option *ngFor="let product of sellableProducts" [ngValue]="product.externalId">{{ product.name }}</option>
         </select>
-      </label>
+      </label> -->
 
       <label>
         Price
@@ -65,7 +65,7 @@
 
       <label class="span-2">
         Description
-        <textarea [(ngModel)]="form.description" rows="2"></textarea>
+        <textarea [(ngModel)]="form.description" rows="2" style="min-height: 50px;"></textarea>
       </label>
     </div>
 
@@ -78,16 +78,16 @@
 
   <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
   <p *ngIf="successMessage" class="success-message">{{ successMessage }}</p>
-  <p *ngIf="unlinkedMenuItems.length > 0" class="warning-message">
+  <!-- <p *ngIf="unlinkedMenuItems.length > 0" class="warning-message">
     {{ unlinkedMenuItems.length }} menu item(s) are still attached to <strong>Unlinked</strong>. Review them before final production/inventory planning.
-  </p>
+  </p> -->
 
   <section class="table-wrap" *ngIf="!isLoading; else loading">
     <table>
       <thead>
         <tr>
           <th>Name</th>
-          <th>Product</th>
+          <!-- <th>Product</th> -->
           <th>Price</th>
           <th>Max/Order</th>
           <th>Sort</th>
@@ -98,10 +98,10 @@
       <tbody>
         <tr *ngFor="let item of menuItems">
           <td>{{ item.name }}</td>
-          <td>
+          <!-- <td>
             {{ resolveProductName(item) }}
             <span *ngIf="isUsingUnlinkedProduct(item)" class="warning-badge">Needs review</span>
-          </td>
+          </td> -->
           <td>{{ item.price | currency }}</td>
           <td>{{ item.maxPerOrder ?? 'None' }}</td>
           <td>{{ item.sortOrder }}</td>

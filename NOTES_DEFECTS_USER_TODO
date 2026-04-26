@@ -1,9 +1,19 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
-AS Part of Initial setup each customer must have a new sellable_product named "Unlinked" make it not active and Not for Sale so it doesn't appear and can't be deleted.
-
+AS Part of Initial prod deployment Fix this to 30 -  "BindRateLimitCount": 300,
+AS Part of Initial prod deployment This to 120 - "BindRateLimitWindowSeconds": 12,
+AS Part of Initial prod deployment These to 10 and 60  
+  <!-- ,
+  "RateLimiting": {
+    "RefreshToken": {
+      "RequestLimit": 100,
+      "TimeWindowSeconds": 6
+    }
+  } -->
 ---
+
+
 
 ## 2026-04-25 High Priority Work Completed
 
@@ -43,6 +53,52 @@ AS Part of Initial setup each customer must have a new sellable_product named "U
 
 - Definition of done update:
 	- MVP is complete only after onboarding finalization + storefront shell cleanup + regression pass
+
+## 2026-04-26 Next Steps (Execution Priority)
+
+1. **Public storefront shell cleanup (first)**
+	- Update Angular root shell so `/shop` does not render admin sidebar links.
+	- Hide role badge, change user, and logout controls on public storefront routes.
+	- Keep those controls on admin routes only.
+
+2. **Onboarding flow completion (second)**
+	- Confirm company registration lands on an existing route.
+	- Finalize tenant-admin invite code management path (API + UI).
+	- Validate staff sign-up via invite code with clear invalid/expired feedback.
+
+3. **Regression and status update (third)**
+	- Execute focused tests for storefront shell behavior and onboarding flow.
+	- Immediately update `MASTER_TODO_LIST.md` and this file with test results and blockers.
+
+## 2026-04-26 Progress Update
+
+- ✅ **Public storefront shell cleanup completed**
+	- Angular root shell is now route-aware for storefront routes.
+	- On `/BakeAhead` storefront route, admin sidebar and top-right auth controls are hidden.
+	- On admin routes, full admin shell remains visible.
+	- Added admin-facing `Preview Store` link in the top navigation that opens `/BakeAhead` in a new tab, allowing admins to preview storefront without leaving admin workflow.
+	- Added route definition for `/BakeAhead` and legacy compatibility redirect from `/shop`.
+	- Files updated: `web/src/app/app.ts`, `web/src/app/app.html`, `web/src/app/app.routes.ts`.
+
+- ✅ **Onboarding route-flow stabilization completed (partial Step 2)**
+	- Restored missing routes used by registration/login utility flows:
+		- `/dashboard`
+		- `/terminal-selection`
+		- `/pin-signin`
+	- This prevents company-register/login/terminal/PIN flows from falling into wildcard redirect due to missing routes.
+	- File updated: `web/src/app/app.routes.ts`.
+	- Remaining onboarding blocker: tenant-admin invite code management (API + UI).
+
+- ✅ **Rate-limit config issue resolved (backend)**
+	- Symptom: increasing rate-limit values in appsettings had no effect for `/api/auth/refresh-token`.
+	- Root cause: `RateLimitingMiddleware` used hard-coded constructor defaults (10 requests / 60s) instead of configuration.
+	- Fix: middleware now reads:
+		- `RateLimiting:RefreshToken:RequestLimit`
+		- `RateLimiting:RefreshToken:TimeWindowSeconds`
+	- Added keys in both:
+		- `api/appsettings.json`
+		- `api/appsettings.Development.json`
+	- Note: terminal bind limits were already config-driven via `Terminal:BindRateLimitCount` and `Terminal:BindRateLimitWindowSeconds`.
 
 
 2026-04-23 preorder persistence cutover notes
@@ -116,46 +172,48 @@ Provide the output as a table with:
 
 Use realistic, grounded estimates similar to what you would give a beginner‑to‑intermediate developer building these tools alone.”**
 
+BakeSweet℠  
+Your bakery’s all‑in‑one management system.  
+Powered by BakeBoard™
+
+Modules included:
+BakeAhead™ — Pre‑Order Manager
+BakeCustom™ — Custom Cake Intake
+BakeList™ — Production List Generator
+BakeShop™ — Online Ordering
+BakeCost™ — Recipe Costing
+
+© 2026 [Your Company Name]. All rights reserved.
+BakeSweet℠ and all related marks are trademarks of [Your Company Name].
+
 Why These Rankings Make Sense
 1. Holiday Pre‑Order Manager — #1 for a reason
 Bakers hate managing Thanksgiving pie orders in spreadsheets.
 
 MVP is simple:
-
 Menu builder
-
 Pickup slots
-
 Order form
-
 Export to CSV
-
 Low complexity, high seasonal pain → easy to sell.
 
 2. Custom Cake Intake
 Every bakery has a chaotic cake‑order process.
-
 MVP: form, image upload, quote calculator, status tracking.
-
 Medium complexity but very high willingness to pay.
 
 3. Production List Generator
 Bakers want “tell me what to bake today.”
-
 MVP: ingest orders → aggregate quantities → printable sheet.
-
 Technically straightforward.
 
 4. Simple Online Ordering
 Higher complexity (cart, payments, availability rules).
-
 But strong revenue potential because it replaces Shopify/Square.
 
 5. Recipe Costing
 Bakers love it, but it’s not mission‑critical.
-
 Good add‑on revenue, not usually a standalone high‑MRR product.
-
 6–10: Higher complexity, slower ROI
 Wholesale portals, inventory, and scheduling are valuable but require more engineering (auth roles, multi‑tenant data, complex workflows).
 
@@ -179,17 +237,11 @@ Then:
 → Makes your system “operational,” not just intake
 
 These three alone can realistically get you to $1k–$3k MRR as a solo dev.
-
 If you want, I can also create:
-
 A roadmap for building these in order
-
 A pricing model
-
 A feature‑scoped MVP plan for any one of them
-
 A full product suite architecture showing how they connect
-
 Which direction do you want to explore next?
 
 Let's dig into Holiday Pre‑Order Manager (Thanksgiving pies, Christmas cookies, etc.)

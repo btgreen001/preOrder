@@ -12,11 +12,13 @@ namespace PreOrderApp.Controllers
     {
         private readonly IOrganizationService _organizationService;
         private readonly PreOrderApp.Data.AppDbContext _context;
+        private readonly IOrganizationContextService _orgContext;
 
-        public OrganizationController(IOrganizationService organizationService, PreOrderApp.Data.AppDbContext context)
+        public OrganizationController(IOrganizationService organizationService, PreOrderApp.Data.AppDbContext context, IOrganizationContextService orgContext)
         {
             _organizationService = organizationService;
             _context = context;
+            _orgContext = orgContext;
         }
 
         [HttpGet("{id}")]
@@ -189,6 +191,94 @@ namespace PreOrderApp.Controllers
             return Ok(isValid);
         }
 
+        // COMPANY ADMIN: List invite/registration codes for their org
+        [HttpGet("{orgId}/registration-codes")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<ActionResult<IEnumerable<RegistrationCodeResponse>>> GetRegistrationCodes(Guid orgId)
+        {
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(_orgContext.GetCurrentUserId(), orgId))
+                return Forbid();
+
+            var codes = await _context.RegistrationCodes
+                .Where(rc => rc.OrganizationId == orgId)
+                .OrderByDescending(rc => rc.CreatedOn)
+                .Select(rc => new RegistrationCodeResponse
+                {
+                    CodeId = rc.CodeId,
+                    Code = rc.Code,
+                    Email = rc.Email,
+                    UserRole = rc.UserRole,
+                    ExpiresOn = rc.ExpiresOn,
+                    IsUsed = rc.IsUsed,
+                    UsedOn = rc.UsedOn,
+                    CreatedOn = rc.CreatedOn,
+                    IsExpired = rc.ExpiresOn < DateTime.UtcNow && !rc.IsUsed
+                })
+                .ToListAsync();
+
+            return Ok(codes);
+        }
+
+        // COMPANY ADMIN: Create a new invite code for their org
+        [HttpPost("{orgId}/registration-codes")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<ActionResult<RegistrationCodeResponse>> CreateRegistrationCode(Guid orgId, [FromBody] CreateRegistrationCodeRequest request)
+        {
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(_orgContext.GetCurrentUserId(), orgId))
+                return Forbid();
+
+            var org = await _context.Organizations.FindAsync(orgId);
+            if (org == null) return NotFound("Organization not found");
+
+            var code = new RegistrationCode
+            {
+                CodeId = Guid.NewGuid(),
+                OrganizationId = orgId,
+                Code = Guid.NewGuid().ToString("N").ToUpper()[..12],
+                CreatedByUserId = _orgContext.GetCurrentUserId(),
+                Email = request.Email,
+                UserRole = UserRoles.User,
+                ExpiresOn = DateTime.UtcNow.AddDays(request.ExpiryDays > 0 ? request.ExpiryDays : 7),
+                IsUsed = false,
+                CreatedOn = DateTime.UtcNow
+            };
+
+            _context.RegistrationCodes.Add(code);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetRegistrationCodes), new { orgId }, new RegistrationCodeResponse
+            {
+                CodeId = code.CodeId,
+                Code = code.Code,
+                Email = code.Email,
+                UserRole = code.UserRole,
+                ExpiresOn = code.ExpiresOn,
+                IsUsed = false,
+                CreatedOn = code.CreatedOn,
+                IsExpired = false
+            });
+        }
+
+        // COMPANY ADMIN: Delete (revoke) an unused invite code
+        [HttpDelete("{orgId}/registration-codes/{codeId}")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> DeleteRegistrationCode(Guid orgId, Guid codeId)
+        {
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(_orgContext.GetCurrentUserId(), orgId))
+                return Forbid();
+
+            var code = await _context.RegistrationCodes
+                .FirstOrDefaultAsync(rc => rc.CodeId == codeId && rc.OrganizationId == orgId);
+
+            if (code == null) return NotFound();
+            if (code.IsUsed) return BadRequest("Cannot delete a code that has already been used.");
+
+            _context.RegistrationCodes.Remove(code);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
     }
     
 }
@@ -199,3 +289,24 @@ namespace PreOrderApp.Controllers
         public string? UserRole { get; set; }
         public bool? IsEnabled { get; set; }
     }
+
+    public class CreateRegistrationCodeRequest
+    {
+        public string? Email { get; set; }
+        public int ExpiryDays { get; set; } = 7;
+    }
+
+    public class RegistrationCodeResponse
+    {
+        public Guid CodeId { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string UserRole { get; set; } = string.Empty;
+        public DateTime ExpiresOn { get; set; }
+        public bool IsUsed { get; set; }
+        public DateTime? UsedOn { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public bool IsExpired { get; set; }
+    }
+
+

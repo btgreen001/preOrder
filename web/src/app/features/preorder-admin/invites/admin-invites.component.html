@@ -1,0 +1,69 @@
+<div class="invites-admin">
+  <h2>Staff Invite Codes</h2>
+  <p class="subtitle">Generate one-time invite codes to let new staff register. Each code expires after the set number of days.</p>
+
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+  <div class="generate-form">
+    <h3>Generate New Code</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="email">Email (optional — pre-fill for specific person)</label>
+        <input id="email" type="email" [(ngModel)]="newCodeEmail" placeholder="staff@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="expiry">Expires In (days)</label>
+        <input id="expiry" type="number" [(ngModel)]="newCodeExpiryDays" min="1" max="90" />
+      </div>
+      <button class="btn btn-primary" (click)="generateCode()" [disabled]="isSaving">
+        {{ isSaving ? 'Creating...' : 'Generate Code' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="codes-table-wrapper">
+    <div *ngIf="isLoading" class="loading">Loading codes...</div>
+
+    <table *ngIf="!isLoading && codes.length > 0" class="codes-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Expires</th>
+          <th>Used On</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let code of codes" [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
+          <td class="code-cell">
+            <span class="code-value">{{ code.code }}</span>
+            <button class="btn-icon" (click)="copyCode(code)" [title]="copiedCodeId === code.codeId ? 'Copied!' : 'Copy code'">
+              {{ copiedCodeId === code.codeId ? '✓' : '⎘' }}
+            </button>
+          </td>
+          <td>{{ code.email || '—' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="!code.isUsed && !code.isExpired"
+                  [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
+              {{ codeStatus(code) }}
+            </span>
+          </td>
+          <td>{{ code.expiresOn | date:'MMM d, y' }}</td>
+          <td>{{ code.usedOn ? (code.usedOn | date:'MMM d, y') : '—' }}</td>
+          <td>{{ code.createdOn | date:'MMM d, y' }}</td>
+          <td>
+            <button *ngIf="!code.isUsed" class="btn btn-danger btn-sm" (click)="deleteCode(code)">Revoke</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!isLoading && codes.length === 0" class="empty-state">
+      No invite codes yet. Generate one above to invite your first staff member.
+    </div>
+  </div>
+</div>

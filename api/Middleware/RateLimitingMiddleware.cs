@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,13 +14,16 @@ namespace PreOrderApp.Middleware
         private readonly int _requestLimit;
         private readonly TimeSpan _timeWindow;
 
-        public RateLimitingMiddleware(RequestDelegate next, IMemoryCache cache, 
-                                     int requestLimit = 10, int timeWindowSeconds = 60)
+        public RateLimitingMiddleware(RequestDelegate next, IMemoryCache cache, IConfiguration configuration)
         {
             _next = next;
             _cache = cache;
-            _requestLimit = requestLimit;
-            _timeWindow = TimeSpan.FromSeconds(timeWindowSeconds);
+
+            var configuredLimit = configuration.GetValue<int>("RateLimiting:RefreshToken:RequestLimit", 10);
+            var configuredWindowSeconds = configuration.GetValue<int>("RateLimiting:RefreshToken:TimeWindowSeconds", 60);
+
+            _requestLimit = configuredLimit > 0 ? configuredLimit : 10;
+            _timeWindow = TimeSpan.FromSeconds(configuredWindowSeconds > 0 ? configuredWindowSeconds : 60);
         }
 
         public async Task InvokeAsync(HttpContext context)

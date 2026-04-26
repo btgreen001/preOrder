@@ -34,19 +34,22 @@ export class App implements OnInit, OnDestroy {
   protected readonly title = signal('Pre-Order');
   currentRole: UserRole = 'customer'; // Default fallback
   sidebarNav: { label: string, route: string, roles: UserRole[], icon: string, isChild?: boolean }[] = [];
+  showAdminShell = true;
+  showStorePreviewLink = false;
 
   private allNavItems = [
-    { label: 'Events',              route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'event' },
-    { label: 'Menu',                route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'restaurant_menu' },
-    { label: 'Pickup Slots',        route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'schedule' },
-    { label: 'Orders',              route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'receipt_long' },
+    { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'event' },
+    { label: 'Menu',                  route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'restaurant_menu' },
+    { label: 'Pickup Slots',          route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'schedule' },
+    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'receipt_long' },
+    { label: 'Invite Staff',           route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                                     icon: 'person_add' }
 
-    { label: 'Shop (Customer Portal)',                route: '/shop',                         roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'add_shopping_cart'}
 ];
-
+  currentYear = new Date().getFullYear();
   constructor() {
     // Initial setup
     this.updateNavigation();
+    this.syncShellForCurrentRoute();
   }
 
   ngOnInit() {
@@ -69,10 +72,12 @@ export class App implements OnInit, OnDestroy {
     this.routeIdleSyncSubscription = this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe(() => {
+      this.syncShellForCurrentRoute();
       this.syncIdleMonitoringForCurrentRoute('navigation-end');
     });
 
     // Apply route-aware state at startup in case the app is loaded directly into a cook route.
+    this.syncShellForCurrentRoute();
     this.syncIdleMonitoringForCurrentRoute('app-init');
   }
 
@@ -86,6 +91,25 @@ export class App implements OnInit, OnDestroy {
   private updateNavigation() {
     this.currentRole = this.roleService.getCurrentRole();
     this.sidebarNav = this.allNavItems.filter(nav => nav.roles.includes(this.currentRole));
+  }
+
+  private syncShellForCurrentRoute(): void {
+    const normalizedUrl = this.router.url.toLowerCase();
+    const isStorefrontRoute =
+      normalizedUrl === '/bakeahead' ||
+      normalizedUrl.startsWith('/bakeahead?') ||
+      normalizedUrl.startsWith('/bakeahead/') ||
+      normalizedUrl === '/shop' ||
+      normalizedUrl.startsWith('/shop?') ||
+      normalizedUrl.startsWith('/shop/');
+
+    const isLoginRoute =
+      normalizedUrl === '/login' ||
+      normalizedUrl.startsWith('/login?') ||
+      normalizedUrl.startsWith('/login/');
+
+    this.showAdminShell = !isStorefrontRoute && !isLoginRoute;
+    this.showStorePreviewLink = normalizedUrl.startsWith('/admin');
   }
 
   private syncIdleMonitoringForCurrentRoute(source: string): void {
@@ -115,15 +139,6 @@ export class App implements OnInit, OnDestroy {
     return false;
   }
 
-  logoutThisSession() {
-    // Release device binding server-side so device-context returns null on next reload.
-    // This is the authoritative signal — no client-side flags needed.
-    this.terminalService.releaseDeviceContext().subscribe({ error: () => {} });
-    this.authService.logout(false);
-    this.terminalContextService.clearTerminalContext();
-    sessionStorage.clear();
-    this.router.navigate(['/login']);
-  }
 
   logoutAllSessions() {
     this.terminalService.releaseDeviceContext().subscribe({ error: () => {} });

@@ -487,8 +487,8 @@ public class TerminalDeviceBindingService : ITerminalDeviceBindingService
 
     private void EnforceBindRateLimit(Guid userId, Guid organizationId)
     {
-        var maxAttempts = _configuration.GetValue<int>("Terminal:BindRateLimitCount", 5);
-        var windowSeconds = _configuration.GetValue<int>("Terminal:BindRateLimitWindowSeconds", 300);
+        var maxAttempts = _configuration.GetValue<int>("Terminal:BindRateLimitCount", 30);
+        var windowSeconds = _configuration.GetValue<int>("Terminal:BindRateLimitWindowSeconds", 120);
 
         if (maxAttempts <= 0)
         {

@@ -140,23 +140,23 @@ public class MvpPreOrderService : IMvpPreOrderService
             throw new InvalidOperationException("Max-per-order must be at least 1 when provided.");
         }
 
-        if (request.ProductExternalId.HasValue && request.ProductExternalId.Value != Guid.Empty)
-        {
-            sellableProductId = await _context.SellableProducts
-                .Where(p => p.OrganizationId == organizationId && p.ExternalId == request.ProductExternalId.Value && p.IsActive && p.IsForSale)
-                .Select(p => (long?)p.Id)
-                .FirstOrDefaultAsync();
+        // if (request.ProductExternalId.HasValue && request.ProductExternalId.Value != Guid.Empty)
+        // {
+        //     sellableProductId = await _context.SellableProducts
+        //         .Where(p => p.OrganizationId == organizationId && p.ExternalId == request.ProductExternalId.Value && p.IsActive && p.IsForSale)
+        //         .Select(p => (long?)p.Id)
+        //         .FirstOrDefaultAsync();
 
-            if (!sellableProductId.HasValue)
-            {
-                throw new KeyNotFoundException($"Sellable product {request.ProductExternalId.Value} not found.");
-            }
-        }
-        else
-        {
-            sellableProductId = await ResolveUnlinkedSellableProductIdAsync(organizationId);
-        }
-
+        //     if (!sellableProductId.HasValue)
+        //     {
+        //         throw new KeyNotFoundException($"Sellable product {request.ProductExternalId.Value} not found.");
+        //     }
+        // }
+        // else
+        // {
+        //     sellableProductId = await ResolveUnlinkedSellableProductIdAsync(organizationId);
+        // }
+        sellableProductId = null;
         var entity = new MenuItem
         {
             ExternalId = Guid.NewGuid(),
@@ -201,22 +201,23 @@ public class MvpPreOrderService : IMvpPreOrderService
         var holidayEvent = await ResolveHolidayEventAsync(organizationId, request.HolidayEventExternalId);
 
         long? sellableProductId;
-        if (request.ProductExternalId.HasValue && request.ProductExternalId.Value != Guid.Empty)
-        {
-            sellableProductId = await _context.SellableProducts
-                .Where(product => product.OrganizationId == organizationId && product.ExternalId == request.ProductExternalId.Value && product.IsActive && product.IsForSale)
-                .Select(product => (long?)product.Id)
-                .FirstOrDefaultAsync();
+        // if (request.ProductExternalId.HasValue && request.ProductExternalId.Value != Guid.Empty)
+        // {
+        //     sellableProductId = await _context.SellableProducts
+        //         .Where(product => product.OrganizationId == organizationId && product.ExternalId == request.ProductExternalId.Value && product.IsActive && product.IsForSale)
+        //         .Select(product => (long?)product.Id)
+        //         .FirstOrDefaultAsync();
 
-            if (!sellableProductId.HasValue)
-            {
-                throw new KeyNotFoundException($"Sellable product {request.ProductExternalId.Value} not found.");
-            }
-        }
-        else
-        {
-            sellableProductId = await ResolveUnlinkedSellableProductIdAsync(organizationId);
-        }
+        //     if (!sellableProductId.HasValue)
+        //     {
+        //         throw new KeyNotFoundException($"Sellable product {request.ProductExternalId.Value} not found.");
+        //     }
+        // }
+        // else
+        // {
+        //     sellableProductId = await ResolveUnlinkedSellableProductIdAsync(organizationId);
+        // }
+        sellableProductId = null;
 
         entity.HolidayEventId = holidayEvent.Id;
         entity.SellableProductId = sellableProductId;
@@ -256,7 +257,6 @@ public class MvpPreOrderService : IMvpPreOrderService
         }
 
         var holidayEvent = await ResolveHolidayEventAsync(organizationId, request.HolidayEventExternalId);
-        EnsureSlotWithinEventPickupWindow(request.SlotStartAt, request.SlotEndAt, holidayEvent);
 
         var entity = new PickupSlot
         {
@@ -303,7 +303,6 @@ public class MvpPreOrderService : IMvpPreOrderService
         }
 
         var holidayEvent = await ResolveHolidayEventAsync(organizationId, request.HolidayEventExternalId);
-        EnsureSlotWithinEventPickupWindow(request.SlotStartAt, request.SlotEndAt, holidayEvent);
 
         entity.HolidayEventId = holidayEvent.Id;
         entity.SlotStartAt = request.SlotStartAt;
@@ -738,21 +737,21 @@ public class MvpPreOrderService : IMvpPreOrderService
         }
     }
 
-    private async Task<long> ResolveUnlinkedSellableProductIdAsync(Guid organizationId)
-    {
-        var productId = await _context.SellableProducts
-            .Where(product => product.OrganizationId == organizationId
-                && product.Name.Trim().ToUpper() == UnlinkedSellableProductName)
-            .Select(product => (long?)product.Id)
-            .FirstOrDefaultAsync();
+    // private async Task<long> ResolveUnlinkedSellableProductIdAsync(Guid organizationId)
+    // {
+    //     var productId = await _context.SellableProducts
+    //         .Where(product => product.OrganizationId == organizationId
+    //             && product.Name.Trim().ToUpper() == UnlinkedSellableProductName)
+    //         .Select(product => (long?)product.Id)
+    //         .FirstOrDefaultAsync();
 
-        if (!productId.HasValue)
-        {
-            throw new InvalidOperationException("Sellable product 'Unlinked' must exist as an active for-sale product before menu items can default to it.");
-        }
+    //     if (!productId.HasValue)
+    //     {
+    //         throw new InvalidOperationException("Sellable product 'Unlinked' must exist as an active for-sale product before menu items can default to it.");
+    //     }
 
-        return productId.Value;
-    }
+    //     return productId.Value;
+    // }
 
     private const string UnlinkedSellableProductName = "UNLINKED";
 
@@ -959,13 +958,5 @@ public class MvpPreOrderService : IMvpPreOrderService
             "CONFIRMED" when nextStatus == "CANCELLED" => true,
             _ => false
         };
-    }
-
-    private static void EnsureSlotWithinEventPickupWindow(DateTime slotStartAt, DateTime slotEndAt, HolidayEvent holidayEvent)
-    {
-        if (slotStartAt < holidayEvent.PickupStartDt || slotEndAt > holidayEvent.PickupEndDt)
-        {
-            throw new InvalidOperationException("Pickup slot must be within the event pickup window.");
-        }
     }
 }

@@ -81,8 +81,7 @@ export class PreorderMenuAdminComponent implements OnInit {
   }
 
   onEventChange(): void {
-    this.form.holidayEventExternalId = this.selectedHolidayEventExternalId;
-    this.editingExternalId = null;
+    this.startCreate();
     this.loadMenuItems();
   }
 

@@ -63,7 +63,7 @@ describe('LoginComponent', () => {
       component.ngOnInit();
 
       expect(component.loginForm).toBeDefined();
-      expect(component.loginForm.get('username')?.value).toBe('ba');
+      expect(component.loginForm.get('username')?.value).toBe('demo-pre-order');
       expect(component.loginForm.get('password')?.value).toBe('password');
       expect(component.loginForm.get('username')?.valid).toBeTruthy();
       expect(component.loginForm.get('password')?.valid).toBeTruthy();

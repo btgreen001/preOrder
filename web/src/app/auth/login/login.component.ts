@@ -39,26 +39,17 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Initialize the login form with default values for testing
     this.loginForm = this.formBuilder.group({
-      username: ['pre', Validators.required],
+      username: ['demo-pre-order', Validators.required],
       password: ['password', Validators.required]
     });
 
-    // Get return URL from route parameters or default to '/dashboard'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/admin/events';
 
     // Redirect if already logged in
     if (this.authService.isAuthenticated()) {
       this.router.navigate([this.returnUrl]);
     }
 
-    // Log terminal context status for debugging
-    const terminalContext = this.terminalContext.getTerminalContext();
-    if (terminalContext) {
-      console.debug('[LoginComponent] Terminal context found:', {
-        terminal: terminalContext.terminalCode,
-        organization: terminalContext.organizationId
-      });
-    }
   }
 
   onSubmit(): void {
@@ -81,15 +72,8 @@ export class LoginComponent implements OnInit {
       .subscribe({
         next: () => {
           this.isLoading = false;
-          
-          // After login, check if terminal context is set
-          // If not set (first login on device), redirect to terminal selection
-          if (!this.terminalContext.hasTerminalContext()) {
-            this.router.navigate(['/terminal-selection']);
-          } else {
-            // Terminal already selected, go to dashboard or returnUrl
-            this.router.navigate([this.returnUrl]);
-          }
+          this.router.navigate([this.returnUrl]);
+
         },
         error: error => {
           this.isLoading = false;

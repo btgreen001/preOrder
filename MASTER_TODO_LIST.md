@@ -225,6 +225,68 @@ Order after MVP works:
 - All soft-delete dependency checks in place
 - Onboarding and public storefront shell cleanup must be completed before calling MVP complete
 
+### Next Steps (2026-04-26 — Execution Order)
+
+1. **Finish public storefront shell cleanup in Angular root layout** ✅ Completed (2026-04-26)
+  - `/BakeAhead` now hides admin sidebar and top-right auth controls.
+  - Full shell behavior remains available on admin routes.
+  - Added admin-only "Preview Store" link in top nav that opens `/BakeAhead` in a new tab.
+  - Added route definition for `/BakeAhead` and compatibility redirect from `/shop`.
+  - Updated files: `web/src/app/app.ts`, `web/src/app/app.html`, `web/src/app/app.routes.ts`.
+
+2. **Finalize onboarding route flow and invite management scope** 🟡 In Progress (2026-04-26)
+  - ✅ Restored onboarding/auth utility routes so existing navigation targets resolve:
+    - `/dashboard` (auth guarded)
+    - `/terminal-selection` (auth guarded)
+    - `/pin-signin`
+  - ✅ Company registration/login terminal flows now land on valid routes instead of wildcard fallback.
+  - ⏳ Remaining: implement tenant-admin invite code management endpoints and UI workflow.
+  - Primary files: `web/src/app/app.routes.ts`, `web/src/app/auth/company-register/company-register.component.ts`, `api/Controllers/OrganizationController.cs`.
+
+### Progress Note (2026-04-26 — Invite Code Management Completed)
+
+- ✅ **Config values corrected** (both `appsettings.json` and `appsettings.Development.json`):
+  - `Terminal:BindRateLimitCount`: 300 → 30
+  - `Terminal:BindRateLimitWindowSeconds`: 12 → 120
+  - `RateLimiting:RefreshToken:RequestLimit`: 100 → 10
+  - `RateLimiting:RefreshToken:TimeWindowSeconds`: 6 → 60
+
+- ✅ **Invite code management API added** (`api/Controllers/OrganizationController.cs`):
+  - `GET  /api/organization/{orgId}/registration-codes` — list all codes for org
+  - `POST /api/organization/{orgId}/registration-codes` — generate new code (optional email, expiry days)
+  - `DELETE /api/organization/{orgId}/registration-codes/{codeId}` — revoke unused code
+  - Tenant-isolated: callers must belong to the same org (or be SystemAdmin)
+  - New response DTO: `RegistrationCodeResponse`; new request DTO: `CreateRegistrationCodeRequest`
+
+- ✅ **Invite code management UI added** (`web/src/app/features/preorder-admin/invites/`):
+  - `AdminInvitesComponent` — list, generate, revoke, and copy codes
+  - `InviteCodesService` — HTTP calls to API
+  - Route: `/admin/invites` (AuthGuard + AdminGuard)
+  - Sidebar nav item "Invite Staff" visible to `CompanyAdmin` and `SystemAdmin` only
+
+- **Onboarding path is now complete end-to-end**:
+  1. Company registers → lands on `/admin/events`
+  2. Admin goes to `/admin/invites` → generates a code
+  3. Staff visits `/register` → enters code → account created
+
+
+3. **Run targeted regression for newly-blocking flows**
+  - Public storefront shell behavior (no admin chrome on public route).
+  - Registration -> admin landing -> invite code -> staff signup path.
+
+4. **Update status docs immediately after each slice**
+  - Keep this file and `NOTES_DEFECTS_USER_TODO` synchronized with pass/fail outcomes.
+
+### Progress Note (2026-04-26)
+
+- Rate-limit configuration bug fixed for auth refresh endpoint:
+  - Root cause: `RateLimitingMiddleware` used constructor defaults (`10` requests / `60s`) and ignored appsettings values.
+  - Fix: middleware now reads config from:
+    - `RateLimiting:RefreshToken:RequestLimit`
+    - `RateLimiting:RefreshToken:TimeWindowSeconds`
+  - Added these keys to `api/appsettings.json` and `api/appsettings.Development.json`.
+  - This change is independent from terminal bind limits (`Terminal:BindRateLimitCount`, `Terminal:BindRateLimitWindowSeconds`), which were already config-driven.
+
 ### Latest Backend Progress (2026-04-23)
 - Added admin preorder status transition endpoint on MVP API: `PATCH /api/mvp/preorders/{preOrderExternalId}/status`.
 - Added guarded transitions in backend service:
