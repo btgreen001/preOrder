@@ -41,8 +41,8 @@ export class App implements OnInit, OnDestroy {
     { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'event' },
     { label: 'Menu',                  route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'restaurant_menu' },
     { label: 'Pickup Slots',          route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'schedule' },
-    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff', 'customer'] as UserRole[],               icon: 'receipt_long' },
-    { label: 'Invite Staff',           route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                                     icon: 'person_add' }
+    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'receipt_long' },
+    { label: 'Invite Staff',           route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                                   icon: 'person_add' }
 
 ];
   currentYear = new Date().getFullYear();
@@ -108,7 +108,15 @@ export class App implements OnInit, OnDestroy {
       normalizedUrl.startsWith('/login?') ||
       normalizedUrl.startsWith('/login/');
 
-    this.showAdminShell = !isStorefrontRoute && !isLoginRoute;
+          const isRegisterRoute =
+      normalizedUrl === '/register' ||
+      normalizedUrl === '/company-register' ||
+      normalizedUrl.startsWith('/company-register?') ||
+      normalizedUrl.startsWith('/company-register/') ||
+      normalizedUrl.startsWith('/register?') ||
+      normalizedUrl.startsWith('/register/');
+
+    this.showAdminShell = !isStorefrontRoute && !isLoginRoute && !isRegisterRoute;
     this.showStorePreviewLink = normalizedUrl.startsWith('/admin');
   }
 

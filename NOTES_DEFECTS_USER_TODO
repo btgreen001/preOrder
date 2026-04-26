@@ -1,6 +1,7 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
+As part of company registration we need to ensure license is setup.
 AS Part of Initial prod deployment Fix this to 30 -  "BindRateLimitCount": 300,
 AS Part of Initial prod deployment This to 120 - "BindRateLimitWindowSeconds": 12,
 AS Part of Initial prod deployment These to 10 and 60  
@@ -99,6 +100,22 @@ AS Part of Initial prod deployment These to 10 and 60
 		- `api/appsettings.json`
 		- `api/appsettings.Development.json`
 	- Note: terminal bind limits were already config-driven via `Terminal:BindRateLimitCount` and `Terminal:BindRateLimitWindowSeconds`.
+
+- ✅ **Invite email send + resend implemented (SMTP)**
+	- SMTP provider configured in both appsettings files:
+		- Host: `smtp.gmail.com`
+		- Port: `465`
+		- SSL: enabled
+		- Username: `boardbake@gmail.com`
+		- Password: app password placeholder set in config for local setup.
+	- Backend create-invite endpoint now sends email automatically when invitee email is provided.
+	- Added resend endpoint:
+		- `POST /api/organization/{orgId}/registration-codes/{codeId}/resend`
+	- Resend guardrails:
+		- reject used/expired/no-email invites
+		- throttle to max 3 resends per code per hour
+	- Frontend invites page now includes `Resend` button for eligible invites and handles success/error feedback.
+	- Registration page now supports invite deep links with query-prefill (`?code=...&email=...`).
 
 
 2026-04-23 preorder persistence cutover notes

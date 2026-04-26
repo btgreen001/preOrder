@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { RegisterUserRequest } from '../../core/models/auth.model';
 import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -24,19 +25,30 @@ export class RegisterComponent {
   error: string | null = null;
   success: string | null = null;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private route: ActivatedRoute) {
     // Use a valid test registration code from insert-test-data.sql
-    const testRegistrationCode = 'INVITE-ENT-001';
+    const testRegistrationCode = '';
     // Generate a random unique email for x.com
-    const randomEmail = `user${Math.floor(Math.random() * 1000000)}@x.com`;
+    const randomEmail = '';
     this.form = this.fb.group({
       companyRegistrationCode: [testRegistrationCode, Validators.required],
       email: [randomEmail, [Validators.required, Validators.email]],
-  userName: ['testuser', Validators.required],
-      password: ['password', Validators.required],
-      firstName: ['Test', Validators.required],
-      lastName: ['User', Validators.required]
+  userName: ['', Validators.required],
+      password: ['', Validators.required],
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required]
     });
+
+    const inviteCode = this.route.snapshot.queryParamMap.get('code');
+    const inviteEmail = this.route.snapshot.queryParamMap.get('email');
+
+    if (inviteCode) {
+      this.form.patchValue({ companyRegistrationCode: inviteCode });
+    }
+
+    if (inviteEmail) {
+      this.form.patchValue({ email: inviteEmail });
+    }
   }
 
   submit(): void {
@@ -52,6 +64,7 @@ export class RegisterComponent {
       },
       error: (err) => {
         this.error = err?.error?.message || 'Registration failed.';
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;

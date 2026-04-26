@@ -79,7 +79,7 @@ export class OrderBuilderComponent implements OnInit {
 
     if (!this.organizationToken) {
       this.isLoading = false;
-      this.loadError = 'This preorder link is missing the bakery organization token. Open a link with ?org=... to continue.';
+      this.loadError = 'This preorder link is missing the bakery organization token. Please check the link and try again or contact support.';
       return;
     }
 

@@ -38,8 +38,17 @@ if (!string.IsNullOrWhiteSpace(pasetoSecretKey))
     builder.Configuration["Paseto:SecretKey"] = pasetoSecretKey;
 }
 
+// Add SMTP credentials from environment
+var smtpApiKey = Environment.GetEnvironmentVariable("SMTP_API_KEY");
+if (!string.IsNullOrWhiteSpace(smtpApiKey))
+{
+    builder.Configuration["InviteEmails:Smtp:Password"] = smtpApiKey;
+}
+
 // Build connection string with environment variable
 // Use DB_HOST env var for flexibility: "postgres" in docker-compose, "192.168.50.147" locally, "localhost" for dev
+var apiKey = Environment.GetEnvironmentVariable("SMTP_API_KEY");
+
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
 var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "appdb";
@@ -141,8 +150,10 @@ builder.Services.AddScoped<IPinService, PinService>();
 builder.Services.AddScoped<ITerminalLockService, TerminalLockService>();
 builder.Services.AddScoped<ITerminalDeviceBindingService, TerminalDeviceBindingService>();
 builder.Services.AddScoped<IOrganizationSettingService, OrganizationSettingService>();
+builder.Services.AddScoped<IInviteEmailService, InviteEmailService>();
 builder.Services.AddScoped<TenantAccessFilter>(); // Register the tenant validation filter
 builder.Services.AddScoped<TenantAdminFilter>(); // Register the tenant admin role filter
+builder.Services.AddScoped<TenantStaffOrAdminFilter>(); // Register the tenant staff/admin role filter
 builder.Services.AddScoped<SysAdminFilter>(); // Register the system admin role filter
 
 // Enable request body buffering so middleware and controllers can both read the request body
@@ -155,6 +166,7 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.AddService<TenantAccessFilter>(); // Apply filter globally to all controllers
     options.Filters.AddService<TenantAdminFilter>(); // Apply admin filter globally to all controllers
+    options.Filters.AddService<TenantStaffOrAdminFilter>(); // Apply staff/admin filter globally where [RequireTenantStaffOrAdmin] is present
     options.Filters.AddService<SysAdminFilter>(); // Apply sysadmin filter globally where [ValidateSysAdmin] is present
 })
     .AddJsonOptions(options =>

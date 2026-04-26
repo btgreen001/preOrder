@@ -35,6 +35,7 @@
           <th>Used On</th>
           <th>Created</th>
           <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -56,6 +57,11 @@
           <td>{{ code.usedOn ? (code.usedOn | date:'MMM d, y') : '—' }}</td>
           <td>{{ code.createdOn | date:'MMM d, y' }}</td>
           <td>
+            <button *ngIf="canResend(code)" class="btn btn-secondary btn-sm" (click)="resendCode(code)" [disabled]="isResending">
+              {{ isResending ? 'Sending...' : 'Resend' }}
+            </button>
+        </td>
+        <td>
             <button *ngIf="!code.isUsed" class="btn btn-danger btn-sm" (click)="deleteCode(code)">Revoke</button>
           </td>
         </tr>

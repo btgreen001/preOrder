@@ -31,7 +31,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPost("preorder-event")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> CreateHolidayEvent([FromBody] CreateHolidayEventRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -40,7 +40,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPut("preorder-event/{holidayEventExternalId:guid}")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> UpdateHolidayEvent(Guid holidayEventExternalId, [FromBody] UpdateHolidayEventRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -69,7 +69,8 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPost("menu-items")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
+
     public async Task<IActionResult> CreateMenuItem([FromBody] CreateMenuItemRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -78,7 +79,8 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPut("menu-items/{menuItemExternalId:guid}")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
+
     public async Task<IActionResult> UpdateMenuItem(Guid menuItemExternalId, [FromBody] UpdateMenuItemRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -107,7 +109,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPost("pickup-slots")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> CreatePickupSlot([FromBody] CreatePickupSlotRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -116,7 +118,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPut("pickup-slots/{pickupSlotExternalId:guid}")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> UpdatePickupSlot(Guid pickupSlotExternalId, [FromBody] UpdatePickupSlotRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -137,7 +139,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpGet("preorders")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> GetPreOrders([FromQuery] Guid? holidayEventExternalId)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -146,7 +148,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpGet("preorders/export.csv")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> ExportPreOrdersCsv([FromQuery] Guid? holidayEventExternalId, [FromQuery] DateTime? pickupDateUtc)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
@@ -164,7 +166,7 @@ public class MvpPreOrdersController : ControllerBase
     }
 
     [HttpPatch("preorders/{preOrderExternalId:guid}/status")]
-    [RequireTenantAdmin]
+    [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> UpdatePreOrderStatus(Guid preOrderExternalId, [FromBody] UpdatePreOrderStatusRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Status))

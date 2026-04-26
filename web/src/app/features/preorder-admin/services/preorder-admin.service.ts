@@ -136,6 +136,24 @@ export interface AdminPreOrder {
   lines: AdminPreOrderLine[];
 }
 
+export interface AdminRegistrationCode {
+  codeId: string;
+  code: string;
+  email?: string | null;
+  userRole: string;
+  expiresOn: string;
+  isUsed: boolean;
+  usedOn?: string | null;
+  createdOn: string;
+  isExpired: boolean;
+  emailSent: boolean;
+}
+
+export interface CreateRegistrationCodeRequest {
+  email?: string;
+  expiryDays: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -143,6 +161,7 @@ export class PreorderAdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/mvp`;
   private readonly productsUrl = `${environment.apiUrl}/products`;
+  private readonly organizationsUrl = `${environment.apiUrl}/organization`;
 
   getHolidayEvents(): Observable<AdminHolidayEvent[]> {
     return this.http.get<AdminHolidayEvent[]>(`${this.baseUrl}/preorder-event`);
@@ -209,5 +228,21 @@ export class PreorderAdminService {
       params,
       responseType: 'blob'
     });
+  }
+
+  getRegistrationCodes(orgId: string): Observable<AdminRegistrationCode[]> {
+    return this.http.get<AdminRegistrationCode[]>(`${this.organizationsUrl}/${orgId}/registration-codes`);
+  }
+
+  createRegistrationCode(orgId: string, request: CreateRegistrationCodeRequest): Observable<AdminRegistrationCode> {
+    return this.http.post<AdminRegistrationCode>(`${this.organizationsUrl}/${orgId}/registration-codes`, request);
+  }
+
+  deleteRegistrationCode(orgId: string, codeId: string): Observable<void> {
+    return this.http.delete<void>(`${this.organizationsUrl}/${orgId}/registration-codes/${codeId}`);
+  }
+
+  resendRegistrationCode(orgId: string, codeId: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.organizationsUrl}/${orgId}/registration-codes/${codeId}/resend`, {});
   }
 }

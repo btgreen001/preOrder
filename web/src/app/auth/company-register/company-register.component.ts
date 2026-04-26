@@ -101,25 +101,25 @@ export class CompanyRegisterComponent {
   constructor() {
     this.companyRegisterForm = this.fb.group({
       // Company information
-      companyName: ['Demo Company', Validators.required],
-      email: ['company@example.com', [Validators.required, Validators.email]],
-      addressLine1: ['123 Main St', Validators.required],
-      addressLine2: ['Suite 100'],
+      companyName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      addressLine1: ['', Validators.required],
+      addressLine2: [''],
       addressLine3: [''],
-      locality: ['Metropolis', Validators.required], // City
-      region: ['State', Validators.required], // State/Province
-      postalCode: ['12345', Validators.required],
-      countryCode: ['US', Validators.required],
+      locality: ['', Validators.required], // City
+      region: ['', Validators.required], // State/Province
+      postalCode: ['', Validators.required],
+      countryCode: ['', Validators.required],
       
       // License tier
       licenseTier: ['Professional', Validators.required], // Default to recommended tier
       
       // Admin account
-      adminFirstName: ['Tom', Validators.required],
-      adminLastName: ['Smith', Validators.required],
-      adminEmail: ['tom.smith@example.com', [Validators.required, Validators.email]],
-      adminUsername: ['tom', Validators.required],
-      adminPassword: ['password', [Validators.required, Validators.minLength(6)]]
+      adminFirstName: ['', Validators.required],
+      adminLastName: ['', Validators.required],
+      adminEmail: ['', [Validators.required, Validators.email]],
+      adminUsername: ['', Validators.required],
+      adminPassword: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 

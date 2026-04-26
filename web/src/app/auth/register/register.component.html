@@ -1,47 +1,53 @@
+<div class="spotify-register-root">
 
-<div class="register-container" fxLayout="column" fxLayoutAlign="center center">
-  <mat-card class="register-card">
-    <div class="welcome-promo">
-      <p><strong>Welcome to the bakery system — we're excited to have you!</strong></p>
-      <p>Everything's set up and ready to help you manage orders with ease. Let's get started and make something delicious! <span class="cake-emoji">🍰</span></p>
-    </div>
-    
-    <mat-card-title>Register as a User</mat-card-title>
-    <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Company Registration Code</mat-label>
+  <div class="register-area">
+    <mat-card class="spotify-card">
+      <div class="card-header">
+        <h2>User Registration</h2>
+        <p class="muted">Enter your registration code to join</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="register-form">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Registration Code</mat-label>
           <input matInput formControlName="companyRegistrationCode" required />
         </mat-form-field>
-        <mat-form-field appearance="fill" class="full-width">
+
+        <mat-form-field appearance="outline" class="full">
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" required type="email" />
         </mat-form-field>
-        <mat-form-field appearance="fill" class="full-width">
+
+        <mat-form-field appearance="outline" class="full">
           <mat-label>Username</mat-label>
           <input matInput formControlName="userName" required />
         </mat-form-field>
-        <mat-form-field appearance="fill" class="full-width">
+
+        <mat-form-field appearance="outline" class="full">
           <mat-label>Password</mat-label>
           <input matInput formControlName="password" required type="password" />
         </mat-form-field>
-        <mat-form-field appearance="fill" class="full-width">
+
+        <mat-form-field appearance="outline" class="full">
           <mat-label>First Name</mat-label>
           <input matInput formControlName="firstName" required />
         </mat-form-field>
-        <mat-form-field appearance="fill" class="full-width">
+
+        <mat-form-field appearance="outline" class="full">
           <mat-label>Last Name</mat-label>
           <input matInput formControlName="lastName" required />
         </mat-form-field>
-        <div class="actions">
-          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading">Register</button>
-        </div>
-        <div *ngIf="error" class="error">{{ error }}</div>
-        <div *ngIf="success" class="success">{{ success }}</div>
+
+        <div *ngIf="error" class="error-message">{{ error }}</div>
+        <div *ngIf="success" class="success-message">{{ success }}</div>
+
+        <button mat-flat-button class="spotify-btn" type="submit" [disabled]="form.invalid || loading">Register</button>
       </form>
-    </mat-card-content>
-    <mat-card-actions>
-      <a routerLink="/company-register">Register your company</a>
-    </mat-card-actions>
-  </mat-card>
+
+      <mat-card-actions class="card-actions">
+        <a routerLink="/company-register">Register Your Company Now!</a>
+        <a routerLink="/login">Login</a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </div>

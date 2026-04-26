@@ -13,12 +13,18 @@ namespace PreOrderApp.Controllers
         private readonly IOrganizationService _organizationService;
         private readonly PreOrderApp.Data.AppDbContext _context;
         private readonly IOrganizationContextService _orgContext;
+        private readonly IInviteEmailService _inviteEmailService;
 
-        public OrganizationController(IOrganizationService organizationService, PreOrderApp.Data.AppDbContext context, IOrganizationContextService orgContext)
+        public OrganizationController(
+            IOrganizationService organizationService,
+            PreOrderApp.Data.AppDbContext context,
+            IOrganizationContextService orgContext,
+            IInviteEmailService inviteEmailService)
         {
             _organizationService = organizationService;
             _context = context;
             _orgContext = orgContext;
+            _inviteEmailService = inviteEmailService;
         }
 
         [HttpGet("{id}")]
@@ -224,7 +230,8 @@ namespace PreOrderApp.Controllers
         [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
         public async Task<ActionResult<RegistrationCodeResponse>> CreateRegistrationCode(Guid orgId, [FromBody] CreateRegistrationCodeRequest request)
         {
-            if (!await _orgContext.ValidateUserOrganizationAccessAsync(_orgContext.GetCurrentUserId(), orgId))
+            var userId = _orgContext.GetCurrentUserId();
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(userId, orgId))
                 return Forbid();
 
             var org = await _context.Organizations.FindAsync(orgId);
@@ -235,7 +242,7 @@ namespace PreOrderApp.Controllers
                 CodeId = Guid.NewGuid(),
                 OrganizationId = orgId,
                 Code = Guid.NewGuid().ToString("N").ToUpper()[..12],
-                CreatedByUserId = _orgContext.GetCurrentUserId(),
+                CreatedByUserId = userId,
                 Email = request.Email,
                 UserRole = UserRoles.User,
                 ExpiresOn = DateTime.UtcNow.AddDays(request.ExpiryDays > 0 ? request.ExpiryDays : 7),
@@ -246,6 +253,21 @@ namespace PreOrderApp.Controllers
             _context.RegistrationCodes.Add(code);
             await _context.SaveChangesAsync();
 
+            var emailSent = false;
+            if (!string.IsNullOrWhiteSpace(code.Email))
+            {
+                try
+                {
+                    await _inviteEmailService.SendInviteEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
+                    emailSent = true;
+                    await LogInviteAuditAsync("INVITE_CREATE_EMAIL_SENT", userId, orgId, code.CodeId, $"Invite email sent to {code.Email}");
+                }
+                catch (Exception ex)
+                {
+                    await LogInviteAuditAsync("INVITE_CREATE_EMAIL_FAILED", userId, orgId, code.CodeId, $"Invite email failed for {code.Email}: {ex.Message}");
+                }
+            }
+
             return CreatedAtAction(nameof(GetRegistrationCodes), new { orgId }, new RegistrationCodeResponse
             {
                 CodeId = code.CodeId,
@@ -255,8 +277,45 @@ namespace PreOrderApp.Controllers
                 ExpiresOn = code.ExpiresOn,
                 IsUsed = false,
                 CreatedOn = code.CreatedOn,
-                IsExpired = false
+                IsExpired = false,
+                EmailSent = emailSent
             });
+        }
+
+        [HttpPost("{orgId}/registration-codes/{codeId}/resend")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> ResendRegistrationCode(Guid orgId, Guid codeId)
+        {
+            var userId = _orgContext.GetCurrentUserId();
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(userId, orgId))
+                return Forbid();
+
+            var code = await _context.RegistrationCodes
+                .FirstOrDefaultAsync(rc => rc.CodeId == codeId && rc.OrganizationId == orgId);
+
+            if (code == null) return NotFound("Registration code not found.");
+            if (code.IsUsed) return BadRequest("Cannot resend a code that has already been used.");
+            if (code.ExpiresOn < DateTime.UtcNow) return BadRequest("Cannot resend an expired code.");
+            if (string.IsNullOrWhiteSpace(code.Email)) return BadRequest("Cannot resend because this code has no invitee email.");
+
+            var oneHourAgo = DateTime.UtcNow.AddHours(-1);
+            var resendCount = await _context.AuditLogs
+                .Where(a => a.Action == "INVITE_RESEND"
+                         && a.EntityType == "RegistrationCode"
+                         && a.EntityId == codeId.ToString()
+                         && a.Timestamp >= oneHourAgo)
+                .CountAsync();
+
+            if (resendCount >= 3)
+                return BadRequest("Resend limit reached. Try again later.");
+
+            var org = await _context.Organizations.FindAsync(orgId);
+            if (org == null) return NotFound("Organization not found");
+
+            await _inviteEmailService.SendInviteEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
+            await LogInviteAuditAsync("INVITE_RESEND", userId, orgId, code.CodeId, $"Invite email resent to {code.Email}");
+
+            return Ok(new { message = "Invite email resent." });
         }
 
         // COMPANY ADMIN: Delete (revoke) an unused invite code
@@ -277,6 +336,24 @@ namespace PreOrderApp.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private async Task LogInviteAuditAsync(string action, Guid userId, Guid orgId, Guid codeId, string details)
+        {
+            _context.AuditLogs.Add(new AuditLog
+            {
+                Action = action,
+                UserId = userId,
+                OrganizationId = orgId,
+                EntityType = "RegistrationCode",
+                EntityId = codeId.ToString(),
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = HttpContext.Request.Headers.UserAgent.ToString(),
+                Details = details,
+                Timestamp = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
         }
 
     }
@@ -307,6 +384,7 @@ namespace PreOrderApp.Controllers
         public DateTime? UsedOn { get; set; }
         public DateTime CreatedOn { get; set; }
         public bool IsExpired { get; set; }
+        public bool EmailSent { get; set; }
     }
 
 

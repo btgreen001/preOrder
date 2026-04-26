@@ -269,6 +269,43 @@ Order after MVP works:
   2. Admin goes to `/admin/invites` → generates a code
   3. Staff visits `/register` → enters code → account created
 
+### Progress Note (2026-04-26 — Invite Email Send + Resend Implemented)
+
+- ✅ **SMTP invite email delivery added**
+  - New backend service: `api/Services/InviteEmailService.cs` (`IInviteEmailService`)
+  - Configured via `InviteEmails` in:
+    - `api/appsettings.json`
+    - `api/appsettings.Development.json`
+  - SMTP settings applied per requested provider:
+    - Host: `smtp.gmail.com`
+    - Port: `465`
+    - SSL enabled
+    - Username: `boardbake@gmail.com`
+
+- ✅ **Send invite on create implemented** (`api/Controllers/OrganizationController.cs`)
+  - `POST /api/organization/{orgId}/registration-codes` now sends email automatically when `email` is provided.
+  - Response includes `emailSent` flag in `RegistrationCodeResponse`.
+
+- ✅ **Resend invite endpoint implemented**
+  - `POST /api/organization/{orgId}/registration-codes/{codeId}/resend`
+  - Resends the same active code to the invitee email.
+  - Validation guards:
+    - code must exist and belong to org
+    - code must not be used
+    - code must not be expired
+    - code must have invitee email
+  - Throttle guard:
+    - max 3 resends per code per hour (enforced via `audit_log` action count)
+
+- ✅ **Invites UI updated with Resend action**
+  - `web/src/app/features/preorder-admin/invites/admin-invites.component.html`
+  - `web/src/app/features/preorder-admin/invites/admin-invites.component.ts`
+  - Added `Resend` button for eligible rows (active + email present), with loading and error/success messaging.
+  - Switched invites page to reuse `PreorderAdminService` registration-code APIs.
+
+- ✅ **Register deep-link prefill implemented**
+  - `web/src/app/auth/register/register.component.ts` now reads `?code=` and `?email=` query params and pre-fills the registration form.
+
 
 3. **Run targeted regression for newly-blocking flows**
   - Public storefront shell behavior (no admin chrome on public route).

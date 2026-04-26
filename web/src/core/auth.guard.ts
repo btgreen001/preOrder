@@ -39,7 +39,7 @@ export const SystemAdminGuard: CanActivateFn = (route, state) => {
   return true;
 };
 
-/** Allows Staff (role='staff') and SystemAdmin only. Redirects to /dashboard on failure. */
+/** Allows Staff (role='staff') and SystemAdmin only. Redirects to /login on failure. */
 export const StaffGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -47,7 +47,7 @@ export const StaffGuard: CanActivateFn = (route, state) => {
   const role = user?.role;
   const isStaff = role === 'staff' || role === 'SystemAdmin' || role === 'CompanyAdmin';
   if (!user || !isStaff) {
-    router.navigate(['/dashboard']);
+    router.navigate(['/login']);
     return false;
   }
   return true;
@@ -61,6 +61,7 @@ export const AdminGuard: CanActivateFn = (route, state) => {
   const role = user?.role;
   const isAdmin = role === 'admin' || role === 'SystemAdmin' || role === 'CompanyAdmin';
   if (!user || !isAdmin) {
+    router.navigate(['/login']);
     return false;
   }
   return true;

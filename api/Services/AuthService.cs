@@ -418,7 +418,7 @@ public class AuthService : IAuthService
 
         // Check if userName is already in use
         if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == request.UserName))
-            throw new InvalidOperationException("UserName is already in use");
+            throw new InvalidOperationException("Username is already in use");
 
         // Get active license subscription
         var subscription = await _context.LicenseSubscriptions
@@ -490,7 +490,7 @@ public class AuthService : IAuthService
 
         // Check if admin userName is already in use
         if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == request.AdminUserName))
-            throw new InvalidOperationException("Admin userName is already in use");
+            throw new InvalidOperationException("Username is already in use");
 
         // Create a unique registration token
         var registrationToken = Guid.NewGuid().ToString("N");
