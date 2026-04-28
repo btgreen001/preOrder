@@ -20,7 +20,7 @@
     <p>We will send a confirmation to <strong>{{ submitSuccess.customerEmail }}</strong>.</p>
     <button class="btn btn-secondary" (click)="startAnotherOrder()">Place Another Order</button>
   </div>
-
+{{this.organizationToken}}
   <ng-container *ngIf="!isLoading && !loadError && !submitSuccess">
     <!-- Holiday event selector (only when multiple events) -->
     <div *ngIf="holidayEvents.length > 1" class="form-group event-selector">
