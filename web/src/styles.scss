@@ -11,6 +11,7 @@
   --bakery-accent-2: #fff0d9;   /* pale cream */
   --bakery-accent-transparent: rgba(255,217,199,0.45);
   --bakery-primary: #c8703a;    /* warm terracotta */
+  --bakery-primary-subtle: #c2672f;    /* warmer terracotta */
   --bakery-primary-light: #f3e8e0; /* very light tint for hover bg */
   --bakery-text: #3b3b3b;       /* muted charcoal */
   --bakery-text-emph: #1e1e2e;  /* dark text for emphasis */
@@ -270,7 +271,7 @@ button:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([ma
 }
 
 .info-snackbar {
-  background: var(--bakery-primary) !important;
+  background: var(--bakery-primary-subtle) !important;
   color: white !important;
   
   .mat-mdc-button {

@@ -153,7 +153,7 @@ constructor(
     this.currentStep = 1;
     this.loadSelectedHolidayEventData();
     this.snackBar.open('Holiday event changed. Menu and pickup options reloaded.', 'Close', {
-      duration: 30000000,
+      duration: 3000,
       panelClass: ['info-snackbar']
     });
   }
