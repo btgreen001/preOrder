@@ -64,6 +64,35 @@ export interface PublicPreOrderResponse {
   createdAt: string;
 }
 
+export interface PublicOrganizationDtl {
+  organizationId: string;
+  organizationName: string;
+  registrationToken?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
+export interface PublicOrderEmailLine {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface PublicSendOrderEmailRequest {
+  customerName: string;
+  customerEmail: string;
+  orderExternalId: string;
+  slotStartAt: string;
+  slotEndAt: string;
+  lines: PublicOrderEmailLine[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -90,8 +119,20 @@ export class PublicPreorderService {
     }).pipe(map(slots => slots.map(slot => this.mapPickupSlot(slot))));
   }
 
+  getOrganizationDetails(orgToken: string): Observable<PublicOrganizationDtl> {
+    return this.http.get<unknown>(`${this.apiUrl}/organization-details`, {
+      params: { org: orgToken }
+    }).pipe(map(organization => this.mapOrganizationDetails(organization)));
+  }
+
   createPreOrder(orgToken: string, request: PublicCreatePreOrderRequest): Observable<PublicPreOrderResponse> {
     return this.http.post<PublicPreOrderResponse>(`${this.apiUrl}/preorders`, request, {
+      params: { org: orgToken }
+    });
+  }
+
+  sendOrderEmail(orgToken: string, request: PublicSendOrderEmailRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/send-order-email`, request, {
       params: { org: orgToken }
     });
   }
@@ -125,5 +166,33 @@ export class PublicPreorderService {
       reservedCount: Number(slot['reservedCount'] ?? slot['ReservedCount'] ?? 0),
       isActive: Boolean(slot['isActive'] ?? slot['IsActive'])
     };
+  }
+
+  private mapOrganizationDetails(value: unknown): PublicOrganizationDtl {
+    const organization = value as Record<string, unknown>;
+
+    return {
+      organizationId: String(organization['organizationId'] ?? organization['OrganizationId'] ?? ''),
+      organizationName: String(organization['organizationName'] ?? organization['OrganizationName'] ?? ''),
+      registrationToken: this.readOptionalString(organization, 'registrationToken', 'RegistrationToken'),
+      addressLine1: this.readOptionalString(organization, 'addressLine1', 'AddressLine1'),
+      addressLine2: this.readOptionalString(organization, 'addressLine2', 'AddressLine2'),
+      city: this.readOptionalString(organization, 'city', 'City'),
+      state: this.readOptionalString(organization, 'state', 'State'),
+      postalCode: this.readOptionalString(organization, 'postalCode', 'PostalCode'),
+      country: this.readOptionalString(organization, 'country', 'Country'),
+      contactEmail: this.readOptionalString(organization, 'contactEmail', 'ContactEmail'),
+      contactPhone: this.readOptionalString(organization, 'contactPhone', 'ContactPhone')
+    };
+  }
+
+  private readOptionalString(source: Record<string, unknown>, camelKey: string, pascalKey: string): string | undefined {
+    const value = source[camelKey] ?? source[pascalKey];
+    if (value == null) {
+      return undefined;
+    }
+
+    const normalized = String(value).trim();
+    return normalized.length > 0 ? normalized : undefined;
   }
 }

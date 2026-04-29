@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
+using PreOrderApp.Data;
 using PreOrderApp.Filters;
 using PreOrderApp.Services;
 using PreOrderApp.Services.Interfaces;
+using PreOrderApp.DTOs;
 
 namespace PreOrderApp.Controllers;
 
@@ -15,11 +18,19 @@ public class MvpPreOrdersController : ControllerBase
 {
     private readonly IMvpPreOrderService _service;
     private readonly IOrganizationContextService _orgContext;
+    private readonly IEmailService _emailService;
+    private readonly AppDbContext _context;
 
-    public MvpPreOrdersController(IMvpPreOrderService service, IOrganizationContextService orgContext)
+    public MvpPreOrdersController(
+        IMvpPreOrderService service,
+        IOrganizationContextService orgContext,
+        IEmailService emailService,
+        AppDbContext context)
     {
         _service = service;
         _orgContext = orgContext;
+        _emailService = emailService;
+        _context = context;
     }
 
     [HttpGet("preorder-event")]
@@ -35,8 +46,16 @@ public class MvpPreOrdersController : ControllerBase
     public async Task<IActionResult> CreateHolidayEvent([FromBody] CreateHolidayEventRequest request)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
-        var entity = await _service.CreateHolidayEventAsync(organizationId, request);
-        return Ok(MapHolidayEvent(entity));
+
+        try
+        {
+            var entity = await _service.CreateHolidayEventAsync(organizationId, request);
+            return Ok(MapHolidayEvent(entity));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpPut("preorder-event/{holidayEventExternalId:guid}")]
@@ -163,6 +182,64 @@ public class MvpPreOrdersController : ControllerBase
         var organizationId = _orgContext.GetCurrentOrganizationId();
         var preorder = await _service.CreatePreOrderAsync(organizationId, request);
         return Ok(preorder);
+    }
+
+    [HttpPost("preorders/send-order-email")]
+    [RequireTenantStaffOrAdmin]
+    public async Task<IActionResult> SendOrderEmail([FromBody] SendOrderEmailDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CustomerEmail) || string.IsNullOrWhiteSpace(request.CustomerName))
+        {
+            return BadRequest(new { message = "Customer name and email are required." });
+        }
+
+        var organizationId = _orgContext.GetCurrentOrganizationId();
+        var organizationName = await _context.Organizations
+            .Where(o => o.OrganizationId == organizationId)
+            .Select(o => o.OrganizationName)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(organizationName))
+        {
+            return NotFound(new { message = "Organization not found." });
+        }
+
+        var slotStartAt = request.SlotStartAt;
+        var slotEndAt = request.SlotEndAt;
+        if (Guid.TryParse(request.OrderExternalId, out var orderExternalId))
+        {
+            var slotFromOrder = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.OrganizationId == organizationId && o.ExternalId == orderExternalId && o.PickupSlot != null)
+                .Select(o => new
+                {
+                    SlotStartAt = (DateTime?)o.PickupSlot!.SlotStartAt,
+                    SlotEndAt = (DateTime?)o.PickupSlot!.SlotEndAt
+                })
+                .FirstOrDefaultAsync();
+
+            if (slotFromOrder?.SlotStartAt.HasValue == true && slotFromOrder.SlotEndAt.HasValue)
+            {
+                slotStartAt = slotFromOrder.SlotStartAt.Value;
+                slotEndAt = slotFromOrder.SlotEndAt.Value;
+            }
+        }
+
+        await _emailService.SendOrderEmailAsync(
+            request.CustomerEmail,
+            organizationName,
+            request.CustomerName,
+            request.OrderExternalId,
+            slotStartAt,
+            slotEndAt,
+            request.Lines.Select(line => new OrderEmailLineItem
+            {
+                Name = line.Name,
+                Quantity = line.Quantity,
+                UnitPrice = line.UnitPrice
+            }));
+
+        return Ok(new { message = "Order confirmation email sent." });
     }
 
     [HttpPatch("preorders/{preOrderExternalId:guid}/status")]

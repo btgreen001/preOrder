@@ -1,7 +1,10 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
-/shop is BROKE....the org is not honoring who I am after I register and login.
+Snackbar text is too light for background
+
+Allow user to change pickup window prior to status change.
+
 Need a forget user/password; and need page to be able to perform change password
 
 As part of company registration we need to ensure license is setup.

@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PreOrderApp.Data;
+using PreOrderApp.Services;
 using PreOrderApp.Services.Interfaces;
+using PreOrderApp.DTOs;
 
 namespace PreOrderApp.Controllers;
 
@@ -12,13 +14,22 @@ namespace PreOrderApp.Controllers;
 public class PublicPreOrdersController : ControllerBase
 {
     private readonly IMvpPreOrderService _service;
+    private readonly IOrderService _orderService;
     private readonly AppDbContext _context;
+    private readonly IEmailService _emailService;
     private readonly ILogger<PublicPreOrdersController> _logger;
 
-    public PublicPreOrdersController(IMvpPreOrderService service, AppDbContext context, ILogger<PublicPreOrdersController> logger)
+    public PublicPreOrdersController(
+        IMvpPreOrderService service,
+        IOrderService orderService,
+        AppDbContext context,
+        IEmailService emailService,
+        ILogger<PublicPreOrdersController> logger)
     {
         _service = service;
+        _orderService = orderService;
         _context = context;
+        _emailService = emailService;
         _logger = logger;
     }
 
@@ -65,6 +76,60 @@ public class PublicPreOrdersController : ControllerBase
         return Ok(slots.Select(MapPickupSlot));
     }
 
+    [HttpGet("organization-details")]
+    public async Task<IActionResult> GetOrganizationDetails([FromQuery(Name = "org")] string organizationToken)
+    {
+        var organization = await TryResolveOrganizationAsync(organizationToken);
+        if (organization.error != null)
+        {
+            return organization.error;
+        }
+
+        var organizationDetails = await _context.Organizations
+            .AsNoTracking()
+            .Where(o => o.OrganizationId == organization.organizationId)
+            .Select(o => new
+            {
+                o.OrganizationId,
+                OrganizationName = o.OrganizationName,
+                o.RegistrationToken,
+                o.AddressLine1,
+                o.AddressLine2,
+                City = o.Locality,
+                State = o.Region,
+                o.PostalCode,
+                Country = o.CountryCode,
+                ContactEmail = o.PrimaryEmail,
+                o.ContactPhone
+            })
+            .FirstOrDefaultAsync();
+
+        if (organizationDetails == null)
+        {
+            return NotFound(new { message = "Organization not found for the provided token." });
+        }
+
+        return Ok(organizationDetails);
+    }
+
+    // External endpoint to get order details by external ID without requiring authentication (for email links)
+    [HttpGet("{externalId:guid}")]
+    public async Task<IActionResult> GetExternalOrderById(Guid externalId)
+    {
+        try
+        {
+            var order = await _orderService.GetExternalOrderByIdAsync(externalId);
+            if (order == null)
+                return NotFound(new { error = "Order not found" });
+            
+            return Ok(order);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting order");
+            return StatusCode(500, new { error = "An error occurred while retrieving the order" });
+        }
+    }
     [HttpPost("preorders")]
     public async Task<IActionResult> CreatePreOrder(
         [FromQuery(Name = "org")] string organizationToken,
@@ -75,9 +140,73 @@ public class PublicPreOrdersController : ControllerBase
         {
             return organization.error;
         }
-
         var preorder = await _service.CreatePreOrderAsync(organization.organizationId, request);
         return Ok(MapPreOrder(preorder));
+    }
+
+    [HttpPost("send-order-email")]
+    public async Task<IActionResult> SendOrderEmail(
+        [FromQuery(Name = "org")] string organizationToken,
+        [FromBody] SendOrderEmailDto request)
+    {
+        var organization = await TryResolveOrganizationAsync(organizationToken);
+        if (organization.error != null)
+        {
+            return organization.error;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.CustomerEmail) || string.IsNullOrWhiteSpace(request.CustomerName))
+        {
+            return BadRequest(new { message = "Customer name and email are required." });
+        }
+
+        var organizationName = await _context.Organizations
+            .AsNoTracking()
+            .Where(o => o.OrganizationId == organization.organizationId)
+            .Select(o => o.OrganizationName)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(organizationName))
+        {
+            return NotFound(new { message = "Organization not found for order email." });
+        }
+
+        var slotStartAt = request.SlotStartAt;
+        var slotEndAt = request.SlotEndAt;
+        if (Guid.TryParse(request.OrderExternalId, out var orderExternalId))
+        {
+            var slotFromOrder = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.OrganizationId == organization.organizationId && o.ExternalId == orderExternalId && o.PickupSlot != null)
+                .Select(o => new
+                {
+                    SlotStartAt = (DateTime?)o.PickupSlot!.SlotStartAt,
+                    SlotEndAt = (DateTime?)o.PickupSlot!.SlotEndAt
+                })
+                .FirstOrDefaultAsync();
+
+            if (slotFromOrder?.SlotStartAt.HasValue == true && slotFromOrder.SlotEndAt.HasValue)
+            {
+                slotStartAt = slotFromOrder.SlotStartAt.Value;
+                slotEndAt = slotFromOrder.SlotEndAt.Value;
+            }
+        }
+
+        await _emailService.SendOrderEmailAsync(
+            request.CustomerEmail,
+            organizationName,
+            request.CustomerName,
+            request.OrderExternalId,
+            slotStartAt,
+            slotEndAt,
+            request.Lines.Select(line => new OrderEmailLineItem
+            {
+                Name = line.Name,
+                Quantity = line.Quantity,
+                UnitPrice = line.UnitPrice
+            }));
+
+        return Ok(new { message = "Order confirmation email sent." });
     }
 
     private async Task<(Guid organizationId, IActionResult? error)> TryResolveOrganizationAsync(string organizationToken)

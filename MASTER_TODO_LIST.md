@@ -272,8 +272,8 @@ Order after MVP works:
 ### Progress Note (2026-04-26 — Invite Email Send + Resend Implemented)
 
 - ✅ **SMTP invite email delivery added**
-  - New backend service: `api/Services/InviteEmailService.cs` (`IInviteEmailService`)
-  - Configured via `InviteEmails` in:
+  - New backend service: `api/Services/EmailService.cs` (`IEmailService`)
+  - Configured via `Emails` in:
     - `api/appsettings.json`
     - `api/appsettings.Development.json`
   - SMTP settings applied per requested provider:

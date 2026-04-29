@@ -1,5 +1,4 @@
 <div class="order-builder">
-  <h1>Pre-Order</h1>
 
   <!-- Error: missing org token -->
   <div *ngIf="loadError && !isLoading" class="error-banner">
@@ -14,20 +13,30 @@
   <!-- Success screen -->
   <div *ngIf="submitSuccess" class="success-screen">
     <h2>&#10003; Order Received!</h2>
-    <p>Thank you, <strong>{{ submitSuccess.customerName }}</strong>. Your preorder has been submitted.</p>
+    <p>Thank you, <strong>{{ submitSuccess.customerName }}</strong>. Thank you so much for your pre-order.  It has been submitted.</p>
     <p>Confirmation: <strong>{{ submitSuccess.externalId }}</strong></p>
     <p>Total: <strong>${{ submitSuccess.totalAmount | number:'1.2-2' }}</strong></p>
     <p>We will send a confirmation to <strong>{{ submitSuccess.customerEmail }}</strong>.</p>
     <button class="btn btn-secondary" (click)="startAnotherOrder()">Place Another Order</button>
   </div>
-{{this.organizationToken}}
   <ng-container *ngIf="!isLoading && !loadError && !submitSuccess">
     <!-- Holiday event selector (only when multiple events) -->
     <div *ngIf="holidayEvents.length > 1" class="form-group event-selector">
-      <label for="holidayEvent">Select Event</label>
-      <select id="holidayEvent" [(ngModel)]="selectedHolidayEventExternalId" (ngModelChange)="onHolidayEventChange()">
-        <option *ngFor="let event of holidayEvents" [value]="event.externalId">{{ event.name }}</option>
+      <label for="holidayEvent" class="event-label">Select Pre-Order Event</label>
+      <select id="holidayEvent"
+              [(ngModel)]="selectedHolidayEventExternalId"
+              (ngModelChange)="onHolidayEventChange()">
+        <option *ngFor="let event of holidayEvents" [value]="event.externalId">
+          {{ event.name }}
+        </option>
       </select>
+    </div>
+
+    <div *ngIf="holidayEvents.length === 1" class="order-builder form-group event-selector">
+      <label class="event-label">Pre-Order Event</label>
+      <div class="single-event-name">
+        {{ holidayEvents[0].name }}
+      </div>
     </div>
 
     <div *ngIf="holidayEvents.length === 0" class="empty-state">
@@ -62,7 +71,7 @@
           <h2>Choose Your Items</h2>
           <div *ngIf="selectedHolidayEvent" class="event-banner">
             <strong>{{ selectedHolidayEvent.name }}</strong>
-            <span class="event-dates"> &mdash; orders close {{ selectedHolidayEvent.closesAt | date:'mediumDate' }}</span>
+            <span class="event-dates"> &mdash; order by {{ selectedHolidayEvent.closesAt | date:'shortDate' }}</span>
           </div>
           <div *ngIf="pickupAvailabilityWarning" class="error-banner">
             {{ pickupAvailabilityWarning }}
@@ -78,12 +87,35 @@
                     <p class="price">${{ item.price | number:'1.2-2' }}</p>
                     <p *ngIf="item.maxPerOrder" class="category">Max {{ item.maxPerOrder }} per order</p>
                   </div>
-                    <button 
+                  <div class="product-actions">
+                    <button
+                      *ngIf="getCartItemQuantity(item.externalId) === 0"
                       class="btn btn-primary"
                       (click)="addToCart(item)"
                       [disabled]="!hasPickupCapacity">
                       Add
                     </button>
+                    <div *ngIf="getCartItemQuantity(item.externalId) > 0" class="inline-quantity-controls">
+                      <button
+                        type="button"
+                        (click)="updateQuantity(item.externalId, getCartItemQuantity(item.externalId) - 1)">
+                        -
+                      </button>
+                      <span class="inline-qty-value">{{ getCartItemQuantity(item.externalId) }}</span>
+                      <button
+                        type="button"
+                        (click)="updateQuantity(item.externalId, getCartItemQuantity(item.externalId) + 1)"
+                        [disabled]="!canIncreaseItem(item)">
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        class="remove-btn"
+                        (click)="removeFromCart(item.externalId)">
+                        Del
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div *ngIf="availableMenuItems.length === 0" class="empty-state">
@@ -140,6 +172,7 @@
         <!-- Step 3: Pickup Slot -->
         <div *ngIf="currentStep === 3" class="step-content">
           <h2>Choose Pickup Slot</h2>
+          <h4>All times are local timezone</h4>
           <div class="delivery-form">
             <div *ngIf="pickupSlots.length === 0" class="empty-state">
               No pickup slots are currently available for this event.
@@ -188,9 +221,30 @@
               </div>
             </div>
 
+            <div class="review-section" *ngIf="organization">
+              <h3>Pickup Location</h3>
+              <div class="pickup-location">
+                <div class="pickup-location-details">
+                  <p *ngIf="organization.organizationName">{{ organization.organizationName }}</p>
+                  <p *ngIf="organization.addressLine1 || organization.addressLine2">{{ organization.addressLine1 || organization.addressLine2 }}</p>
+                  <p *ngIf="organization.city">
+                    {{ organization.city }}
+                    <span *ngIf="organization.state">, {{ organization.state }}</span>
+                  </p>
+                  <p *ngIf="organization.contactPhone">Phone: {{ organization.contactPhone }}</p>
+                  <p *ngIf="organization.contactEmail">Email: {{ organization.contactEmail }}</p>
+                </div>
+              </div>
+            </div>
             <div class="review-section" *ngIf="selectedPickupSlot">
-              <h3>Pickup</h3>
-              <p>{{ selectedPickupSlot.slotStartAt | date:'full' }}</p>
+              <div class="pickup-time">
+                <div class="pickup-time-details">
+                  <h3>Pickup Time (merchant local time)</h3>
+                  <p>{{ selectedPickupSlot.slotStartAt | date:'fullDate' }} {{ selectedPickupSlot.slotStartAt | date:'shortTime' }} to
+                  {{ selectedPickupSlot.slotEndAt | date:'shortTime' }}</p>
+                  <p><i>Orders not picked up during this scheduled window may become unavailable.</i></p>
+                </div>
+              </div>
             </div>
 
             <div *ngIf="submitError" class="error-banner">{{ submitError }}</div>
@@ -202,6 +256,9 @@
       <!-- Navigation Buttons -->
       <div class="navigation-buttons">
         <button *ngIf="currentStep > 1" class="btn btn-secondary" (click)="previousStep()" [disabled]="isSubmitting">
+          Previous
+        </button>
+        <button *ngIf="currentStep === 1" class="btn btn-secondary" (click)="previousStep()" [disabled]="true">
           Previous
         </button>
         <button *ngIf="currentStep < totalSteps" class="btn btn-primary" (click)="nextStep()" [disabled]="!canProceedToNext()">

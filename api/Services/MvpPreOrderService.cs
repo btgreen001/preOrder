@@ -52,9 +52,9 @@ public class MvpPreOrderService : IMvpPreOrderService
         {
             throw new InvalidOperationException("Pickup end date must be on or after pickup start date.");
         }
-        if (request.PickupStartDt < request.OpensAt)
+        if (request.PickupStartDt.Date < request.OpensAt.Date)
         {
-            throw new InvalidOperationException("Pickup start date must be on or after pre-order event open time.");
+            throw new InvalidOperationException("Pickup start date must be on or after the pre-order event open date.");
         }
 
         var entity = new HolidayEvent
@@ -649,19 +649,19 @@ public class MvpPreOrderService : IMvpPreOrderService
         return await MapOrderToPreOrderAsync(order);
     }
 
-    private async Task<List<PreOrder>> MapOrdersToPreOrdersAsync(List<Order> orders)
+    private Task<List<PreOrder>> MapOrdersToPreOrdersAsync(List<Order> orders)
     {
         if (orders.Count == 0)
         {
-            return [];
+            return Task.FromResult(new List<PreOrder>());
         }
 
-        return orders.Select(MapOrderToPreOrder).ToList();
+        return Task.FromResult(orders.Select(MapOrderToPreOrder).ToList());
     }
 
-    private async Task<PreOrder> MapOrderToPreOrderAsync(Order order)
+    private Task<PreOrder> MapOrderToPreOrderAsync(Order order)
     {
-        return await Task.FromResult(MapOrderToPreOrder(order));
+        return Task.FromResult(MapOrderToPreOrder(order));
     }
 
     private async Task<Dictionary<long, string>> BuildMenuNameLookupAsync(IEnumerable<Order> orders)
@@ -955,7 +955,7 @@ public class MvpPreOrderService : IMvpPreOrderService
         return normalizedCurrent switch
         {
             "SUBMITTED" when nextStatus is "CONFIRMED" or "CANCELLED" => true,
-            "CONFIRMED" when nextStatus == "CANCELLED" => true,
+            "PENDING" when nextStatus == "CANCELLED" => true,
             _ => false
         };
     }

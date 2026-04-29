@@ -40,14 +40,14 @@ export class RegisterComponent {
     });
 
     const inviteCode = this.route.snapshot.queryParamMap.get('code');
-    const inviteEmail = this.route.snapshot.queryParamMap.get('email');
+    const email = this.route.snapshot.queryParamMap.get('email');
 
     if (inviteCode) {
       this.form.patchValue({ companyRegistrationCode: inviteCode });
     }
 
-    if (inviteEmail) {
-      this.form.patchValue({ email: inviteEmail });
+    if (email) {
+      this.form.patchValue({ email: email });
     }
   }
 

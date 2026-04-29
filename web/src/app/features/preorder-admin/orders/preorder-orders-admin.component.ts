@@ -79,6 +79,17 @@ export class PreorderOrdersAdminComponent implements OnInit {
       });
   }
 
+  get filteredPreOrders(): AdminPreOrder[] {
+    if (!this.selectedPickupDateUtc) {
+      return this.preOrders;
+    }
+    return this.preOrders.filter(order => {
+      const slotDate = order.pickupSlot?.slotStartAt;
+      if (!slotDate) return false;
+      return slotDate.startsWith(this.selectedPickupDateUtc);
+    });
+  }
+
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',

@@ -1,40 +1,54 @@
 <div class="app-shell">
   <app-loading-overlay></app-loading-overlay>
   <nav class="topnav">
+    <button class="mobile-nav-toggle" *ngIf="showAdminShell" (click)="toggleSidebar()" title="Toggle navigation" aria-label="Toggle navigation">
+      <mat-icon>{{ isSidebarOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
     <mat-icon class="brand-icon">bakery_dining</mat-icon>
-    <span class="app-title">BakeAhead™ <small>Powered by BakeBoard™</small></span>
+    <div class="app-title-wrapper">
+      <div class="app-title">BakeAhead™</div>
+      <div class="tiny">Powered by BakeBoard™</div>
+    </div>
     <span class="spacer"></span>
     <div class="nav-controls" *ngIf="showAdminShell">
-      <a
-        *ngIf="showStorePreviewLink"
-        class="change-user-btn"
-        href="/BakeAhead"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Open Storefront Preview"
-        data-testid="storefront-preview-link">
-        <mat-icon>open_in_new</mat-icon>
-        Preview Store
-      </a>
       <button class="logout-btn" (click)="logoutAllSessions()" title="Logout" data-testid="logout-button">
         <mat-icon>logout</mat-icon>
         Logout
       </button>
     </div>
   </nav>
+  <div class="mobile-sidebar-backdrop" *ngIf="showAdminShell && isSidebarOpen" (click)="closeSidebar()"></div>
   <div class="main-layout">
-    <aside class="sidebar" *ngIf="showAdminShell">
-      <ul>
-        <li *ngFor="let nav of sidebarNav"
-            [class.active]="isActive(nav.route)"
-            [class.child]="nav.isChild">
-          <a [routerLink]="nav.route">
-            <mat-icon class="nav-icon">{{ nav.icon }}</mat-icon>
-            <span class="nav-label">{{ nav.label }}</span>
-          </a>
-        </li>
-      </ul>
-    </aside>
+  <aside class="sidebar" *ngIf="showAdminShell" [class.mobile-open]="isSidebarOpen">
+  <ul>
+    <li *ngFor="let nav of sidebarNav"
+        [class.active]="nav.route ? isActive(nav.route) : false"
+        [class.child]="nav.isChild">
+
+      <!-- Divider BEFORE this item -->
+      <div *ngIf="nav.dividerBefore" class="nav-divider"></div>
+
+      <!-- External link -->
+      <a *ngIf="nav.externalUrl"
+         [href]="nav.externalUrl"
+         target="_blank"
+         rel="noopener noreferrer">
+        <mat-icon>{{ nav.icon }}</mat-icon>
+        {{ nav.label }}
+      </a>
+
+        <!-- Internal route -->
+        <a *ngIf="nav.route && !nav.externalUrl"
+          [routerLink]="nav.route">
+          <mat-icon>{{ nav.icon }}</mat-icon>
+          {{ nav.label }}
+        </a>
+
+      </li>
+    </ul>
+  </aside>
+
+
     <main class="main-content">
       <div class="content-scroll">
         <router-outlet></router-outlet>

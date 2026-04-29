@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 import { PreorderAdminService, AdminHolidayEvent, SaveHolidayEventRequest } from '../services/preorder-admin.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-preorder-events-admin',
@@ -14,7 +15,8 @@ import { PreorderAdminService, AdminHolidayEvent, SaveHolidayEventRequest } from
 })
 export class PreorderEventsAdminComponent implements OnInit {
   private readonly preorderAdminService = inject(PreorderAdminService);
-
+  private readonly snackBar = inject(MatSnackBar);
+  
   events: AdminHolidayEvent[] = [];
   isLoading = false;
   isSaving = false;
@@ -86,6 +88,7 @@ export class PreorderEventsAdminComponent implements OnInit {
       : `Permanently deactivated "${event.name}" - reactivate it to accept new orders.`;
 
     if (!confirm(confirmMsg)) {
+      this.snackBar.open('Event Deleted', 'Close', { duration: 3000 });
       return;
     }
 
@@ -168,6 +171,7 @@ export class PreorderEventsAdminComponent implements OnInit {
         this.successMessage = this.editingExternalId ? 'Event updated.' : 'Event created.';
         this.startCreate();
         this.loadEvents();
+        this.snackBar.open(this.successMessage, 'Close', { duration: 3000 });
       },
       error: (error) => {
         this.isSaving = false;

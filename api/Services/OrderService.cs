@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using PreOrderApp.Data;
 using PreOrderApp.Models;
@@ -31,6 +32,7 @@ namespace PreOrderApp.Services
                 .AsNoTracking()
                 .Where(o => o.OrganizationId == organizationId)
                 .Include(o => o.Customer)
+                .Include(o => o.HolidayEvent)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.MenuItem)
                 .Select(o => new OrderDto
@@ -39,6 +41,8 @@ namespace PreOrderApp.Services
                     ExternalId = o.ExternalId,
                     CustomerId = o.CustomerId,
                     CustomerExternalId = o.Customer != null ? o.Customer.ExternalId : null,
+                    EventToken = o.HolidayEvent != null ? o.HolidayEvent.ExternalId : null,
+                    EventName = o.HolidayEvent != null ? o.HolidayEvent.Name : null,
                     CustomerName = o.Customer != null ? o.Customer.Name : string.Empty,
                     OrderStatus = o.OrderStatus,
                     OrderDate = o.OrderDate,
@@ -56,9 +60,12 @@ namespace PreOrderApp.Services
             
             var order = await _context.Orders
                 .Where(o => o.OrganizationId == organizationId)
+                .Include(o => o.Organization)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Customer)
+                .Include(o => o.HolidayEvent)
+                .Include(o => o.PickupSlot)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
 
@@ -68,6 +75,27 @@ namespace PreOrderApp.Services
             return MapToDetailDto(order);
         }
 
+
+        public async Task<OrderDetailDto?> GetExternalOrderByIdAsync(Guid externalId)
+        {
+            _logger.LogDebug($"Getting order {externalId}");
+            
+            var order = await _context.Orders
+                .Where(o => o.ExternalId == externalId)
+                .Include(o => o.Organization)
+                .Include(o => o.Customer)
+                .Include(o => o.HolidayEvent)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.PickupSlot)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.ExternalId == externalId);
+
+            if (order == null)
+                return null;
+
+            return MapToDetailDto(order);
+        }
         public async Task<OrderDetailDto> CreateOrderAsync(Guid organizationId, CreateOrderRequest request)
         {
             _logger.LogInformation($"Creating order for organization {organizationId}");
@@ -146,7 +174,9 @@ namespace PreOrderApp.Services
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Organization)
                 .Include(o => o.Customer)
+                .Include(o => o.PickupSlot)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
             
             if (order == null)
@@ -193,7 +223,9 @@ namespace PreOrderApp.Services
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Organization)
                 .Include(o => o.Customer)
+                .Include(o => o.PickupSlot)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
             
             if (order == null)
@@ -216,11 +248,34 @@ namespace PreOrderApp.Services
                 ExternalId = order.ExternalId,
                 CustomerId = order.CustomerId,
                 CustomerExternalId = order.Customer?.ExternalId,
+                EventToken = order.HolidayEvent?.ExternalId,
+                EventName = order.HolidayEvent?.Name,
+                Organization = order.Organization == null ? null : new OrganizationSummaryDto
+                {
+                    OrganizationId = order.Organization.OrganizationId,
+                    OrganizationName = order.Organization.OrganizationName,
+                    RegistrationToken = order.Organization.RegistrationToken,
+                    AddressLine1 = order.Organization.AddressLine1,
+                    AddressLine2 = order.Organization.AddressLine2,
+                    City = order.Organization.Locality,
+                    State = order.Organization.Region,
+                    PostalCode = order.Organization.PostalCode,
+                    Country = order.Organization.CountryCode,
+                    ContactEmail = order.Organization.PrimaryEmail,
+                    ContactPhone = order.Organization.ContactPhone
+                },
                 CustomerName = order.Customer?.Name ?? string.Empty,
                 OrderStatus = order.OrderStatus,
                 OrderDate = order.OrderDate,
                 TotalAmount = order.TotalAmount,
                 SpecialInstructionTxt = order.SpecialInstructionTxt,
+                PickupSlot = order.PickupSlot == null ? null : new PickupSlotSummaryDto
+                {
+                    Id = order.PickupSlot.Id,
+                    ExternalId = order.PickupSlot.ExternalId,
+                    SlotStartAt = order.PickupSlot.SlotStartAt,
+                    SlotEndAt = order.PickupSlot.SlotEndAt
+                },
                 Items = order.OrderItems?.Select(oi => new OrderItemDto
                 {
                     Id = oi.Id,
@@ -394,7 +449,10 @@ namespace PreOrderApp.Services
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Organization)
                 .Include(o => o.Customer)
+                .Include(o => o.HolidayEvent)
+                .Include(o => o.PickupSlot)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
 
             if (order == null)
@@ -425,11 +483,20 @@ namespace PreOrderApp.Services
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Organization)
                 .Include(o => o.Customer)
+                .Include(o => o.HolidayEvent)
+                .Include(o => o.PickupSlot)
                 .FirstOrDefaultAsync(o => o.ExternalId == externalId);
 
             if (order == null)
                 return null;
+
+            var currentStatus = (order.OrderStatus ?? string.Empty).Trim().ToUpperInvariant();
+            if (currentStatus != "PENDING" && currentStatus != "SUBMITTED")
+            {
+                throw new InvalidOperationException($"Order cannot be cancelled from status '{order.OrderStatus}'. Only PENDING or SUBMITTED orders can be cancelled.");
+            }
 
             order.OrderStatus = "CANCELLED";
             order.CancelledAt = DateTime.UtcNow;

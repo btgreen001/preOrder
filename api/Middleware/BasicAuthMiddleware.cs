@@ -56,7 +56,7 @@ namespace PreOrderApp.Middleware
                 path.Contains("/api/auth/logout") ||
                 // anonymous device-context lookup (rehydrates terminal context from device_token cookie on reload)
                 path.Contains("/api/terminal/device-context") ||
-                // public holiday preorder endpoints (org token validated in controller)
+                // public preorder endpoints (org token not required for GET /api/public/preorders/preorder-event and /api/public/preorders/menu-items, but will be required for GET /api/public/preorders/{externalId} to prevent abuse)
                 path.Contains("/api/public/preorders")
             ))
             {

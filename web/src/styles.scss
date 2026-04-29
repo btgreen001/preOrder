@@ -212,6 +212,36 @@ button:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([ma
 .inventory-scan { display: flex; gap: .5rem; align-items: center; }
 
 /* Snackbar/Toast notification styles */
+.mat-mdc-snack-bar-container {
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+
+    /* Prevent MDC state-layer from creating a bright flash over custom button colors */
+    --mat-text-button-state-layer-color: transparent;
+    --mat-text-button-ripple-color: rgba(255, 255, 255, 0.12);
+
+    .mdc-button__label {
+      color: inherit !important;
+    }
+
+    .mat-mdc-button-persistent-ripple::before,
+    .mdc-button__ripple::before,
+    .mdc-button__ripple::after {
+      opacity: 0 !important;
+    }
+
+    &:hover {
+      background: #ffffff !important;
+      color: #1f2937 !important;
+      border-color: #ffffff !important;
+    }
+  }
+}
+
 .error-snackbar {
   background: var(--bakery-error) !important;
   color: white !important;

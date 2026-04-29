@@ -7,11 +7,30 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RoleService, UserRole } from '../shared-data-services/role.service';
 import { LicenseService } from '../shared-data-services/license.service';
 import { AuthService } from './core/services/auth.service';
-import { IdleDetectionService } from './core/services/idle-detection.service';
 import { TerminalContextService } from './core/services/terminal-context.service';
 import { TerminalService } from './features/terminals/services/terminal.service';
 import { LoadingOverlayComponent } from './core/components/loading-overlay/loading-overlay.component';
 import { Subscription, filter } from 'rxjs';
+
+export type NavItem =
+  | {
+      label: string;
+      route: string;
+      roles: UserRole[];
+      icon: string;
+      isChild?: boolean;
+      externalUrl?: undefined;
+      dividerBefore?: boolean;
+    }
+  | {
+      label: string;
+      externalUrl: string;
+      roles: UserRole[];
+      icon: string;
+      isChild?: boolean;
+      route?: undefined;
+      dividerBefore?: boolean;
+    };
 
 @Component({
   selector: 'app-root',
@@ -20,12 +39,13 @@ import { Subscription, filter } from 'rxjs';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
+
 export class App implements OnInit, OnDestroy {
+  private static readonly MOBILE_NAV_BREAKPOINT = 960;
   private router = inject(Router);
   private roleService = inject(RoleService);
   private licenseService = inject(LicenseService);
   private authService = inject(AuthService);
-  private idleDetection = inject(IdleDetectionService);
   private terminalContextService = inject(TerminalContextService);
   private terminalService = inject(TerminalService);
   private userSubscription?: Subscription;
@@ -33,16 +53,27 @@ export class App implements OnInit, OnDestroy {
 
   protected readonly title = signal('Pre-Order');
   currentRole: UserRole = 'customer'; // Default fallback
-  sidebarNav: { label: string, route: string, roles: UserRole[], icon: string, isChild?: boolean }[] = [];
+  sidebarNav: NavItem[] = [];
+
+//  sidebarNav: { label: string, route: string, roles: UserRole[], icon: string, isChild?: boolean }[] = [];
   showAdminShell = true;
   showStorePreviewLink = false;
+  isSidebarOpen = false;
+
+  
+  get storePreviewUrl(): string {
+    const token = this.authService.currentUserValue?.registrationToken;
+    return token ? `/BakeAhead?org=${encodeURIComponent(token)}` : '/BakeAhead';
+  }
 
   private allNavItems = [
-    { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'event' },
-    { label: 'Menu',                  route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'restaurant_menu' },
-    { label: 'Pickup Slots',          route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'schedule' },
-    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],                           icon: 'receipt_long' },
-    { label: 'Invite Staff',           route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                                   icon: 'person_add' }
+    { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
+    { label: 'Menu',                  route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'restaurant_menu' },
+    { label: 'Pickup Slots',          route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
+    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long' },
+    { label: 'Invite Staff',          route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'person_add' },
+
+    { label: 'Store Preview',         externalUrl: this.storePreviewUrl,      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'preview',dividerBefore: true}
 
 ];
   currentYear = new Date().getFullYear();
@@ -51,7 +82,6 @@ export class App implements OnInit, OnDestroy {
     this.updateNavigation();
     this.syncShellForCurrentRoute();
   }
-
   ngOnInit() {
     // Subscribe to user changes to update navigation when role changes
     this.userSubscription = this.authService.currentUser.subscribe(user => {
@@ -59,33 +89,25 @@ export class App implements OnInit, OnDestroy {
 
       // Start idle detection monitoring when user is authenticated.
       // Route sync below will immediately stop it when the active route is cook mode.
-      if (user) {
-        console.log('[App] User authenticated - starting idle detection');
-        this.idleDetection.startMonitoring();
-        this.syncIdleMonitoringForCurrentRoute('auth-state-change');
-        return;
-      }
-
-      this.idleDetection.stopMonitoring();
+ 
     });
 
     this.routeIdleSyncSubscription = this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.syncShellForCurrentRoute();
-      this.syncIdleMonitoringForCurrentRoute('navigation-end');
+      this.closeSidebarOnMobile();
     });
 
     // Apply route-aware state at startup in case the app is loaded directly into a cook route.
     this.syncShellForCurrentRoute();
-    this.syncIdleMonitoringForCurrentRoute('app-init');
   }
 
   ngOnDestroy() {
     // Clean up subscription and stop idle monitoring
     this.userSubscription?.unsubscribe();
     this.routeIdleSyncSubscription?.unsubscribe();
-    this.idleDetection.stopMonitoring();
+  
   }
 
   private updateNavigation() {
@@ -103,6 +125,11 @@ export class App implements OnInit, OnDestroy {
       normalizedUrl.startsWith('/shop?') ||
       normalizedUrl.startsWith('/shop/');
 
+    const isOrderRoute =
+      normalizedUrl === '/preorders/external' ||
+      normalizedUrl.startsWith('/preorders/external?') ||
+      normalizedUrl.startsWith('/preorders/external/');
+
     const isLoginRoute =
       normalizedUrl === '/login' ||
       normalizedUrl.startsWith('/login?') ||
@@ -116,24 +143,32 @@ export class App implements OnInit, OnDestroy {
       normalizedUrl.startsWith('/register?') ||
       normalizedUrl.startsWith('/register/');
 
-    this.showAdminShell = !isStorefrontRoute && !isLoginRoute && !isRegisterRoute;
+    this.showAdminShell = !isStorefrontRoute && !isLoginRoute && !isRegisterRoute && !isOrderRoute;
+    if (!this.showAdminShell) {
+      this.isSidebarOpen = false;
+    }
     this.showStorePreviewLink = normalizedUrl.startsWith('/admin');
   }
 
-  private syncIdleMonitoringForCurrentRoute(source: string): void {
-    if (!this.authService.currentUserValue) {
-      return;
-    }
-
-    const inCookModeRoute = this.routeTreeHasCookMode(this.router.routerState.snapshot.root);
-
-    if (inCookModeRoute) {
-      this.idleDetection.stopMonitoring();
-      return;
-    }
-
-    this.idleDetection.startMonitoring();
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
   }
+
+  closeSidebar(): void {
+    this.isSidebarOpen = false;
+  }
+
+  onSidebarNavClick(): void {
+    this.closeSidebarOnMobile();
+  }
+
+  private closeSidebarOnMobile(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= App.MOBILE_NAV_BREAKPOINT) {
+      this.isSidebarOpen = false;
+    }
+  }
+
+
 
   private routeTreeHasCookMode(snapshot: ActivatedRouteSnapshot | null): boolean {
     let cursor: ActivatedRouteSnapshot | null = snapshot;

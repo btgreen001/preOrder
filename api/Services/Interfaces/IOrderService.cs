@@ -9,6 +9,7 @@ namespace PreOrderApp.Services.Interfaces
         // Phase 1 - Basic CRUD Operations
         Task<List<OrderDto>> GetOrdersAsync(Guid organizationId);
         Task<OrderDetailDto?> GetOrderByIdAsync(Guid externalId, Guid organizationId);
+        Task<OrderDetailDto?> GetExternalOrderByIdAsync(Guid externalId);
         Task<OrderDetailDto> CreateOrderAsync(Guid organizationId, CreateOrderRequest request);
         Task<OrderDetailDto?> UpdateOrderAsync(Guid externalId, UpdateOrderRequest request);
         Task<bool> DeleteOrderAsync(Guid externalId);
@@ -29,6 +30,8 @@ namespace PreOrderApp.Services.Interfaces
         public Guid ExternalId { get; set; }
         public long CustomerId { get; set; }
         public Guid? CustomerExternalId { get; set; }
+        public Guid? EventToken { get; set; }
+        public string? EventName { get; set; }
         public string CustomerName { get; set; } = string.Empty;
         public string OrderStatus { get; set; } = string.Empty;
         public DateTime OrderDate { get; set; }
@@ -38,7 +41,32 @@ namespace PreOrderApp.Services.Interfaces
 
     public class OrderDetailDto : OrderDto
     {
+        public OrganizationSummaryDto? Organization { get; set; }
         public List<OrderItemDto>? Items { get; set; }
+        public PickupSlotSummaryDto? PickupSlot { get; set; }
+    }
+
+    public class OrganizationSummaryDto
+    {
+        public Guid OrganizationId { get; set; }
+        public string OrganizationName { get; set; } = string.Empty;
+        public string RegistrationToken { get; set; } = string.Empty;
+        public string? AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? PostalCode { get; set; }
+        public string? Country { get; set; }
+        public string? ContactEmail { get; set; }
+        public string? ContactPhone { get; set; }
+    }
+
+    public class PickupSlotSummaryDto
+    {
+        public long Id { get; set; }
+        public Guid ExternalId { get; set; }
+        public DateTime SlotStartAt { get; set; }
+        public DateTime SlotEndAt { get; set; }
     }
 
     public class OrderItemDto

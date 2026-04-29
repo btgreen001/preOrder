@@ -15,6 +15,11 @@ export const routes: Routes = [
 	{ path: 'admin/orders', loadComponent: () => import('./features/preorder-admin/orders/preorder-orders-admin.component').then(m => m.PreorderOrdersAdminComponent), canActivate: [AuthGuard, StaffGuard] },
 	{ path: 'admin/invites', loadComponent: () => import('./features/preorder-admin/invites/admin-invites.component').then(m => m.AdminInvitesComponent), canActivate: [AuthGuard, AdminGuard] },
 
+	{ path: 'preorders/external', loadComponent: () => import('./features/orders/pre-order-detail/pre-order-detail').then(m => m.OrderDetailComponent) },
+	{ path: 'preorders/external/:id', loadComponent: () => import('./features/orders/pre-order-detail/pre-order-detail').then(m => m.OrderDetailComponent) },
+//	{ path: 'preorders/external/cancel/:id', loadComponent: () => import('./features/orders/pre-order-detail/pre-order-detail').then(m => m.OrderDetailComponent) },
+
+
 	{ path: '', redirectTo: '/BakeAhead', pathMatch: 'full' },
 	{ path: '**', redirectTo: '/BakeAhead' }
 ];

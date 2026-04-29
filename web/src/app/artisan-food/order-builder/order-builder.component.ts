@@ -1,14 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import {
   PublicCreatePreOrderRequest,
   PublicHolidayEvent,
   PublicMenuItem,
+  PublicOrganizationDtl,
   PublicPickupSlot,
   PublicPreOrderResponse,
+  PublicSendOrderEmailRequest,
   PublicPreorderService
 } from '../../core/services/public-preorder.service';
 
@@ -37,9 +40,12 @@ interface CustomerForm {
   styleUrls: ['./order-builder.component.scss']
 })
 export class OrderBuilderComponent implements OnInit {
-  private static readonly ORG_TOKEN_STORAGE_KEY = 'preorder.orgToken';
   private readonly route = inject(ActivatedRoute);
   private readonly preorderService = inject(PublicPreorderService);
+
+constructor(
+  private snackBar: MatSnackBar
+) {}
 
   currentStep = 1;
   totalSteps = 4;
@@ -56,6 +62,7 @@ export class OrderBuilderComponent implements OnInit {
   holidayEvents: PublicHolidayEvent[] = [];
   availableMenuItems: PublicMenuItem[] = [];
   pickupSlots: PublicPickupSlot[] = [];
+  organization: PublicOrganizationDtl | null = null;
   selectedHolidayEventExternalId = '';
   selectedPickupSlotExternalId = '';
 
@@ -70,12 +77,7 @@ export class OrderBuilderComponent implements OnInit {
 
   ngOnInit(): void {
     const queryToken = this.route.snapshot.queryParamMap.get('org')?.trim() ?? '';
-    const storedToken = localStorage.getItem(OrderBuilderComponent.ORG_TOKEN_STORAGE_KEY)?.trim() ?? '';
-    this.organizationToken = queryToken || storedToken;
-
-    if (queryToken) {
-      localStorage.setItem(OrderBuilderComponent.ORG_TOKEN_STORAGE_KEY, queryToken);
-    }
+    this.organizationToken = queryToken;
 
     if (!this.organizationToken) {
       this.isLoading = false;
@@ -106,6 +108,15 @@ export class OrderBuilderComponent implements OnInit {
     return this.pickupSlots.some(slot => slot.capacity > slot.reservedCount);
   }
 
+  getCartItemQuantity(menuItemExternalId: string): number {
+    return this.cart.find(item => item.menuItemExternalId === menuItemExternalId)?.quantity ?? 0;
+  }
+
+  canIncreaseItem(item: PublicMenuItem): boolean {
+    const quantity = this.getCartItemQuantity(item.externalId);
+    return !item.maxPerOrder || quantity < item.maxPerOrder;
+  }
+
   loadHolidayEvents(): void {
     this.isLoading = true;
     this.loadError = '';
@@ -117,6 +128,7 @@ export class OrderBuilderComponent implements OnInit {
         if (events.length === 0) {
           this.availableMenuItems = [];
           this.pickupSlots = [];
+          this.organization = null;
           this.selectedHolidayEventExternalId = '';
           this.isLoading = false;
           return;
@@ -138,7 +150,12 @@ export class OrderBuilderComponent implements OnInit {
     this.submitError = '';
     this.submitSuccess = null;
     this.pickupAvailabilityWarning = '';
+    this.currentStep = 1;
     this.loadSelectedHolidayEventData();
+    this.snackBar.open('Holiday event changed. Menu and pickup options reloaded.', 'Close', {
+      duration: 30000000,
+      panelClass: ['info-snackbar']
+    });
   }
 
   addToCart(item: PublicMenuItem): void {
@@ -227,8 +244,30 @@ export class OrderBuilderComponent implements OnInit {
 
     this.preorderService.createPreOrder(this.organizationToken, request).subscribe({
       next: preorder => {
-        this.isSubmitting = false;
-        this.submitSuccess = preorder;
+        const orderEmailRequest: PublicSendOrderEmailRequest = {
+          customerName: this.customer.name.trim(),
+          customerEmail: this.customer.email.trim(),
+          orderExternalId: preorder.externalId,
+          slotStartAt: this.selectedPickupSlot?.slotStartAt ?? '',
+          slotEndAt: this.selectedPickupSlot?.slotEndAt ?? '',
+          lines: this.cart.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice
+          }))
+        };
+
+        this.preorderService.sendOrderEmail(this.organizationToken, orderEmailRequest).subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            this.submitSuccess = preorder;
+          },
+          error: () => {
+            // Keep checkout successful even if confirmation email fails.
+            this.isSubmitting = false;
+            this.submitSuccess = preorder;
+          }
+        });
       },
       error: error => {
         this.isSubmitting = false;
@@ -271,6 +310,7 @@ export class OrderBuilderComponent implements OnInit {
     if (!this.selectedHolidayEventExternalId) {
       this.availableMenuItems = [];
       this.pickupSlots = [];
+      this.organization = null;
       this.isLoading = false;
       return;
     }
@@ -279,10 +319,12 @@ export class OrderBuilderComponent implements OnInit {
     this.loadError = '';
 
     forkJoin({
+      organization: this.preorderService.getOrganizationDetails(this.organizationToken),
       menuItems: this.preorderService.getMenuItems(this.organizationToken, this.selectedHolidayEventExternalId),
       pickupSlots: this.preorderService.getPickupSlots(this.organizationToken, this.selectedHolidayEventExternalId)
     }).subscribe({
       next: result => {
+        this.organization = result.organization;
         this.availableMenuItems = result.menuItems;
         this.pickupSlots = result.pickupSlots;
         const availableSlots = result.pickupSlots.filter(slot => slot.capacity > slot.reservedCount);

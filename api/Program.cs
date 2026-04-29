@@ -42,7 +42,7 @@ if (!string.IsNullOrWhiteSpace(pasetoSecretKey))
 var smtpApiKey = Environment.GetEnvironmentVariable("SMTP_API_KEY");
 if (!string.IsNullOrWhiteSpace(smtpApiKey))
 {
-    builder.Configuration["InviteEmails:Smtp:Password"] = smtpApiKey;
+    builder.Configuration["Emails:Smtp:Password"] = smtpApiKey;
 }
 
 // Build connection string with environment variable
@@ -150,7 +150,7 @@ builder.Services.AddScoped<IPinService, PinService>();
 builder.Services.AddScoped<ITerminalLockService, TerminalLockService>();
 builder.Services.AddScoped<ITerminalDeviceBindingService, TerminalDeviceBindingService>();
 builder.Services.AddScoped<IOrganizationSettingService, OrganizationSettingService>();
-builder.Services.AddScoped<IInviteEmailService, InviteEmailService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<TenantAccessFilter>(); // Register the tenant validation filter
 builder.Services.AddScoped<TenantAdminFilter>(); // Register the tenant admin role filter
 builder.Services.AddScoped<TenantStaffOrAdminFilter>(); // Register the tenant staff/admin role filter

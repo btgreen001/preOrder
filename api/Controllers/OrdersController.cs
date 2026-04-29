@@ -10,8 +10,6 @@ namespace PreOrderApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
-    [ValidateTenantAccess]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -29,6 +27,8 @@ namespace PreOrderApp.Controllers
         /// Get all orders for the authenticated user's organization
         /// </summary>
         [HttpGet]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> GetOrders()
         {
             try
@@ -47,9 +47,11 @@ namespace PreOrderApp.Controllers
         }
 
         /// <summary>
-        /// Get a specific order by external ID
+        /// Get a specific order by external ID 
         /// </summary>
         [HttpGet("{externalId:guid}")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> GetOrderById(Guid externalId)
         {
             try
@@ -69,11 +71,12 @@ namespace PreOrderApp.Controllers
                 return StatusCode(500, new { error = "An error occurred while retrieving the order" });
             }
         }
-
         /// <summary>
         /// Create a new order
         /// </summary>
         [HttpPost]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
         {
             try
@@ -98,6 +101,8 @@ namespace PreOrderApp.Controllers
         /// Update an existing order
         /// </summary>
         [HttpPut("{externalId:guid}")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> UpdateOrder(Guid externalId, [FromBody] UpdateOrderRequest request)
         {
             try
@@ -124,6 +129,8 @@ namespace PreOrderApp.Controllers
         /// Update order status
         /// </summary>
         [HttpPut("{externalId:guid}/status")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> UpdateOrderStatus(Guid externalId, [FromBody] UpdateOrderStatusRequest request)
         {
             try
@@ -150,6 +157,8 @@ namespace PreOrderApp.Controllers
         /// Delete an order (soft delete to CANCELLED status)
         /// </summary>
         [HttpDelete("{externalId:guid}")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> DeleteOrder(Guid externalId)
         {
             try
@@ -175,6 +184,8 @@ namespace PreOrderApp.Controllers
         /// Validate if inventory is available for all items in an order
         /// </summary>
         [HttpPost("validate-inventory")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> ValidateOrderInventory([FromBody] List<CreateOrderItemRequest> items)
         {
             try
@@ -203,6 +214,8 @@ namespace PreOrderApp.Controllers
         /// Check availability of a specific inventory item
         /// </summary>
         [HttpPost("check-availability")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> CheckAvailability([FromBody] InventoryCheckAvailabilityRequest request)
         {
             try
@@ -227,6 +240,8 @@ namespace PreOrderApp.Controllers
         /// Generate pick list for an order (for fulfillment)
         /// </summary>
         [HttpGet("{externalId:guid}/pick-list")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> GeneratePickList(Guid externalId)
         {
             try
@@ -251,6 +266,8 @@ namespace PreOrderApp.Controllers
         /// Complete an order (mark as fulfilled)
         /// </summary>
         [HttpPut("{externalId:guid}/complete")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> CompleteOrder(Guid externalId)
         {
             try
@@ -286,6 +303,11 @@ namespace PreOrderApp.Controllers
                 
                 return Ok(order);
             }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid cancel request for order {ExternalId}", externalId);
+                return Conflict(new { error = ex.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error cancelling order");
@@ -297,6 +319,8 @@ namespace PreOrderApp.Controllers
         /// Get orders by status
         /// </summary>
         [HttpGet("by-status/{status}")]
+        [Authorize]
+        [ValidateTenantAccess]
         public async Task<IActionResult> GetOrdersByStatus(string status)
         {
             try

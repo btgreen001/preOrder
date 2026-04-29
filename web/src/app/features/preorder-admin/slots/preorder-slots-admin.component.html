@@ -24,14 +24,14 @@
   <section class="editor">
     <h2>{{ editingExternalId ? 'Edit Pickup Slot' : 'Create Pickup Slot' }}</h2>
     <p *ngIf="selectedHolidayEvent" class="window-hint">
-      Event Pickup Window:
+      Event Pickup Window (local time):
       {{ selectedHolidayEvent.pickupStartDt | date: 'yyyy-MM-dd HH:mm' }}
       to
       {{ selectedHolidayEvent.pickupEndDt | date: 'yyyy-MM-dd HH:mm' }}
     </p>
     <div class="grid">
       <label>
-        Slot Start
+        Slot Start (local time)
         <input [(ngModel)]="form.slotStartAt" type="datetime-local" />
       </label>
 

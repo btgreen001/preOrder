@@ -13,18 +13,18 @@ namespace PreOrderApp.Controllers
         private readonly IOrganizationService _organizationService;
         private readonly PreOrderApp.Data.AppDbContext _context;
         private readonly IOrganizationContextService _orgContext;
-        private readonly IInviteEmailService _inviteEmailService;
+        private readonly IEmailService _emailService;
 
         public OrganizationController(
             IOrganizationService organizationService,
             PreOrderApp.Data.AppDbContext context,
             IOrganizationContextService orgContext,
-            IInviteEmailService inviteEmailService)
+            IEmailService emailService)
         {
             _organizationService = organizationService;
             _context = context;
             _orgContext = orgContext;
-            _inviteEmailService = inviteEmailService;
+            _emailService = emailService;
         }
 
         [HttpGet("{id}")]
@@ -258,7 +258,7 @@ namespace PreOrderApp.Controllers
             {
                 try
                 {
-                    await _inviteEmailService.SendInviteEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
+                    await _emailService.SendEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
                     emailSent = true;
                     await LogInviteAuditAsync("INVITE_CREATE_EMAIL_SENT", userId, orgId, code.CodeId, $"Invite email sent to {code.Email}");
                 }
@@ -312,7 +312,7 @@ namespace PreOrderApp.Controllers
             var org = await _context.Organizations.FindAsync(orgId);
             if (org == null) return NotFound("Organization not found");
 
-            await _inviteEmailService.SendInviteEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
+            await _emailService.SendEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
             await LogInviteAuditAsync("INVITE_RESEND", userId, orgId, code.CodeId, $"Invite email resent to {code.Email}");
 
             return Ok(new { message = "Invite email resent." });

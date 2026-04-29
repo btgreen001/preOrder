@@ -25,13 +25,13 @@ public static class FractionUtility
                 throw new ArgumentException($"Invalid whole number in fraction input '{input}'.");
             }
 
-            var fractionPart = ParseFractionPart(wholeAndFractionParts[1], input);
+            var fractionPart = ParseFractionPart(wholeAndFractionParts[1], value);
             return whole + fractionPart;
         }
 
         if (wholeAndFractionParts.Length == 1 && value.Contains('/'))
         {
-            return ParseFractionPart(value, input);
+            return ParseFractionPart(value, value);
         }
 
         throw new ArgumentException($"Invalid fraction input '{input}'. Use formats like 1/2, 1 1/2, or 0.5.");
