@@ -9,7 +9,13 @@ export const AuthGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const terminalContextService = inject(TerminalContextService);
   
-  if (state.url === '/login' || state.url === '/register' || state.url === '/company-register') {
+  if (
+    state.url === '/login' ||
+    state.url === '/register' ||
+    state.url === '/company-register' ||
+    state.url === '/forgot-password' ||
+    state.url === '/reset-password'
+  ) {
     return true;
   }
   

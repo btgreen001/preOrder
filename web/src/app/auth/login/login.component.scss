@@ -127,6 +127,10 @@ a {
 
 @media (max-width: 900px) {
   .left-graphic { display: none; }
-  .login-area { width: 100%; padding: 24px; }
+  .login-area {
+    width: 100%;
+    align-items: flex-start;
+    padding: 14px 24px 24px;
+  }
   .spotify-card { width: 100%; }
 }

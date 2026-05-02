@@ -1,13 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';  
 import { ActivatedRoute } from '@angular/router';
-import { OrdersService, Order } from '../services/pre-orders.service';
+import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-orders.service';
 
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="order-detail-container" *ngIf="order">
       <header class="page-header">
@@ -65,6 +67,31 @@ import { OrdersService, Order } from '../services/pre-orders.service';
         <h2>Pickup Time</h2>
         <p><strong>Start:</strong> {{ order.pickupSlot.slotStartAt | date:'short' }} (local time)</p>
         <p><strong>End:</strong> {{ order.pickupSlot.slotEndAt | date:'short' }} (local time)</p>
+
+        <div class="pickup-slot-change" *ngIf="canChangePickupSlot(order.orderStatus)">
+          <p class="pickup-slot-help">You can change your pickup slot while this order is still pending or submitted.</p>
+          <div class="notice notice-success" *ngIf="pickupSlotNotice">{{ pickupSlotNotice }}</div>
+          <div class="notice notice-error" *ngIf="pickupSlotError">{{ pickupSlotError }}</div>
+          <p class="pickup-slot-help" *ngIf="isLoadingPickupSlots">Checking available pickup slots...</p>
+
+          <ng-container *ngIf="!isLoadingPickupSlots && hasAlternatePickupSlots(); else noAlternateSlots">
+            <label class="pickup-slot-field">
+              <span>Pickup slot</span>
+              <select [(ngModel)]="selectedPickupSlotExternalId" [disabled]="isChangingPickupSlot">
+                <option *ngFor="let slot of availablePickupSlots" [ngValue]="slot.externalId">
+                  {{ formatPickupSlotOption(slot) }}
+                </option>
+              </select>
+            </label>
+            <button class="btn" type="button" (click)="changePickupSlot()" [disabled]="isChangingPickupSlot || !canSubmitPickupSlotChange()">
+              {{ isChangingPickupSlot ? 'Updating...' : 'Change Pickup Slot' }}
+            </button>
+          </ng-container>
+
+          <ng-template #noAlternateSlots>
+            <p class="pickup-slot-help" *ngIf="!isLoadingPickupSlots">No alternate pickup slots are currently available.</p>
+          </ng-template>
+        </div>
       </div>
     </div>
     <div *ngIf="!order">
@@ -119,6 +146,25 @@ import { OrdersService, Order } from '../services/pre-orders.service';
     .pickup-slot h2,
     .order-items h2 {
       margin: 0 0 12px;
+    }
+    .pickup-slot-change {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--bakery-border);
+    }
+    .pickup-slot-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .pickup-slot-field span,
+    .pickup-slot-help {
+      color: var(--bakery-text-muted);
+      font-size: 0.95rem;
+    }
+    .pickup-slot-field select {
+      max-width: 100%;
     }
     .pickup-location p,
     .pickup-slot p {
@@ -186,21 +232,33 @@ import { OrdersService, Order } from '../services/pre-orders.service';
       font-weight: 500;
       text-transform: uppercase;
     }
+    .status-SUBMITTED,
+    .status-submitted,
+    .status-PENDING,
     .status-pending {
-      background: var(--bakery-warning);
-      color: var(--bakery-text-emph);
+      background: color-mix(in srgb, var(--bakery-warning) 24%, white);
+      color: #7c2d12;
+      border: 1px solid color-mix(in srgb, var(--bakery-warning) 55%, transparent);
     }
-    .status-processing {
-      background: var(--bakery-primary);
-      color: var(--bakery-text-emph);
+    .status-CONFIRMED,
+    .status-confirmed {
+      background: color-mix(in srgb, var(--bakery-primary) 22%, white);
+      color: #9a3412;
+      border: 1px solid color-mix(in srgb, var(--bakery-primary) 50%, transparent);
     }
+    .status-DELIVERED,
+    .status-delivered,
+    .status-COMPLETED,
     .status-completed {
-      background: var(--bakery-success);
-      color: var(--bakery-text-emph);
+      background: color-mix(in srgb, var(--bakery-success) 22%, white);
+      color: #166534;
+      border: 1px solid color-mix(in srgb, var(--bakery-success) 50%, transparent);
     }
+    .status-CANCELLED,
     .status-cancelled {
-      background: var(--bakery-error);
-      color: var(--bakery-text-emph);
+      background: color-mix(in srgb, var(--bakery-error) 18%, white);
+      color: #991b1b;
+      border: 1px solid color-mix(in srgb, var(--bakery-error) 45%, transparent);
     }
     .btn {
       padding: 10px 20px;
@@ -264,11 +322,18 @@ import { OrdersService, Order } from '../services/pre-orders.service';
 })
 export class OrderDetailComponent {
   order: Order | undefined;
+  availablePickupSlots: AvailablePickupSlot[] = [];
+  selectedPickupSlotExternalId = '';
+  isLoadingPickupSlots = false;
+  isChangingPickupSlot = false;
   isCancelling = false;
   cancelNotice = '';
   cancelError = '';
+  pickupSlotNotice = '';
+  pickupSlotError = '';
   private route = inject(ActivatedRoute);
   private orders = inject(OrdersService);
+  private snackBar = inject(MatSnackBar);
 
   constructor() {
     const externalId = this.getExternalIdFromRoute();
@@ -276,7 +341,11 @@ export class OrderDetailComponent {
       return;
     }
 
-    this.orders.getOrderByExternalId(externalId).subscribe((o: Order) => this.order = o);
+    this.orders.getOrderByExternalId(externalId).subscribe((o: Order) => {
+      this.order = o;
+      this.selectedPickupSlotExternalId = o.pickupSlot?.externalId ?? '';
+      this.loadAvailablePickupSlots();
+    });
   }
 
   private getExternalIdFromRoute(): string {
@@ -320,6 +389,7 @@ startAnotherOrder() {
       next: updatedOrder => {
         this.order = updatedOrder;
         this.cancelNotice = 'Your order has been cancelled.';
+        this.availablePickupSlots = [];
         this.isCancelling = false;
       },
       error: error => {
@@ -330,8 +400,96 @@ startAnotherOrder() {
     });
   }
 
+  changePickupSlot() {
+    if (!this.order || this.isChangingPickupSlot || !this.canSubmitPickupSlotChange()) {
+      return;
+    }
+
+    this.isChangingPickupSlot = true;
+    this.pickupSlotError = '';
+    this.pickupSlotNotice = '';
+
+    this.orders.changePickupSlot(this.order.externalId, { pickupSlotExternalId: this.selectedPickupSlotExternalId }).subscribe({
+      next: updatedOrder => {
+        this.order = updatedOrder;
+        this.selectedPickupSlotExternalId = updatedOrder.pickupSlot?.externalId ?? '';
+        this.pickupSlotNotice = 'Your pickup slot has been updated.';
+        this.isChangingPickupSlot = false;
+        this.loadAvailablePickupSlots();
+        this.snackBar.open('Pickup slot updated successfully.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+      },
+      error: error => {
+        const apiMessage = (error?.error?.error ?? error?.error?.message ?? '').toString().trim();
+        this.pickupSlotError = apiMessage || 'Unable to change the pickup slot right now. Please try again.';
+        this.isChangingPickupSlot = false;
+      }
+    });
+  }
+
   canCancel(status: string): boolean {
     const normalized = (status ?? '').trim().toUpperCase();
     return normalized === 'PENDING' || normalized === 'SUBMITTED';
+  }
+
+  canChangePickupSlot(status: string): boolean {
+    const normalized = (status ?? '').trim().toUpperCase();
+    return normalized === 'PENDING' || normalized === 'SUBMITTED';
+  }
+
+  canSubmitPickupSlotChange(): boolean {
+    return !!this.order
+      && !!this.selectedPickupSlotExternalId
+      && this.selectedPickupSlotExternalId !== (this.order.pickupSlot?.externalId ?? '');
+  }
+
+  hasAlternatePickupSlots(): boolean {
+    const currentSlotExternalId = this.order?.pickupSlot?.externalId ?? '';
+    return this.availablePickupSlots.some(slot => slot.externalId !== currentSlotExternalId);
+  }
+
+  formatPickupSlotOption(slot: AvailablePickupSlot): string {
+    const start = new Date(slot.slotStartAt);
+    const end = new Date(slot.slotEndAt);
+    const seatsLeft = Math.max(slot.capacity - slot.reservedCount, 0);
+    const isCurrent = slot.externalId === this.order?.pickupSlot?.externalId;
+    const startText = start.toLocaleString();
+    const endText = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const seatsText = `${seatsLeft} slot${seatsLeft === 1 ? '' : 's'} left`;
+
+    return `${startText} - ${endText} | ${seatsText}${isCurrent ? ' | current' : ''}`;
+  }
+
+  private loadAvailablePickupSlots(): void {
+    if (!this.order || !this.canChangePickupSlot(this.order.orderStatus)) {
+      this.availablePickupSlots = [];
+      return;
+    }
+
+    const organizationToken = this.order.organization?.registrationToken?.trim() ?? '';
+    const holidayEventExternalId = this.order.eventToken?.trim() ?? '';
+    if (!organizationToken || !holidayEventExternalId) {
+      this.availablePickupSlots = [];
+      return;
+    }
+
+    this.isLoadingPickupSlots = true;
+    this.pickupSlotError = '';
+
+    this.orders.getAvailablePickupSlots(organizationToken, holidayEventExternalId).subscribe({
+      next: slots => {
+        const currentSlotExternalId = this.order?.pickupSlot?.externalId ?? '';
+        this.availablePickupSlots = slots.filter(slot => slot.externalId === currentSlotExternalId || slot.reservedCount < slot.capacity);
+        if (!this.availablePickupSlots.some(slot => slot.externalId === this.selectedPickupSlotExternalId)) {
+          this.selectedPickupSlotExternalId = (currentSlotExternalId || this.availablePickupSlots[0]?.externalId) ?? '';
+        }
+        this.isLoadingPickupSlots = false;
+      },
+      error: error => {
+        const apiMessage = (error?.error?.error ?? error?.error?.message ?? '').toString().trim();
+        this.pickupSlotError = apiMessage || 'Unable to load available pickup slots right now.';
+        this.availablePickupSlots = [];
+        this.isLoadingPickupSlots = false;
+      }
+    });
   }
 }

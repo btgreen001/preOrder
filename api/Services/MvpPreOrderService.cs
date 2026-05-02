@@ -31,6 +31,15 @@ public class MvpPreOrderService : IMvpPreOrderService
         _logger = logger;
     }
 
+    public async Task<List<HolidayEvent>> GetAllHolidayEventsAsync(Guid organizationId)
+    {
+        return await _context.HolidayEvents
+            .Where(e => e.OrganizationId == organizationId)
+            .OrderBy(e => e.IsActive ? 0 : 1)  // Active events first
+            .ThenBy(e => e.OpensAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
     public async Task<List<HolidayEvent>> GetHolidayEventsAsync(Guid organizationId)
     {
         return await _context.HolidayEvents
@@ -68,7 +77,7 @@ public class MvpPreOrderService : IMvpPreOrderService
             PickupStartDt = DateTime.SpecifyKind(request.PickupStartDt, DateTimeKind.Local),
             PickupEndDt = DateTime.SpecifyKind(request.PickupEndDt, DateTimeKind.Local),
 
-            IsActive = true,
+            IsActive = request.IsActive,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -426,7 +435,8 @@ public class MvpPreOrderService : IMvpPreOrderService
         {
             orders = await query
                 .Include(order => order.OrderItems)
-                .OrderBy(order => order.PickupSlot!.SlotStartAt)
+                .OrderBy(order => order.OrderStatus)
+                .ThenBy(order => order.PickupSlot!.SlotStartAt)
                 .ThenBy(order => order.CreatedAt)
                 .AsNoTracking()
                 .ToListAsync();
@@ -438,7 +448,8 @@ public class MvpPreOrderService : IMvpPreOrderService
             try
             {
                 orders = await query
-                    .OrderBy(order => order.PickupSlot!.SlotStartAt)
+                    .OrderBy(order => order.OrderStatus)
+                    .ThenBy(order => order.PickupSlot!.SlotStartAt)
                     .ThenBy(order => order.CreatedAt)
                     .AsNoTracking()
                     .ToListAsync();
@@ -459,7 +470,8 @@ public class MvpPreOrderService : IMvpPreOrderService
             _logger.LogWarning(ex, "Falling back to preorder CSV header-only export because a legacy varchar FK is being compared to bigint in the order-item include path.");
 
             orders = await query
-                .OrderBy(order => order.PickupSlot!.SlotStartAt)
+                .OrderBy(order => order.OrderStatus)
+                .ThenBy(order => order.PickupSlot!.SlotStartAt)
                 .ThenBy(order => order.CreatedAt)
                 .AsNoTracking()
                 .ToListAsync();
@@ -772,7 +784,7 @@ public class MvpPreOrderService : IMvpPreOrderService
         IReadOnlyDictionary<long, string> menuNameLookup)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("OrderExternalId,CreatedAtUtc,Status,HolidayEventExternalId,HolidayEventName,PickupSlotExternalId,PickupStartUtc,PickupEndUtc,PickupDateUtc,CustomerName,CustomerEmail,CustomerPhone,Notes,TotalAmount,LineExternalId,MenuItemName,MenuItemId,Quantity,UnitPrice,LineTotal");
+        builder.AppendLine("Order ID,Ordered Tms,Status,Event Name,Pickup Date,PU Start Time (local),PU End Time (local),CustomerName,CustomerEmail,CustomerPhone,Notes,TotalAmount,Menu Item,Quantity,UnitPrice,LineTotal");
 
         foreach (var order in orders)
         {
@@ -807,25 +819,21 @@ public class MvpPreOrderService : IMvpPreOrderService
         var pickupDate = order.PickupSlot?.SlotStartAt.Date;
         var lineTotal = orderItem != null ? orderItem.UnitPrice * orderItem.Quantity : 0m;
 
-        var columns = new[]
+        var columns = new string[]
         {
             order.ExternalId.ToString(),
-            FormatUtc(order.CreatedAt),
+            order.CreatedAt.ToString("MM-dd-yyyy h:mm tt"),
             order.OrderStatus,
-            order.HolidayEvent?.ExternalId.ToString() ?? string.Empty,
             order.HolidayEvent?.Name ?? string.Empty,
-            order.PickupSlot?.ExternalId.ToString() ?? string.Empty,
-            order.PickupSlot != null ? FormatUtc(order.PickupSlot.SlotStartAt) : string.Empty,
-            order.PickupSlot != null ? FormatUtc(order.PickupSlot.SlotEndAt) : string.Empty,
-            pickupDate?.ToString("yyyy-MM-dd") ?? string.Empty,
+            pickupDate?.ToString("MM-dd-yyyy") ?? string.Empty,
+            order.PickupSlot != null ? order.PickupSlot.SlotStartAt.ToString("h:mm tt") : string.Empty,
+            order.PickupSlot != null ? order.PickupSlot.SlotEndAt.ToString("h:mm tt") : string.Empty,
             order.CustomerName,
             order.CustomerEmail,
             order.CustomerPhone ?? string.Empty,
             order.SpecialInstructionTxt ?? string.Empty,
             order.TotalAmount.ToString("0.00"),
-            orderItem?.ExternalId.ToString() ?? string.Empty,
             menuItemName,
-            orderItem?.MenuItemId.ToString() ?? string.Empty,
             orderItem?.Quantity.ToString() ?? string.Empty,
             orderItem?.UnitPrice.ToString("0.00") ?? string.Empty,
             orderItem != null ? lineTotal.ToString("0.00") : string.Empty
@@ -943,8 +951,9 @@ public class MvpPreOrderService : IMvpPreOrderService
         return normalized switch
         {
             "CONFIRMED" => "CONFIRMED",
+            "DELIVERED" => "DELIVERED",
             "CANCELLED" => "CANCELLED",
-            _ => throw new InvalidOperationException($"Unsupported preorder status '{status}'. Allowed values: CONFIRMED, CANCELLED.")
+            _ => throw new InvalidOperationException($"Unsupported preorder status '{status}'. Allowed values: CONFIRMED, DELIVERED, CANCELLED.")
         };
     }
 
@@ -956,6 +965,7 @@ public class MvpPreOrderService : IMvpPreOrderService
         {
             "SUBMITTED" when nextStatus is "CONFIRMED" or "CANCELLED" => true,
             "PENDING" when nextStatus == "CANCELLED" => true,
+            "CONFIRMED" when nextStatus is "DELIVERED" or "CANCELLED" => true,
             _ => false
         };
     }

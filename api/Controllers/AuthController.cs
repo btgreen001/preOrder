@@ -95,6 +95,95 @@ public class AuthController : ControllerBase
         return Ok(resp);
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<AuthResponse>> GetMyProfile()
+    {
+        var userId = _orgContext.GetCurrentUserId();
+        var user = await _context.SystemUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.IsEnabled);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var org = await _context.Organizations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.OrganizationId == user.OrganizationId);
+
+        if (org == null)
+        {
+            return NotFound(new { message = "Organization not found." });
+        }
+
+        var sub = await _context.LicenseSubscriptions
+            .AsNoTracking()
+            .Where(ls => ls.OrganizationId == user.OrganizationId && ls.IsActive)
+            .OrderByDescending(ls => ls.StartDate)
+            .FirstOrDefaultAsync();
+
+        return Ok(new AuthResponse
+        {
+            UserId = user.UserId,
+            UserName = user.UserName,
+            Email = user.EmailAddress,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Role = user.UserRole,
+            OrganizationId = user.OrganizationId,
+            OrganizationName = org.OrganizationName,
+            LicenseTier = sub?.Tier ?? LicenseTier.Basic,
+            RegistrationToken = org.RegistrationToken
+        });
+    }
+
+    [HttpPut("me/profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateMyProfileRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+        {
+            return BadRequest(new { message = "Email, first name, and last name are required." });
+        }
+
+        var userId = _orgContext.GetCurrentUserId();
+        var user = await _context.SystemUsers.FirstOrDefaultAsync(u => u.UserId == userId && u.IsEnabled);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var normalizedEmail = request.Email.Trim();
+        var emailInUse = await _context.SystemUsers
+            .AsNoTracking()
+            .AnyAsync(u => u.UserId != userId && u.EmailAddress == normalizedEmail);
+
+        if (emailInUse)
+        {
+            return BadRequest(new { message = "Email address is already in use." });
+        }
+
+        user.EmailAddress = normalizedEmail;
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Profile updated.",
+            user = new
+            {
+                user.UserId,
+                user.UserName,
+                Email = user.EmailAddress,
+                user.FirstName,
+                user.LastName
+            }
+        });
+    }
+
     [AllowAnonymous]
     [HttpPost("register-user")]
     public async Task<ActionResult<AuthResponse>> RegisterUser(RegisterUserRequest request)
@@ -196,6 +285,34 @@ public class AuthController : ControllerBase
         {
             // Return 403 Forbidden with error message for invalid/wrong-org terminal
             return StatusCode(403, new { message = ex.Message });
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password/code")]
+    public async Task<IActionResult> RequestPasswordResetCode([FromBody] ForgotPasswordCodeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest(new { message = "Email is required." });
+        }
+
+        await _authService.RequestPasswordResetCodeAsync(request.Email);
+        return Ok(new { message = "If that email exists in our system, a reset code has been sent." });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password/reset")]
+    public async Task<IActionResult> ResetPasswordWithCode([FromBody] ResetPasswordWithCodeRequest request)
+    {
+        try
+        {
+            await _authService.ResetPasswordWithCodeAsync(request.Email, request.Code, request.NewPassword);
+            return Ok(new { message = "Password has been reset successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

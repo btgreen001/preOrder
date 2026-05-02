@@ -7,6 +7,7 @@ namespace PreOrderApp.Services.Interfaces;
 public interface IMvpPreOrderService
 {
     Task<List<HolidayEvent>> GetHolidayEventsAsync(Guid organizationId);
+    Task<List<HolidayEvent>> GetAllHolidayEventsAsync(Guid organizationId);
     Task<HolidayEvent> CreateHolidayEventAsync(Guid organizationId, CreateHolidayEventRequest request);
     Task<HolidayEvent> UpdateHolidayEventAsync(Guid organizationId, Guid holidayEventExternalId, UpdateHolidayEventRequest request);
 

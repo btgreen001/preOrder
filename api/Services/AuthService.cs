@@ -27,6 +27,8 @@ public interface IAuthService
     /// Logout all sessions for a user.
     /// </summary>
     Task<bool> LogoutAllAsync(Guid? userId = null, string? refreshToken = null, string? reason = null);
+    Task RequestPasswordResetCodeAsync(string email);
+    Task ResetPasswordWithCodeAsync(string email, string code, string newPassword);
 }
 
 public class AuthService : IAuthService
@@ -35,18 +37,25 @@ public class AuthService : IAuthService
     private readonly AppDbContext _context;
     private readonly IPasetoTokenService _tokenService;
     private readonly ITerminalLockService _terminalLockService;
+    private readonly IEmailService _emailService;
     private readonly ILogger<AuthService> _logger;
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuthService(IConfiguration configuration, AppDbContext context, IPasetoTokenService tokenService, ITerminalLockService terminalLockService, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor)
+    public AuthService(IConfiguration configuration, AppDbContext context, IPasetoTokenService tokenService, ITerminalLockService terminalLockService, IEmailService emailService, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor)
     {
         _configuration = configuration;
         _context = context;
         _tokenService = tokenService;
         _terminalLockService = terminalLockService;
+        _emailService = emailService;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+    }
+
+    private static string GeneratePasswordResetCode()
+    {
+        return Random.Shared.Next(100000, 1000000).ToString();
     }
 
     private async Task<(int releasedBindings, int clearedLocks)> ReleaseBindingsAndClearLocksAsync(
@@ -583,6 +592,74 @@ public class AuthService : IAuthService
     public async Task<bool> IsUserNameAvailableAsync(string userName)
     {
         return !await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == userName);
+    }
+
+    public async Task RequestPasswordResetCodeAsync(string email)
+    {
+        var normalizedEmail = (email ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            return;
+        }
+
+        var user = await _context.SystemUsers
+            .FirstOrDefaultAsync(u => u.EmailAddress == normalizedEmail && u.IsEnabled);
+
+        // Always return success shape at controller level to prevent account enumeration.
+        if (user == null)
+        {
+            return;
+        }
+
+        var code = GeneratePasswordResetCode();
+        var expiresOnUtc = DateTime.UtcNow.AddMinutes(15);
+
+        user.PasswordResetCodeHash = BCrypt.Net.BCrypt.HashPassword(code);
+        user.PasswordResetCodeExpiresOn = expiresOnUtc;
+
+        await _context.SaveChangesAsync();
+        await _emailService.SendPasswordResetCodeEmailAsync(user.EmailAddress, user.FirstName, code, expiresOnUtc);
+    }
+
+    public async Task ResetPasswordWithCodeAsync(string email, string code, string newPassword)
+    {
+        var normalizedEmail = (email ?? string.Empty).Trim();
+        var normalizedCode = (code ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrWhiteSpace(normalizedCode))
+        {
+            throw new InvalidOperationException("Email and code are required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
+        {
+            throw new InvalidOperationException("New password must be at least 8 characters.");
+        }
+
+        var user = await _context.SystemUsers
+            .FirstOrDefaultAsync(u => u.EmailAddress == normalizedEmail && u.IsEnabled);
+
+        if (user == null)
+        {
+            throw new InvalidOperationException("Invalid reset request.");
+        }
+
+        var now = DateTime.UtcNow;
+
+        if (string.IsNullOrEmpty(user.PasswordResetCodeHash)
+            || user.PasswordResetCodeExpiresOn == null
+            || user.PasswordResetCodeExpiresOn <= now
+            || !BCrypt.Net.BCrypt.Verify(normalizedCode, user.PasswordResetCodeHash))
+        {
+            throw new InvalidOperationException("Invalid or expired reset code.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        user.PasswordResetCodeHash = null;
+        user.PasswordResetCodeExpiresOn = null;
+
+        await _context.SaveChangesAsync();
+        await RevokeAllUserTokensAsync(user.UserId, releaseBindings: true);
     }
 
     public async Task<bool> RevokeRefreshTokenAsync(string refreshToken)

@@ -316,6 +316,42 @@ namespace PreOrderApp.Controllers
         }
 
         /// <summary>
+        /// Change the pickup slot for a public order
+        /// </summary>
+        [HttpPut("{externalId:guid}/pickup-slot")]
+        public async Task<IActionResult> ChangePickupSlot(Guid externalId, [FromBody] ChangePickupSlotRequest request)
+        {
+            try
+            {
+                if (request == null || request.PickupSlotExternalId == Guid.Empty)
+                    return BadRequest(new { error = "pickupSlotExternalId is required" });
+
+                _logger.LogInformation($"Changing pickup slot for order {externalId} to {request.PickupSlotExternalId}");
+
+                var order = await _orderService.ChangePickupSlotAsync(externalId, request.PickupSlotExternalId);
+                if (order == null)
+                    return NotFound(new { error = "Order not found" });
+
+                return Ok(order);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Pickup slot change target not found for order {ExternalId}", externalId);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid pickup slot change request for order {ExternalId}", externalId);
+                return Conflict(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing pickup slot for order {ExternalId}", externalId);
+                return StatusCode(500, new { error = "An error occurred while changing the pickup slot" });
+            }
+        }
+
+        /// <summary>
         /// Get orders by status
         /// </summary>
         [HttpGet("by-status/{status}")]

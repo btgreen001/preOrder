@@ -136,6 +136,16 @@ export interface AdminPreOrder {
   lines: AdminPreOrderLine[];
 }
 
+export interface UpdatePreOrderStatusRequest {
+  status: string;
+}
+
+export interface UpdatePreOrderStatusResponse {
+  externalId: string;
+  status: string;
+  updatedAt: string;
+}
+
 export interface AdminRegistrationCode {
   codeId: string;
   code: string;
@@ -163,8 +173,8 @@ export class PreorderAdminService {
   private readonly productsUrl = `${environment.apiUrl}/products`;
   private readonly organizationsUrl = `${environment.apiUrl}/organization`;
 
-  getHolidayEvents(): Observable<AdminHolidayEvent[]> {
-    return this.http.get<AdminHolidayEvent[]>(`${this.baseUrl}/preorder-event`);
+  getAllHolidayEvents(): Observable<AdminHolidayEvent[]> {
+    return this.http.get<AdminHolidayEvent[]>(`${this.baseUrl}/preorder-event/all`);
   }
 
   createHolidayEvent(request: SaveHolidayEventRequest): Observable<AdminHolidayEvent> {
@@ -212,6 +222,10 @@ export class PreorderAdminService {
     }
 
     return this.http.get<AdminPreOrder[]>(`${this.baseUrl}/preorders`, { params });
+  }
+
+  updatePreOrderStatus(preOrderExternalId: string, request: UpdatePreOrderStatusRequest): Observable<UpdatePreOrderStatusResponse> {
+    return this.http.patch<UpdatePreOrderStatusResponse>(`${this.baseUrl}/preorders/${preOrderExternalId}/status`, request);
   }
 
   exportPreOrdersCsv(holidayEventExternalId?: string, pickupDateUtc?: string): Observable<Blob> {

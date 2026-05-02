@@ -12,19 +12,25 @@
   </header>
 
   <section class="filters">
-    <label>
-      Pre-Order event
-      <select [(ngModel)]="selectedHolidayEventExternalId" (change)="loadPreOrders()">
-        <option value="">All events</option>
-        <option *ngFor="let event of holidayEvents" [value]="event.externalId">
+  <label>
+    Pre-Order event (with orders)
+    <select [(ngModel)]="selectedHolidayEventExternalId" (change)="loadPreOrders()">
+      <option value="">All events</option>
+
+      <ng-container *ngFor="let event of holidayEvents">
+        <option *ngIf="hasOrdersFor(event.id)" [value]="event.externalId">
           {{ event.name }}
         </option>
-      </select>
-    </label>
+      </ng-container>
+
+
+
+    </select>
+  </label>
 
     <label>
       Pickup day
-      <input type="date" [(ngModel)]="selectedPickupDateUtc" (change)="loadPreOrders()" />
+      <input type="date" [(ngModel)]="selectedPickupDateLocal" (change)="loadPreOrders()" />
     </label>
 
     <div class="actions">
@@ -39,6 +45,8 @@
     <table>
       <thead>
         <tr>
+          <th>Event</th>
+          <th>Order ID</th>
           <th>Created</th>
           <th>Customer</th>
           <th>Email</th>
@@ -50,16 +58,35 @@
       </thead>
       <tbody>
         <tr *ngFor="let order of filteredPreOrders">
-          <td>{{ order.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ getHolidayEventName(order.holidayEventId) }}</td>
+          <td>{{ order.externalId }}</td>
+          <td>{{ order.createdAt | date: 'MM-dd-yyyy h:mm a' }}</td>
           <td>{{ order.customerName }}</td>
           <td>{{ order.customerEmail }}</td>
-          <td><span class="status">{{ order.status }}</span></td>
-          <td>{{ (order.pickupSlot?.slotStartAt || null) | date: 'yyyy-MM-dd' }}</td>
+          <td>
+            <div class="status">
+              <select
+                [(ngModel)]="pendingStatusByOrderExternalId[order.externalId]"
+                [disabled]="savingStatusByOrderExternalId[order.externalId] || getAllowedNextStatuses(order.status).length === 0">
+                <option [ngValue]="order.status">{{ order.status }}</option>
+                <option *ngFor="let nextStatus of getAllowedNextStatuses(order.status)" [ngValue]="nextStatus">
+                  {{ nextStatus }}
+                </option>
+              </select>
+              <button
+                type="button"
+                (click)="updateOrderStatus(order)"
+                [disabled]="savingStatusByOrderExternalId[order.externalId] || !canUpdateStatus(order)">
+                {{ savingStatusByOrderExternalId[order.externalId] ? 'Saving...' : 'Update' }}
+              </button>
+            </div>
+          </td>
+          <td>{{ (order.pickupSlot?.slotStartAt || null) | date: 'MM-dd-yyyy h:mm a' }}</td>
           <td>{{ order.lines.length }}</td>
           <td>{{ formatCurrency(order.totalAmount) }}</td>
         </tr>
         <tr *ngIf="filteredPreOrders.length === 0">
-          <td colspan="7" class="empty">No preorder operations found for current filters.</td>
+          <td colspan="9" class="empty">No preorder operations found for current filters.</td>
         </tr>
       </tbody>
     </table>

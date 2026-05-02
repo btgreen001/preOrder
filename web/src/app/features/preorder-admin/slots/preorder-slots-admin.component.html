@@ -25,9 +25,9 @@
     <h2>{{ editingExternalId ? 'Edit Pickup Slot' : 'Create Pickup Slot' }}</h2>
     <p *ngIf="selectedHolidayEvent" class="window-hint">
       Event Pickup Window (local time):
-      {{ selectedHolidayEvent.pickupStartDt | date: 'yyyy-MM-dd HH:mm' }}
+      {{ selectedHolidayEvent.pickupStartDt | date: 'MM-dd-yyyy h:mm a' }}
       to
-      {{ selectedHolidayEvent.pickupEndDt | date: 'yyyy-MM-dd HH:mm' }}
+      {{ selectedHolidayEvent.pickupEndDt | date: 'MM-dd-yyyy h:mm a' }}
     </p>
     <div class="grid">
       <label>
@@ -68,7 +68,7 @@
     <table>
       <thead>
         <tr>
-          <th>Start</th>
+          <th>Start (local time)</th>
           <th>End</th>
           <th>Capacity</th>
           <th>Reserved</th>
@@ -78,15 +78,15 @@
       </thead>
       <tbody>
         <tr *ngFor="let slot of pickupSlots">
-          <td>{{ slot.slotStartAt | date: 'yyyy-MM-dd HH:mm' }}</td>
-          <td>{{ slot.slotEndAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ slot.slotStartAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+          <td>{{ slot.slotEndAt | date: 'MM-dd-yyyy h:mm a' }}</td>
           <td>{{ slot.capacity }}</td>
           <td>{{ slot.reservedCount }}</td>
           <td>{{ slot.isActive ? 'Active' : 'Inactive' }}</td>
           <td>
             <button type="button" (click)="startEdit(slot)">Edit</button>
             <button type="button" (click)="deletePickupSlot(slot)" class="delete-btn" [disabled]="isSaving">
-              {{ slot.isActive ? 'Deactivate' : 'Delete' }}
+              {{ slot.reservedCount>0 ? 'Deactivate' : 'Delete' }}
             </button>
           </td>
         </tr>

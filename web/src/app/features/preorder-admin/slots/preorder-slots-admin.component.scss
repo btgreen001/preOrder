@@ -163,53 +163,6 @@ td {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  input[type="date"],
-  input[type="datetime-local"],
-  input[type="time"] {
-    background-color: #fff8f2 !important;
-    color: #2a1a0f !important;
-    border-color: #c8703a !important;
-  }
-}
-
-input[type="date"],
-input[type="datetime-local"],
-input[type="time"] {
-  background-color: #fff8f2;
-  color: #2a1a0f;
-  border: 1px solid #c8703a;
-  box-shadow: inset 0 0 0 1px rgba(200, 112, 58, 0.15);
-}
-
-input[type="date"]:focus,
-input[type="datetime-local"]:focus,
-input[type="time"]:focus {
-  outline: none;
-  border-color: #a9582b;
-  box-shadow: 0 0 0 3px rgba(200, 112, 58, 0.22);
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  border-radius: 6px;
-  padding: 0.2rem;
-  background-color: #f3d6c2;
-  border: 1px solid #c8703a;
-  opacity: 1;
-}
-
-input[type="date"]:hover::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator,
-input[type="time"]:hover::-webkit-calendar-picker-indicator,
-input[type="date"]:focus::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]:focus::-webkit-calendar-picker-indicator,
-input[type="time"]:focus::-webkit-calendar-picker-indicator {
-  background-color: #e7bd9e;
-  border-color: #a9582b;
-}
 
 :host {
   color-scheme: light;

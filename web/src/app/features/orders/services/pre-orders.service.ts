@@ -54,6 +54,16 @@ export interface OrderPickupSlot {
   slotEndAt: string;
 }
 
+export interface AvailablePickupSlot {
+  externalId: string;
+  holidayEventId: number;
+  slotStartAt: string;
+  slotEndAt: string;
+  capacity: number;
+  reservedCount: number;
+  isActive: boolean;
+}
+
 export interface CreateOrderRequest {
   customerId: string;
   orderItems: OrderItemRequest[];
@@ -70,6 +80,10 @@ export interface UpdateOrderRequest {
 }
 export interface UpdateOrderStatusRequest {
   newStatus: string;
+}
+
+export interface ChangePickupSlotRequest {
+  pickupSlotExternalId: string;
 }
 
 @Injectable({
@@ -97,6 +111,19 @@ export class OrdersService {
   }
 
   // ===== Phase 2: Business Logic Methods =====
+
+  getAvailablePickupSlots(organizationToken: string, holidayEventExternalId: string): Observable<AvailablePickupSlot[]> {
+    return this.http.get<AvailablePickupSlot[]>(`${environment.apiUrl}/public/preorders/pickup-slots`, {
+      params: {
+        org: organizationToken,
+        holidayEventExternalId
+      }
+    });
+  }
+
+  changePickupSlot(externalId: string, request: ChangePickupSlotRequest): Observable<Order> {
+    return this.http.put<Order>(`${this.apiUrl}/${externalId}/pickup-slot`, request);
+  }
 
   /**
    * Cancel an order

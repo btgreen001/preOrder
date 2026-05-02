@@ -71,3 +71,56 @@ export interface CompanyRegistrationResponse {
   licenseTier: string;
   adminAuth: AuthResponse;
 }
+
+export interface UpdateMyProfileRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface MyProfileResponse {
+  userId: string;
+  userName: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  organizationId: string;
+  role: string;
+}
+
+export interface CompanyProfile {
+  organizationId: string;
+  organizationName: string;
+  primaryEmail: string;
+  contactPhone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  addressLine3?: string;
+  locality?: string;
+  region?: string;
+  postalCode?: string;
+  countryCode?: string;
+}
+
+export interface UpdateCompanyProfileRequest {
+  organizationName: string;
+  primaryEmail: string;
+  contactPhone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  addressLine3?: string;
+  locality?: string;
+  region?: string;
+  postalCode?: string;
+  countryCode?: string;
+}
+
+export interface ForgotPasswordCodeRequest {
+  email: string;
+}
+
+export interface ResetPasswordWithCodeRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+}

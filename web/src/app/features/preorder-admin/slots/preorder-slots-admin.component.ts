@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 import {
   PreorderAdminService,
@@ -19,6 +20,7 @@ import {
 })
 export class PreorderSlotsAdminComponent implements OnInit {
   private readonly preorderAdminService = inject(PreorderAdminService);
+  private readonly snackBar = inject(MatSnackBar);
 
   holidayEvents: AdminHolidayEvent[] = [];
   pickupSlots: AdminPickupSlot[] = [];
@@ -48,7 +50,7 @@ export class PreorderSlotsAdminComponent implements OnInit {
   }
 
   loadHolidayEvents(): void {
-    this.preorderAdminService.getHolidayEvents().subscribe({
+    this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
         this.holidayEvents = events;
         if (!this.selectedHolidayEventExternalId && events.length > 0) {
@@ -119,11 +121,14 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
   deletePickupSlot(slot: AdminPickupSlot): void {
     const dateStr = new Date(slot.slotStartAt).toLocaleString();
+    const deactivateMessage = `Deactivate timeslot "${dateStr}" (${slot.reservedCount}/${slot.capacity} reserved)? You will not be able to reactivate it. Existing orders will remain assigned to this slot.`
+    const deleteMessage = `Delete timeslot "${dateStr}"?`;
     const confirmMsg = slot.reservedCount > 0
-      ? `Deactivate "${dateStr}" (${slot.reservedCount}/${slot.capacity} reserved)? Existing orders will remain assigned to this slot.`
-      : `Deactivate "${dateStr}"`;
+      ? deactivateMessage
+      : deleteMessage;
 
     if (!confirm(confirmMsg)) {
+      this.snackBar.open('Action cancelled.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
@@ -141,12 +146,14 @@ export class PreorderSlotsAdminComponent implements OnInit {
     this.preorderAdminService.updatePickupSlot(slot.externalId, deactivateRequest).subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMessage = 'Pickup slot deactivated.';
+        this.successMessage = slot.reservedCount > 0 ? 'Pickup slot deactivated.' : 'Pickup slot deleted.';
         this.loadPickupSlots();
+        this.snackBar.open(this.successMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+
       },
       error: (error) => {
         this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not deactivate pickup slot.');
+        this.errorMessage = extractErrorMessage(error, slot.reservedCount > 0 ? 'Could not deactivate pickup slot.' : 'Could not delete pickup slot.');
       }
     });
   }
@@ -172,6 +179,11 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
     if (new Date(this.form.slotEndAt) <= new Date(this.form.slotStartAt)) {
       this.errorMessage = 'Slot end must be after slot start.';
+      return;
+    }
+
+    if (!this.isSameDay(this.form.slotStartAt, this.form.slotEndAt)) {
+      this.errorMessage = 'Slot start and end must be on the same day.';
       return;
     }
 
@@ -203,9 +215,11 @@ export class PreorderSlotsAdminComponent implements OnInit {
     save$.subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMessage = this.editingExternalId ? 'Pickup slot updated.' : 'Pickup slot created.';
+        const successMessage = this.editingExternalId ? 'Pickup slot updated.' : 'Pickup slot created.';
+        this.successMessage = successMessage;
         this.startCreate();
         this.loadPickupSlots();
+        this.snackBar.open(successMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       },
       error: (error) => {
         this.isSaving = false;
@@ -224,6 +238,14 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
   private toLocalDateTimeInput(isoValue: string): string {
     return this.toDateTimeInput(isoValue);
+  }
+
+  private isSameDay(a: string, b: string): boolean {
+    const da = new Date(a);
+    const db = new Date(b);
+    return da.getFullYear() === db.getFullYear()
+      && da.getMonth() === db.getMonth()
+      && da.getDate() === db.getDate();
   }
 
   private isSlotWithinEventPickupWindow(slotStartAt: string, slotEndAt: string): boolean {

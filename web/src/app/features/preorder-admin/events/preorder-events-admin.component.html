@@ -19,13 +19,10 @@
         <input [(ngModel)]="form.name" type="text" />
       </label>
 
-      <label>
-        Active
-        <select [(ngModel)]="form.isActive">
-          <option [ngValue]="true">Active</option>
-          <option [ngValue]="false">Inactive</option>
-        </select>
-      </label>
+      <select hidden [(ngModel)]="form.isActive">
+        <option [ngValue]="true">Active</option>
+        <option [ngValue]="false">Inactive</option>
+      </select>
 
       <label class="span-2">
         Description
@@ -33,12 +30,12 @@
       </label>
 
       <label>
-        Opens
+        Ordering Opens
         <input [(ngModel)]="form.opensAt" type="datetime-local" />
       </label>
 
       <label>
-        Closes
+        Ordering Closes
         <input [(ngModel)]="form.closesAt" type="datetime-local" />
       </label>
 
@@ -80,14 +77,14 @@
       <tbody>
         <tr *ngFor="let event of events">
           <td>{{ event.name }}</td>
-          <td>{{ event.opensAt | date: 'yyyy-MM-dd HH:mm' }}</td>
-          <td>{{ event.closesAt | date: 'yyyy-MM-dd HH:mm' }}</td>
-          <td>{{ event.pickupStartDt | date: 'yyyy-MM-dd' }} -> {{ event.pickupEndDt | date: 'yyyy-MM-dd' }}</td>
+          <td>{{ event.opensAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+          <td>{{ event.closesAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+          <td>{{ event.pickupStartDt | date: 'MM-dd-yyyy' }} -> {{ event.pickupEndDt | date: 'MM-dd-yyyy' }}</td>
           <td>{{ event.isActive ? 'Active' : 'Inactive' }}</td>
           <td>
-            <button type="button" (click)="startEdit(event)">Edit</button>
-            <button type="button" (click)="deleteEvent(event)" class="delete-btn" [disabled]="isSaving">
-              {{ event.isActive ? 'Deactivate' : 'Delete' }}
+            <button *ngIf="!event.isActive" type="button" (click)="startEdit(event)">Edit</button>
+            <button type="button" (click)="activateToggleEvent(event)" class="delete-btn" [disabled]="isSaving">
+              {{ event.isActive ? 'Deactivate' : 'Activate' }}
             </button>
           </td>
         </tr>

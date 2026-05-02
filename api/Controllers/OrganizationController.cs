@@ -42,6 +42,84 @@ namespace PreOrderApp.Controllers
             }
         }
 
+        [HttpGet("my-profile")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> GetMyOrganizationProfile()
+        {
+            var organizationId = _orgContext.GetCurrentOrganizationId();
+
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(_orgContext.GetCurrentUserId(), organizationId))
+                return Forbid();
+
+            var org = await _context.Organizations
+                .AsNoTracking()
+                .Where(o => o.OrganizationId == organizationId)
+                .Select(o => new
+                {
+                    o.OrganizationId,
+                    o.OrganizationName,
+                    PrimaryEmail = o.PrimaryEmail,
+                    o.ContactPhone,
+                    o.AddressLine1,
+                    o.AddressLine2,
+                    o.AddressLine3,
+                    Locality = o.Locality,
+                    Region = o.Region,
+                    o.PostalCode,
+                    o.CountryCode
+                })
+                .FirstOrDefaultAsync();
+
+            if (org == null)
+            {
+                return NotFound(new { message = "Organization not found." });
+            }
+
+            return Ok(org);
+        }
+
+        [HttpPut("my-profile")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> UpdateMyOrganizationProfile([FromBody] UpdateOrganizationProfileRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.OrganizationName) || string.IsNullOrWhiteSpace(request.PrimaryEmail))
+            {
+                return BadRequest(new { message = "Organization name and primary email are required." });
+            }
+
+            var organizationId = _orgContext.GetCurrentOrganizationId();
+            var org = await _context.Organizations.FirstOrDefaultAsync(o => o.OrganizationId == organizationId);
+            if (org == null)
+            {
+                return NotFound(new { message = "Organization not found." });
+            }
+
+            var normalizedEmail = request.PrimaryEmail.Trim();
+            var duplicateEmail = await _context.Organizations
+                .AsNoTracking()
+                .AnyAsync(o => o.OrganizationId != organizationId && o.PrimaryEmail == normalizedEmail);
+            if (duplicateEmail)
+            {
+                return BadRequest(new { message = "Primary email is already used by another organization." });
+            }
+
+            org.OrganizationName = request.OrganizationName.Trim();
+            org.PrimaryEmail = normalizedEmail;
+            org.ContactPhone = request.ContactPhone?.Trim();
+            org.AddressLine1 = request.AddressLine1?.Trim();
+            org.AddressLine2 = request.AddressLine2?.Trim();
+            org.AddressLine3 = request.AddressLine3?.Trim();
+            org.Locality = request.Locality?.Trim();
+            org.Region = request.Region?.Trim();
+            org.PostalCode = request.PostalCode?.Trim();
+            org.CountryCode = request.CountryCode?.Trim();
+            org.ModifiedOn = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Company profile updated." });
+        }
+
         // SYSTEM ADMIN: Get all organizations
         [HttpGet]
         [Route("")]

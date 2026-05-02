@@ -379,6 +379,8 @@ modelBuilder.Entity<RecipeStep>(entity =>
             entity.Property(e => e.PinAttempts).HasColumnName("pin_attempts");
             entity.Property(e => e.PinLockedUntil).HasColumnName("pin_locked_until");
             entity.Property(e => e.PinSetOn).HasColumnName("pin_set_on");
+            entity.Property(e => e.PasswordResetCodeHash).HasColumnName("password_reset_code_hash");
+            entity.Property(e => e.PasswordResetCodeExpiresOn).HasColumnName("password_reset_code_expires_on");
             entity.HasOne(e => e.Organization)
                   .WithMany()
                   .HasForeignKey(e => e.OrganizationId);

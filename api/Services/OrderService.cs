@@ -493,7 +493,7 @@ namespace PreOrderApp.Services
                 return null;
 
             var currentStatus = (order.OrderStatus ?? string.Empty).Trim().ToUpperInvariant();
-            if (currentStatus != "PENDING" && currentStatus != "SUBMITTED")
+            if (currentStatus != "PENDING" && currentStatus != "SUBMITTED" && currentStatus != "CONFIRMED")
             {
                 throw new InvalidOperationException($"Order cannot be cancelled from status '{order.OrderStatus}'. Only PENDING or SUBMITTED orders can be cancelled.");
             }
@@ -512,6 +512,75 @@ namespace PreOrderApp.Services
             await _context.SaveChangesAsync();
             _logger.LogInformation($"Order {externalId} cancelled successfully");
             
+            return MapToDetailDto(order);
+        }
+
+        public async Task<OrderDetailDto?> ChangePickupSlotAsync(Guid externalId, Guid pickupSlotExternalId)
+        {
+            _logger.LogInformation($"Changing pickup slot for order {externalId} to {pickupSlotExternalId}");
+
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Organization)
+                .Include(o => o.Customer)
+                .Include(o => o.HolidayEvent)
+                .Include(o => o.PickupSlot)
+                .FirstOrDefaultAsync(o => o.ExternalId == externalId);
+
+            if (order == null)
+                return null;
+
+            var currentStatus = (order.OrderStatus ?? string.Empty).Trim().ToUpperInvariant();
+            if (currentStatus != "PENDING" && currentStatus != "SUBMITTED")
+            {
+                throw new InvalidOperationException($"Order cannot change pickup slot from status '{order.OrderStatus}'. Only PENDING or SUBMITTED orders may change pickup slots.");
+            }
+
+            if (!order.HolidayEventId.HasValue)
+            {
+                throw new InvalidOperationException("Order is not associated with an event.");
+            }
+
+            var targetSlot = await _context.PickupSlots
+                .FirstOrDefaultAsync(slot => slot.ExternalId == pickupSlotExternalId
+                    && slot.OrganizationId == order.OrganizationId
+                    && slot.HolidayEventId == order.HolidayEventId.Value);
+
+            if (targetSlot == null)
+            {
+                throw new KeyNotFoundException("Pickup slot not found.");
+            }
+
+            if (!targetSlot.IsActive)
+            {
+                throw new InvalidOperationException("Pickup slot is inactive.");
+            }
+
+            if (order.PickupSlotId == targetSlot.Id)
+            {
+                return MapToDetailDto(order);
+            }
+
+            if (targetSlot.ReservedCount >= targetSlot.Capacity)
+            {
+                throw new InvalidOperationException("Pickup slot capacity has been reached.");
+            }
+
+            if (order.PickupSlot != null)
+            {
+                order.PickupSlot.ReservedCount = Math.Max(0, order.PickupSlot.ReservedCount - 1);
+                order.PickupSlot.UpdatedAt = DateTime.UtcNow;
+            }
+
+            targetSlot.ReservedCount += 1;
+            targetSlot.UpdatedAt = DateTime.UtcNow;
+
+            order.PickupSlotId = targetSlot.Id;
+            order.PickupSlot = targetSlot;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
             return MapToDetailDto(order);
         }
 

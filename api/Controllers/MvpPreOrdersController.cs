@@ -33,11 +33,11 @@ public class MvpPreOrdersController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("preorder-event")]
-    public async Task<IActionResult> GetHolidayEvents()
+    [HttpGet("preorder-event/all")]
+    public async Task<IActionResult> GetAllHolidayEvents()
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
-        var events = await _service.GetHolidayEventsAsync(organizationId);
+        var events = await _service.GetAllHolidayEventsAsync(organizationId);
         return Ok(events.Select(MapHolidayEvent));
     }
 
@@ -194,15 +194,26 @@ public class MvpPreOrdersController : ControllerBase
         }
 
         var organizationId = _orgContext.GetCurrentOrganizationId();
-        var organizationName = await _context.Organizations
+        var org = await _context.Organizations
             .Where(o => o.OrganizationId == organizationId)
-            .Select(o => o.OrganizationName)
+            .Select(o => new
+            {
+                o.OrganizationName,
+                o.AddressLine1,
+                o.AddressLine2,
+                City = o.Locality,
+                State = o.Region,
+                o.ContactPhone,
+                ContactEmail = o.PrimaryEmail
+            })
             .FirstOrDefaultAsync();
 
-        if (string.IsNullOrWhiteSpace(organizationName))
+        if (org == null || string.IsNullOrWhiteSpace(org.OrganizationName))
         {
             return NotFound(new { message = "Organization not found." });
         }
+
+        var organizationName = org.OrganizationName;
 
         var slotStartAt = request.SlotStartAt;
         var slotEndAt = request.SlotEndAt;
@@ -225,9 +236,12 @@ public class MvpPreOrdersController : ControllerBase
             }
         }
 
+        var line1 = org.AddressLine1?.Trim();
+        var line2 = org.AddressLine2?.Trim();
         await _emailService.SendOrderEmailAsync(
             request.CustomerEmail,
             organizationName,
+            org.ContactEmail,
             request.CustomerName,
             request.OrderExternalId,
             slotStartAt,
@@ -237,7 +251,14 @@ public class MvpPreOrdersController : ControllerBase
                 Name = line.Name,
                 Quantity = line.Quantity,
                 UnitPrice = line.UnitPrice
-            }));
+            }),
+            pickupAddress: !string.IsNullOrWhiteSpace(line1)
+                ? (!string.IsNullOrWhiteSpace(line2) ? $"{line1}, {line2}" : line1)
+                : (line2 ?? ""),
+            pickupCity: org.City,
+            pickupState: org.State,
+            contactPhone: org.ContactPhone,
+            contactEmail: org.ContactEmail);
 
         return Ok(new { message = "Order confirmation email sent." });
     }

@@ -52,6 +52,10 @@ public class SystemUser
     public DateTime? PinLockedUntil { get; set; }
     public DateTime? PinSetOn { get; set; }
 
+    // Password reset (stored directly on the user – not in sessions)
+    public string? PasswordResetCodeHash { get; set; }
+    public DateTime? PasswordResetCodeExpiresOn { get; set; }
+
     // Navigation properties
     public Organization? Organization { get; set; }
 }
@@ -142,6 +146,39 @@ public class RefreshTokenRequest
 public class GetPinUsersRequest
 {
     public string? OrganizationId { get; set; }
+}
+
+public class UpdateMyProfileRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+}
+
+public class UpdateOrganizationProfileRequest
+{
+    public string OrganizationName { get; set; } = string.Empty;
+    public string PrimaryEmail { get; set; } = string.Empty;
+    public string? ContactPhone { get; set; }
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? AddressLine3 { get; set; }
+    public string? Locality { get; set; }
+    public string? Region { get; set; }
+    public string? PostalCode { get; set; }
+    public string? CountryCode { get; set; }
+}
+
+public class ForgotPasswordCodeRequest
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ResetPasswordWithCodeRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
 }
 
 public class UserSession

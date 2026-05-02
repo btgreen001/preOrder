@@ -15,14 +15,21 @@ public class OrderEmailLineItem
 public interface IEmailService
 {
     Task SendEmailAsync(string toEmail, string organizationName, string inviteCode, DateTime expiresOnUtc);
+    Task SendPasswordResetCodeEmailAsync(string toEmail, string firstName, string code, DateTime expiresOnUtc);
     Task SendOrderEmailAsync(
         string toEmail,
         string organizationName,
+        string organizationContactEmail,
         string customerName,
         string orderId,
         DateTime? pickupSlotStartAt,
         DateTime? pickupSlotEndAt,
-        IEnumerable<OrderEmailLineItem> lines);
+        IEnumerable<OrderEmailLineItem> lines,
+        string? pickupAddress = null,
+        string? pickupCity = null,
+        string? pickupState = null,
+        string? contactPhone = null,
+        string? contactEmail = null);
 }
 
 public class EmailService : IEmailService
@@ -96,14 +103,7 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task SendOrderEmailAsync(
-        string toEmail,
-        string organizationName,
-        string customerName,
-        string orderId,
-        DateTime? pickupSlotStartAt,
-        DateTime? pickupSlotEndAt,
-        IEnumerable<OrderEmailLineItem> lines)
+    public async Task SendPasswordResetCodeEmailAsync(string toEmail, string firstName, string code, DateTime expiresOnUtc)
     {
         var enabled = _configuration.GetValue<bool>("Emails:Enabled", true);
         if (!enabled)
@@ -117,6 +117,78 @@ public class EmailService : IEmailService
         var username = _configuration["Emails:Smtp:Username"];
         var password = _configuration["Emails:Smtp:Password"];
         var fromEmail = _configuration["Emails:FromEmail"] ?? username ?? "no-reply@example.com";
+        var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            _logger.LogError("SMTP credentials not configured. Username: {Username}, Password present: {HasPassword}",
+                username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
+            throw new InvalidOperationException("Password reset SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
+        }
+
+        using var message = new MailMessage
+        {
+            From = new MailAddress(fromEmail, fromName),
+            Subject = "Your BakeAhead password reset code",
+            Body = BuildPasswordResetHtmlBody(firstName, code, expiresOnUtc),
+            IsBodyHtml = true
+        };
+
+        message.To.Add(toEmail);
+
+        using var smtpClient = new SmtpClient(host, port)
+        {
+            EnableSsl = true,
+            Credentials = new NetworkCredential(username, password),
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false,
+            Timeout = 10000
+        };
+
+        try
+        {
+            _logger.LogInformation("Sending password reset code email to {Email} via {Host}:{Port}", toEmail, host, port);
+            await smtpClient.SendMailAsync(message);
+            _logger.LogInformation("Password reset code email sent successfully to {Email}", toEmail);
+        }
+        catch (SmtpException ex)
+        {
+            _logger.LogError(ex, "SMTP error sending password reset code to {Email} on {Host}:{Port}. Status: {StatusCode}",
+                toEmail, host, port, ex.StatusCode);
+            throw;
+        }
+    }
+
+    public async Task SendOrderEmailAsync(
+        string toEmail,
+        string organizationName,
+        string organizationContactEmail,
+        string customerName,
+        string orderId,
+        DateTime? pickupSlotStartAt,
+        DateTime? pickupSlotEndAt,
+        IEnumerable<OrderEmailLineItem> lines,
+        string? pickupAddress = null,
+        string? pickupCity = null,
+        string? pickupState = null,
+        string? contactPhone = null,
+        string? contactEmail = null)
+    {
+        var enabled = _configuration.GetValue<bool>("Emails:Enabled", true);
+        if (!enabled)
+        {
+            _logger.LogWarning("Email sending is disabled by configuration.");
+            toEmail = _configuration["Emails:AdminEmail"] ?? "";
+        }
+
+        var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
+        var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
+        var username = _configuration["Emails:Smtp:Username"];
+        var password = _configuration["Emails:Smtp:Password"];
+        var fromEmail = organizationContactEmail
+            ?? _configuration["Emails:FromEmail"]
+            ?? username
+            ?? "no-reply@example.com";
         var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
         var orderBaseUrl = _configuration["Emails:OrderBaseUrl"] ?? "https://localhost:4200/preorders/external";
 
@@ -148,7 +220,12 @@ public class EmailService : IEmailService
                 pickupSlotStartAt,
                 pickupSlotEndAt,
                 orderLink,
-                normalizedLines),
+                normalizedLines,
+                pickupAddress,
+                pickupCity,
+                pickupState,
+                contactPhone,
+                contactEmail),
             IsBodyHtml = true
         };
 
@@ -238,7 +315,12 @@ private static string BuildOrderHtmlBody(
     DateTime? pickupSlotStartAt,
     DateTime? pickupSlotEndAt,
     string orderLink,
-    IReadOnlyCollection<OrderEmailLineItem> lines)
+    IReadOnlyCollection<OrderEmailLineItem> lines,
+    string? pickupAddress = null,
+    string? pickupCity = null,
+    string? pickupState = null,
+    string? contactPhone = null,
+    string? contactEmail = null)
 {
     var org = WebUtility.HtmlEncode(organizationName);
     var safeCustomerName = WebUtility.HtmlEncode(customerName);
@@ -246,8 +328,27 @@ private static string BuildOrderHtmlBody(
     var linkText = WebUtility.HtmlEncode(orderLink);
     var safeHref = orderLink;
     var pickupWindowText = pickupSlotStartAt.HasValue && pickupSlotEndAt.HasValue
-        ? $"{pickupSlotStartAt.Value:yyyy-MM-dd HH:mm} to {pickupSlotEndAt.Value:yyyy-MM-dd HH:mm} (local time)"
+        ? $"{pickupSlotStartAt.Value:dddd, MMMM d yyyy h:mm tt} to {pickupSlotEndAt.Value:h:mm tt} (merchant's local time)"
         : "Pickup window unavailable";
+
+    // Build pickup location block
+    var locationParts = new List<string>();
+    if (!string.IsNullOrWhiteSpace(pickupAddress)) locationParts.Add(WebUtility.HtmlEncode(pickupAddress));
+    var cityState = string.Join(", ", new[] { pickupCity, pickupState }.Where(s => !string.IsNullOrWhiteSpace(s)).Select(WebUtility.HtmlEncode!));
+    if (!string.IsNullOrWhiteSpace(cityState)) locationParts.Add(cityState);
+    var locationHtml = locationParts.Count > 0
+        ? $"<p><strong>Pickup Location:</strong><br/>{string.Join("<br/>", locationParts)}</p>"
+        : string.Empty;
+
+    // Build contact block
+    var contactLines = new List<string>();
+    if (!string.IsNullOrWhiteSpace(contactPhone))
+        contactLines.Add($"Phone: {WebUtility.HtmlEncode(contactPhone)}");
+    if (!string.IsNullOrWhiteSpace(contactEmail))
+        contactLines.Add($"Email: <a href=\"mailto:{WebUtility.HtmlEncode(contactEmail)}\" style=\"color: #1a73e8;\">{WebUtility.HtmlEncode(contactEmail)}</a>");
+    var contactHtml = contactLines.Count > 0
+        ? $"<p><strong>Contact:</strong><br/>{string.Join("<br/>", contactLines)}</p>"
+        : string.Empty;
 
     var lineRows = string.Join(string.Empty, lines.Select(line =>
     {
@@ -281,6 +382,10 @@ private static string BuildOrderHtmlBody(
             <p><strong>Order ID:</strong> {safeOrderId}</p>
 
             <p><strong>Pickup Window:</strong> {WebUtility.HtmlEncode(pickupWindowText)}</p>
+            <p>Orders not picked up during this scheduled window may become unavailable. Please contact the merchant if you have any questions about pickup.</p>
+            {locationHtml}
+
+            {contactHtml}
 
             <p><strong>Order summary:</strong></p>
             <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""border-collapse: collapse; margin: 8px 0 12px 0;"">
@@ -309,6 +414,25 @@ private static string BuildOrderHtmlBody(
                 If the link does not open, copy this URL into your browser:<br/>
                 {linkText}
             </p>
+        </td>
+    </tr>
+</table>";
+}
+
+private static string BuildPasswordResetHtmlBody(string firstName, string code, DateTime expiresOnUtc)
+{
+    var safeFirstName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(firstName) ? "there" : firstName);
+    var safeCode = WebUtility.HtmlEncode(code);
+
+    return $@"
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-family: Arial, sans-serif; font-size: 14px; color: #333;"">
+    <tr>
+        <td>
+            <p>Hi {safeFirstName},</p>
+            <p>Use this one-time code to reset your BakeAhead password:</p>
+            <p style=""font-size: 22px; font-weight: 700; letter-spacing: 2px; margin: 16px 0;"">{safeCode}</p>
+            <p>This code expires at <strong>{expiresOnUtc:yyyy-MM-dd HH:mm} UTC</strong>.</p>
+            <p>If you did not request a password reset, you can ignore this email.</p>
         </td>
     </tr>
 </table>";

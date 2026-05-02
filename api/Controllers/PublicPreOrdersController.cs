@@ -160,16 +160,27 @@ public class PublicPreOrdersController : ControllerBase
             return BadRequest(new { message = "Customer name and email are required." });
         }
 
-        var organizationName = await _context.Organizations
+        var orgDetails = await _context.Organizations
             .AsNoTracking()
             .Where(o => o.OrganizationId == organization.organizationId)
-            .Select(o => o.OrganizationName)
+            .Select(o => new
+            {
+                o.OrganizationName,
+                o.AddressLine1,
+                o.AddressLine2,
+                City = o.Locality,
+                State = o.Region,
+                o.ContactPhone,
+                ContactEmail = o.PrimaryEmail
+            })
             .FirstOrDefaultAsync();
 
-        if (string.IsNullOrWhiteSpace(organizationName))
+        if (orgDetails == null || string.IsNullOrWhiteSpace(orgDetails.OrganizationName))
         {
             return NotFound(new { message = "Organization not found for order email." });
         }
+
+        var organizationName = orgDetails.OrganizationName;
 
         var slotStartAt = request.SlotStartAt;
         var slotEndAt = request.SlotEndAt;
@@ -191,10 +202,13 @@ public class PublicPreOrdersController : ControllerBase
                 slotEndAt = slotFromOrder.SlotEndAt.Value;
             }
         }
+        var line1 = orgDetails.AddressLine1?.Trim();
+        var line2 = orgDetails.AddressLine2?.Trim();
 
         await _emailService.SendOrderEmailAsync(
             request.CustomerEmail,
             organizationName,
+            orgDetails.ContactEmail,
             request.CustomerName,
             request.OrderExternalId,
             slotStartAt,
@@ -204,7 +218,14 @@ public class PublicPreOrdersController : ControllerBase
                 Name = line.Name,
                 Quantity = line.Quantity,
                 UnitPrice = line.UnitPrice
-            }));
+            }),
+            pickupAddress: !string.IsNullOrWhiteSpace(line1)
+                ? (!string.IsNullOrWhiteSpace(line2) ? $"{line1}, {line2}" : line1)
+                : (line2 ?? ""),
+            pickupCity: orgDetails.City,
+            pickupState: orgDetails.State,
+            contactPhone: orgDetails.ContactPhone,
+            contactEmail: orgDetails.ContactEmail);
 
         return Ok(new { message = "Order confirmation email sent." });
     }

@@ -1,11 +1,13 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
-Snackbar text is too light for background
-
-Allow user to change pickup window prior to status change.
-
 Need a forget user/password; and need page to be able to perform change password
+
+Also need a forgot my username on forgot password screen.
+
+Need to test update profile 
+Need to test update company profile
+
 
 As part of company registration we need to ensure license is setup.
 AS Part of Initial prod deployment Fix this to 30 -  "BindRateLimitCount": 300,
@@ -498,3 +500,65 @@ A demo workflow you can show to prospects
 A database schema optimized for multi‑tenant SaaS
 
 Which one do you want to dive into next?
+
+
+
+## Plan: Invites UI + Send + Resend
+
+Fix the missing invites-page action by implementing a visible resend-email control, then add backend email delivery so invites are sent on create and can be resent for active codes. Use SMTP-first configuration for fastest MVP, reuse the same active code for resend, include a direct register link with prefilled code, and enforce resend throttling (3 per code per hour).
+
+**Steps**
+1. Stabilize the invites page baseline and remove the current component resolution blocker in the Angular invites feature so the page compiles reliably. This step blocks all other frontend invite work.
+2. Add explicit resend action UX to the invites grid in the admin invites page (button state, success/error feedback, loading state, disabled rules for used/expired/no-email rows). Depends on step 1.
+3. Extend frontend invite API service with resend endpoint call and typed response handling; wire component methods and optimistic refresh behavior. Depends on step 1; parallel with step 4.
+4. Introduce backend email infrastructure with SMTP settings, a single invite-email service, and a consistent invite email template payload (org name, invite code, expiry, register URL). Parallel with step 3.
+5. Update create-invite endpoint to send email when an invitee email is provided (send-on-create path), while still supporting code-only creation when email is blank. Depends on step 4.
+6. Add resend endpoint for existing code: POST organization/{orgId}/registration-codes/{codeId}/resend. Enforce tenant access, block used/expired/no-email codes, and apply throttle max 3 per code per hour. Depends on step 4.
+7. Add resend audit trail fields/events so resend attempts are visible and enforceable. Depends on step 6.
+8. Add registration URL composition for email link (register page with org + code query params) and verify frontend register screen can consume prefilled code without regressions. Depends on steps 4 and 6.
+9. Run end-to-end verification for: create invite + auto email, resend active code, throttle behavior, invalid resend paths, and role/tenant access checks. Depends on steps 1-8.
+10. Update tracking docs with outcomes and any remaining follow-up: MASTER_TODO_LIST.md and NOTES_DEFECTS_USER_TODO. Depends on step 9.
+
+**Implementation phases and parallelism**
+1. Phase A (blocking compile/UI readiness): step 1.
+2. Phase B (parallel): steps 2-3 frontend + step 4 backend infra.
+3. Phase C (backend invite behavior): steps 5-7.
+4. Phase D (cross-flow polish): step 8.
+5. Phase E (verification + status): steps 9-10.
+
+**Relevant files**
+- /opt/projects/preOrder/web/src/app/features/preorder-admin/invites/admin-invites.component.ts — add resend action handlers, guard states, and UX messaging.
+- /opt/projects/preOrder/web/src/app/features/preorder-admin/invites/admin-invites.component.html — add resend button/action column rules per code status.
+- /opt/projects/preOrder/web/src/app/features/preorder-admin/invites/invite-codes.service.ts — add resend API call and types.
+- /opt/projects/preOrder/web/src/app/auth/register/register.component.ts — support query-param prefill for invite code if not already wired.
+- /opt/projects/preOrder/api/Controllers/OrganizationController.cs — send-on-create behavior and resend endpoint.
+- /opt/projects/preOrder/api/Services/AuthService.cs — confirm invite-code use semantics remain unchanged.
+- /opt/projects/preOrder/api/Services (new email service files) — SMTP-backed invite sender abstraction.
+- /opt/projects/preOrder/api/Program.cs — DI registration for email service.
+- /opt/projects/preOrder/api/appsettings.json — SMTP + invite URL config.
+- /opt/projects/preOrder/api/appsettings.Development.json — dev SMTP + invite URL config.
+- /opt/projects/preOrder/MASTER_TODO_LIST.md — update progress and verification state.
+- /opt/projects/preOrder/NOTES_DEFECTS_USER_TODO — mirror execution notes and outcomes.
+
+**Verification**
+1. Frontend compile check: get_errors clean for invites component/service and routes.
+2. Backend compile check: get_errors clean for OrganizationController and email service files.
+3. Functional create-send test: create invite with email and confirm API reports success and SMTP call completes.
+4. Functional resend test: resend same active code and verify delivered content includes register URL + code.
+5. Negative test: resend used code returns validation error.
+6. Negative test: resend expired code returns validation error.
+7. Negative test: resend without email returns validation error.
+8. Throttle test: 4th resend attempt within one hour is blocked.
+9. Tenant/role test: cross-org resend attempt forbidden.
+10. Manual UI test: resend button only appears/enables for eligible rows and feedback messages are clear.
+
+**Decisions**
+- Missing page component to address: resend invite action on invites page.
+- Email provider for MVP: SMTP via appsettings.
+- Resend policy: resend same active code (do not rotate on resend).
+- Email content: include direct registration URL with prefilled code.
+- Resend rate limit: max 3 resends per code per hour.
+
+**Scope boundaries**
+- Included: invite send on create, resend same code, throttling, UI action and messaging, register-link composition.
+- Excluded: webhook delivery tracking, provider failover, email analytics, multi-template localization, background queue retries beyond basic SMTP call handling.

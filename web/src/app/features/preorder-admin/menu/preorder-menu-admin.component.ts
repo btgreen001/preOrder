@@ -51,7 +51,7 @@ export class PreorderMenuAdminComponent implements OnInit {
   }
 
   loadHolidayEvents(): void {
-    this.preorderAdminService.getHolidayEvents().subscribe({
+    this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
         this.holidayEvents = events;
         if (!this.selectedHolidayEventExternalId && events.length > 0) {

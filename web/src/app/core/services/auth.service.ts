@@ -8,7 +8,13 @@ import {
   LoginRequest, 
   RegisterUserRequest, 
   RegisterCompanyRequest, 
-  CompanyRegistrationResponse 
+  CompanyRegistrationResponse,
+  CompanyProfile,
+  ForgotPasswordCodeRequest,
+  MyProfileResponse,
+  ResetPasswordWithCodeRequest,
+  UpdateCompanyProfileRequest,
+  UpdateMyProfileRequest
 } from '../models/auth.model';
 import { LicenseTier } from '../../../shared-data-services/license.service';
 import { environment } from '../../../environments/environment';
@@ -134,6 +140,56 @@ export class AuthService {
           return throwError(() => error);
         })
       );
+  }
+
+  getMyProfile(): Observable<MyProfileResponse> {
+    return this.http.get<MyProfileResponse>(`${this.apiUrl}/me`);
+  }
+
+  updateMyProfile(request: UpdateMyProfileRequest): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/me/profile`, request).pipe(
+      tap(() => {
+        const current = this.currentUserValue;
+        if (!current) {
+          return;
+        }
+
+        this.currentUserSubject.next({
+          ...current,
+          email: request.email,
+          firstName: request.firstName,
+          lastName: request.lastName
+        });
+      })
+    );
+  }
+
+  getMyCompanyProfile(): Observable<CompanyProfile> {
+    return this.http.get<CompanyProfile>(`${environment.apiUrl}/organization/my-profile`);
+  }
+
+  updateMyCompanyProfile(request: UpdateCompanyProfileRequest): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${environment.apiUrl}/organization/my-profile`, request).pipe(
+      tap(() => {
+        const current = this.currentUserValue;
+        if (!current) {
+          return;
+        }
+
+        this.currentUserSubject.next({
+          ...current,
+          organizationName: request.organizationName
+        });
+      })
+    );
+  }
+
+  requestPasswordResetCode(request: ForgotPasswordCodeRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password/code`, request);
+  }
+
+  resetPasswordWithCode(request: ResetPasswordWithCodeRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password/reset`, request);
   }
 
   checkUsernameAvailability(username: string): Observable<boolean> {

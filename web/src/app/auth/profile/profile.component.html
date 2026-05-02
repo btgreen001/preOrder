@@ -1,0 +1,40 @@
+<div class="page-wrap">
+  <div class="profile-card">
+    <h2>My Profile</h2>
+    <p class="muted">Update your personal account details.</p>
+
+    <div class="info" *ngIf="isLoading">Loading profile...</div>
+    <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="success" *ngIf="successMessage">{{ successMessage }}</div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="save()" *ngIf="!isLoading">
+      <label>
+        Username
+        <strong><input formControlName="userName" readonly /></strong>
+      </label>
+
+      <label>
+        Email
+        <input type="email" formControlName="email" />
+      </label>
+
+      <div class="row">
+        <label class="half">
+          First Name
+          <input formControlName="firstName" />
+        </label>
+
+        <label class="half">
+          Last Name
+          <input formControlName="lastName" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary" [disabled]="isSaving">
+          {{ isSaving ? 'Saving...' : 'Save Profile' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

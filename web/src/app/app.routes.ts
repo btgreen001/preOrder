@@ -5,6 +5,10 @@ export const routes: Routes = [
 	{ path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
 	{ path: 'register', loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent) },
 	{ path: 'company-register', loadComponent: () => import('./auth/company-register/company-register.component').then(m => m.CompanyRegisterComponent) },
+	{ path: 'forgot-password', loadComponent: () => import('./auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) },
+	{ path: 'reset-password', loadComponent: () => import('./auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
+	{ path: 'profile', loadComponent: () => import('./auth/profile/profile.component').then(m => m.ProfileComponent), canActivate: [AuthGuard] },
+	{ path: 'admin/company-profile', loadComponent: () => import('./auth/company-profile/company-profile.component').then(m => m.CompanyProfileComponent), canActivate: [AuthGuard, AdminGuard] },
 	{ path: 'BakeAhead', loadComponent: () => import('./artisan-food/order-builder/order-builder.component').then(m => m.OrderBuilderComponent) },
 	{ path: 'shop', redirectTo: '/BakeAhead', pathMatch: 'full' },
 

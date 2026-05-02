@@ -21,6 +21,7 @@ namespace PreOrderApp.Services.Interfaces
         Task<PickListDto> GeneratePickListAsync(Guid externalId, Guid organizationId);
         Task<OrderDetailDto?> CompleteOrderAsync(Guid externalId);
         Task<OrderDetailDto?> CancelOrderAsync(Guid externalId);
+        Task<OrderDetailDto?> ChangePickupSlotAsync(Guid externalId, Guid pickupSlotExternalId);
         Task<List<OrderDto>> GetOrdersByStatusAsync(Guid organizationId, string status);
     }
 
@@ -106,6 +107,11 @@ namespace PreOrderApp.Services.Interfaces
     public class UpdateOrderStatusRequest
     {
         public string? NewStatus { get; set; }
+    }
+
+    public class ChangePickupSlotRequest
+    {
+        public Guid PickupSlotExternalId { get; set; }
     }
 
     // Phase 2 DTOs

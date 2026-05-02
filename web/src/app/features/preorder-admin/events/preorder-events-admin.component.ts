@@ -42,7 +42,7 @@ export class PreorderEventsAdminComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.preorderAdminService.getHolidayEvents().subscribe({
+    this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
         this.events = events;
         this.isLoading = false;
@@ -82,41 +82,42 @@ export class PreorderEventsAdminComponent implements OnInit {
     };
   }
 
-  deleteEvent(event: AdminHolidayEvent): void {
-    const confirmMsg = event.isActive
-      ? `Deactivate "${event.name}"? This will prevent new orders but won't delete existing preorders.`
-      : `Permanently deactivated "${event.name}" - reactivate it to accept new orders.`;
-
-    if (!confirm(confirmMsg)) {
-      this.snackBar.open('Event Deleted', 'Close', { duration: 3000 });
+  activateToggleEvent(event: AdminHolidayEvent): void {
+    const action = event.isActive ? 'deactivate' : 'activate';
+    const deactivateMessage = `Deactivating ${event.name} will hide it from customers and prevent new pre-orders, but existing pre-orders will not be affected.`;
+    const activateMessage = `Activating ${event.name} will make it visible to customers and allow new pre-orders.`;
+    if (!confirm(event.isActive ? deactivateMessage : activateMessage)) {
+      this.snackBar.open('Action cancelled.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
-    this.isSaving = true;
-    this.errorMessage = '';
-
-    const deactivateRequest: SaveHolidayEventRequest = {
+    const request: SaveHolidayEventRequest = {
       name: event.name,
       description: event.description,
       opensAt: event.opensAt,
       closesAt: event.closesAt,
       pickupStartDt: event.pickupStartDt,
       pickupEndDt: event.pickupEndDt,
-      isActive: false
+      isActive: !event.isActive
     };
 
-    this.preorderAdminService.updateHolidayEvent(event.externalId, deactivateRequest).subscribe({
+    this.isSaving = true;
+    this.errorMessage = '';
+
+    this.preorderAdminService.updateHolidayEvent(event.externalId, request).subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMessage = 'Event deactivated.';
+        this.successMessage = `Event ${action}d.`;
         this.loadEvents();
+        this.snackBar.open(this.successMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       },
       error: (error) => {
         this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not deactivate event.');
+        this.errorMessage = extractErrorMessage(error, `Could not ${action} event.`);
       }
     });
   }
+
 
   saveEvent(): void {
     this.errorMessage = '';

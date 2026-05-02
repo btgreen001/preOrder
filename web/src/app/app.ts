@@ -68,10 +68,12 @@ export class App implements OnInit, OnDestroy {
 
   private allNavItems = [
     { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
-    { label: 'Menu',                  route: '/admin/menu',                   roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'restaurant_menu' },
-    { label: 'Pickup Slots',          route: '/admin/slots',                  roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
-    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long' },
-    { label: 'Invite Staff',          route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'person_add' },
+    { label: 'Menu',                  route: '/admin/menu',   isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'restaurant_menu' },
+    { label: 'Pickup Slots',          route: '/admin/slots',  isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
+    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long'},
+    { label: 'Invite Staff',          route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'person_add' ,dividerBefore: true },
+    { label: 'Company Profile',       route: '/admin/company-profile',        roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'business' },
+    { label: 'My Profile',            route: '/profile',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'person' },
 
     { label: 'Store Preview',         externalUrl: this.storePreviewUrl,      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'preview',dividerBefore: true}
 
@@ -138,8 +140,14 @@ export class App implements OnInit, OnDestroy {
           const isRegisterRoute =
       normalizedUrl === '/register' ||
       normalizedUrl === '/company-register' ||
+      normalizedUrl === '/forgot-password' ||
+      normalizedUrl === '/reset-password' ||
       normalizedUrl.startsWith('/company-register?') ||
       normalizedUrl.startsWith('/company-register/') ||
+      normalizedUrl.startsWith('/forgot-password?') ||
+      normalizedUrl.startsWith('/forgot-password/') ||
+      normalizedUrl.startsWith('/reset-password?') ||
+      normalizedUrl.startsWith('/reset-password/') ||
       normalizedUrl.startsWith('/register?') ||
       normalizedUrl.startsWith('/register/');
 
