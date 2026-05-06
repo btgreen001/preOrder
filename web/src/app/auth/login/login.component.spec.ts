@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { of, throwError, asyncScheduler } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { LoginComponent } from './login.component';
@@ -29,7 +29,9 @@ describe('LoginComponent', () => {
   beforeEach(async () => {
     const authSpy = jasmine.createSpyObj('AuthService', [
       'login',
-      'isAuthenticated'
+      'logout',
+      'getBasicAuthHeader',
+      'getRefreshToken'
     ]);
     const routerSpyObj = jasmine.createSpyObj('Router', ['navigate']);
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {

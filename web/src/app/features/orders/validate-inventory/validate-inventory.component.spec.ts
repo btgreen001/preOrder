@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ValidateInventoryComponent } from './validate-inventory.component';
-import { OrdersService } from './services/orders.service';
+import { OrdersService } from './../services/orders.service';
 import { of, throwError } from 'rxjs';
 
 describe('ValidateInventoryComponent', () => {
@@ -12,9 +12,9 @@ describe('ValidateInventoryComponent', () => {
     mockOrdersService = jasmine.createSpyObj('OrdersService', ['validateOrderInventory']);
     mockOrdersService.validateOrderInventory.and.returnValue(
       of({
-        isValid: true,
-        missingItems: [],
-        message: 'All items available'
+        message: 'All items available',
+        allItemsAvailable: true,
+        items: []
       })
     );
 
@@ -43,7 +43,7 @@ describe('ValidateInventoryComponent', () => {
     component.addItem();
 
     expect(component.items.length).toBe(1);
-  expect(component.items[0].sellableProductId).toBe('product-123');
+  expect(component.items[0].sellableProductExternalId).toBe('product-123');
     expect(component.items[0].quantity).toBe(5);
     expect(component.newProductId).toBe('');
     expect(component.newQuantity).toBeNull();
@@ -60,17 +60,17 @@ describe('ValidateInventoryComponent', () => {
 
   it('should remove item from list', () => {
     component.items = [
-  { sellableProductId: 'prod-1', quantity: 2 },
-  { sellableProductId: 'prod-2', quantity: 3 }
+  { sellableProductExternalId: 'prod-1', quantity: 2 },
+  { sellableProductExternalId: 'prod-2', quantity: 3 }
     ];
 
     component.removeItem(0);
     expect(component.items.length).toBe(1);
-  expect(component.items[0].sellableProductId).toBe('prod-2');
+  expect(component.items[0].sellableProductExternalId).toBe('prod-2');
   });
 
   it('should validate inventory', (done) => {
-  component.items = [{ sellableProductId: 'prod-123', quantity: 5 }];
+  component.items = [{ sellableProductExternalId: 'prod-123', quantity: 5 }];
     component.validateInventory();
 
     expect(component.isLoading).toBe(true);
@@ -79,7 +79,7 @@ describe('ValidateInventoryComponent', () => {
     // Wait for async operation
     setTimeout(() => {
       expect(component.isLoading).toBe(false);
-      expect(component.validationResult?.isValid).toBe(true);
+      expect(component.validationResult?.allItemsAvailable).toBe(true);
       done();
     }, 100);
   });
@@ -89,7 +89,7 @@ describe('ValidateInventoryComponent', () => {
       throwError(() => ({ error: { message: 'API error' } }))
     );
 
-  component.items = [{ sellableProductId: 'prod-123', quantity: 5 }];
+  component.items = [{ sellableProductExternalId: 'prod-123', quantity: 5 }];
     component.validateInventory();
 
     setTimeout(() => {
@@ -101,8 +101,8 @@ describe('ValidateInventoryComponent', () => {
 
   it('should initialize in modal mode with input items', () => {
     component.orderedItems = [
-  { sellableProductId: 'prod-1', quantity: 2 },
-  { sellableProductId: 'prod-2', quantity: 3 }
+  { sellableProductExternalId: 'prod-1', quantity: 2 },
+  { sellableProductExternalId: 'prod-2', quantity: 3 }
     ];
 
     component.ngOnInit();
@@ -115,9 +115,9 @@ describe('ValidateInventoryComponent', () => {
   it('should emit validationComplete when proceed called', () => {
     spyOn(component.validationComplete, 'emit');
     component.validationResult = {
-      isValid: true,
-      missingItems: [],
-      message: 'Valid'
+      allItemsAvailable: true,
+      message: 'Valid',
+      items: []
     };
 
     component.onProceed();

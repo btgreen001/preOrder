@@ -243,6 +243,7 @@ public class MvpPreOrdersController : ControllerBase
             organizationName,
             org.ContactEmail,
             request.CustomerName,
+            request.OrderId,
             request.OrderExternalId,
             slotStartAt,
             slotEndAt,

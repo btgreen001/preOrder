@@ -1,10 +1,10 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
+Need a page to drop/deactivate/delete invited users from the company
 Need a forget user/password; and need page to be able to perform change password
 
 Also need a forgot my username on forgot password screen.
-
 Need to test update profile 
 Need to test update company profile
 

@@ -36,6 +36,8 @@ export class AuthInterceptor implements HttpInterceptor {
     }
     
     const isPublicPreorderRequest = request.url.includes('/api/public/preorders');
+    const isPublicOrderSelfServiceRequest = /\/api\/orders\/[^/]+\/(pickup-slot|cancel)(\?|$)/.test(request.url);
+    const isAnonymousRequest = isPublicPreorderRequest || isPublicOrderSelfServiceRequest;
 
     // Clone the request and add the Bearer token + credentials for cookies
     const modifiedRequest = accessToken 
@@ -43,10 +45,10 @@ export class AuthInterceptor implements HttpInterceptor {
           setHeaders: {
             Authorization: `Bearer ${accessToken}`
           },
-          withCredentials: !isPublicPreorderRequest // Avoid auth cookie flow on anonymous public preorder endpoints
+          withCredentials: !isAnonymousRequest // Avoid auth cookie flow on anonymous endpoints
         })
       : request.clone({
-          withCredentials: !isPublicPreorderRequest // Anonymous public preorder endpoints should not trigger auth refresh behavior
+          withCredentials: !isAnonymousRequest // Anonymous endpoints should not trigger auth refresh behavior
         });
     
     return next.handle(modifiedRequest).pipe(
@@ -68,7 +70,7 @@ export class AuthInterceptor implements HttpInterceptor {
             return throwError(() => new Error('Session expired due to inactivity'));
           }
           
-          if (request.url.includes('/api/public/preorders')) {
+          if (request.url.includes('/api/public/preorders') || isPublicOrderSelfServiceRequest) {
             return throwError(() => error);
           }
 
@@ -105,7 +107,8 @@ export class AuthInterceptor implements HttpInterceptor {
     // Anonymous endpoints: 401 means endpoint or middleware rejected the request.
     // Don't navigate or retry — let the caller's catchError handle it.
     if (request.url.includes('/api/terminal/device-context') ||
-        request.url.includes('/api/public/preorders')) {
+        request.url.includes('/api/public/preorders') ||
+        /\/api\/orders\/[^/]+\/(pickup-slot|cancel)(\?|$)/.test(request.url)) {
       return throwError(() => new Error('Anonymous endpoint unavailable'));
     }
 

@@ -396,7 +396,9 @@ modelBuilder.Entity<RecipeStep>(entity =>
             entity.Property(e => e.SubscriptionId).HasColumnName("subscription_id");
             entity.Property(e => e.IdentityHash).HasColumnName("identity_hash");
             entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-            entity.Property(e => e.Tier).HasColumnName("tier");
+                  entity.Property(e => e.Tier)
+                          .HasColumnName("tier")
+                          .HasConversion<string>();
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.ReferralCode).HasColumnName("referral_code");

@@ -23,6 +23,15 @@ public class TerminalLockEnforcementMiddleware
 
     public async Task InvokeAsync(HttpContext context, ITerminalLockService terminalLockService, IOrganizationContextService orgContext)
     {
+        var path = context.Request.Path;
+
+        // Public order pickup-slot change endpoint should not require terminal lock checks.
+        if (path.StartsWithSegments("/api/orders") && path.Value?.EndsWith("/pickup-slot", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            await _next(context);
+            return;
+        }
+
         // Skip for unauthenticated requests
         if (context.User?.Identity?.IsAuthenticated != true)
         {

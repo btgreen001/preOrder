@@ -182,6 +182,10 @@ public class PublicPreOrdersController : ControllerBase
 
         var organizationName = orgDetails.OrganizationName;
 
+        var orderIdForEmail = string.IsNullOrWhiteSpace(request.OrderId)
+            ? request.OrderExternalId
+            : request.OrderId;
+
         var slotStartAt = request.SlotStartAt;
         var slotEndAt = request.SlotEndAt;
         if (Guid.TryParse(request.OrderExternalId, out var orderExternalId))
@@ -191,10 +195,16 @@ public class PublicPreOrdersController : ControllerBase
                 .Where(o => o.OrganizationId == organization.organizationId && o.ExternalId == orderExternalId && o.PickupSlot != null)
                 .Select(o => new
                 {
+                    o.Id,
                     SlotStartAt = (DateTime?)o.PickupSlot!.SlotStartAt,
                     SlotEndAt = (DateTime?)o.PickupSlot!.SlotEndAt
                 })
                 .FirstOrDefaultAsync();
+
+            if (slotFromOrder != null)
+            {
+                orderIdForEmail = slotFromOrder.Id.ToString();
+            }
 
             if (slotFromOrder?.SlotStartAt.HasValue == true && slotFromOrder.SlotEndAt.HasValue)
             {
@@ -210,6 +220,7 @@ public class PublicPreOrdersController : ControllerBase
             organizationName,
             orgDetails.ContactEmail,
             request.CustomerName,
+            orderIdForEmail,
             request.OrderExternalId,
             slotStartAt,
             slotEndAt,
@@ -289,6 +300,7 @@ public class PublicPreOrdersController : ControllerBase
 
     private static object MapPreOrder(Models.PreOrder p) => new
     {
+        p.Id,
         p.ExternalId,
         p.HolidayEventId,
         p.PickupSlotId,

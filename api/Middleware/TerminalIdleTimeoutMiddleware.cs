@@ -65,6 +65,14 @@ public class TerminalIdleTimeoutMiddleware
                 await _next(context);
                 return;
             }
+
+            // Public order pickup-slot change endpoint should never be blocked by terminal/session checks.
+            if (path.StartsWith("/api/orders/") && path.EndsWith("/pickup-slot"))
+            {
+                _logger.LogDebug("[TerminalIdleTimeout] BYPASS: public order pickup-slot endpoint");
+                await _next(context);
+                return;
+            }
             
             if (path.StartsWith("/api/auth/login") || 
                 path.StartsWith("/api/auth/register") ||

@@ -46,7 +46,7 @@
       <thead>
         <tr>
           <th>Event</th>
-          <th>Order ID</th>
+          <th>Order #</th>
           <th>Created</th>
           <th>Customer</th>
           <th>Email</th>
@@ -59,7 +59,7 @@
       <tbody>
         <tr *ngFor="let order of filteredPreOrders">
           <td>{{ getHolidayEventName(order.holidayEventId) }}</td>
-          <td>{{ order.externalId }}</td>
+          <td>{{ order.id }}</td>
           <td>{{ order.createdAt | date: 'MM-dd-yyyy h:mm a' }}</td>
           <td>{{ order.customerName }}</td>
           <td>{{ order.customerEmail }}</td>

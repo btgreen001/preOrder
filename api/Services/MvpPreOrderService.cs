@@ -457,12 +457,12 @@ public class MvpPreOrderService : IMvpPreOrderService
             catch (PostgresException fallbackEx) when (IsLegacyTypeComparisonError(fallbackEx))
             {
                 _logger.LogWarning(fallbackEx, "Returning header-only CSV because legacy varchar-vs-bigint comparisons still fail in fallback query path after an invalid cast failure.");
-                return "OrderExternalId,CreatedAtUtc,Status,HolidayEventExternalId,HolidayEventName,PickupSlotExternalId,PickupStartUtc,PickupEndUtc,PickupDateUtc,CustomerName,CustomerEmail,CustomerPhone,Notes,TotalAmount,LineExternalId,MenuItemName,ProductId,Quantity,UnitPrice,LineTotal\n";
+                return "OrderId,CreatedAtUtc,Status,HolidayEventExternalId,HolidayEventName,PickupSlotExternalId,PickupStartUtc,PickupEndUtc,PickupDateUtc,CustomerName,CustomerEmail,CustomerPhone,Notes,TotalAmount,LineExternalId,MenuItemName,ProductId,Quantity,UnitPrice,LineTotal\n";
             }
             catch (InvalidCastException fallbackEx)
             {
                 _logger.LogWarning(fallbackEx, "Returning header-only CSV because legacy type drift still causes cast failures in fallback query path.");
-                return "OrderExternalId,CreatedAtUtc,Status,HolidayEventExternalId,HolidayEventName,PickupSlotExternalId,PickupStartUtc,PickupEndUtc,PickupDateUtc,CustomerName,CustomerEmail,CustomerPhone,Notes,TotalAmount,LineExternalId,MenuItemName,ProductId,Quantity,UnitPrice,LineTotal\n";
+                return "OrderId,CreatedAtUtc,Status,HolidayEventExternalId,HolidayEventName,PickupSlotExternalId,PickupStartUtc,PickupEndUtc,PickupDateUtc,CustomerName,CustomerEmail,CustomerPhone,Notes,TotalAmount,LineExternalId,MenuItemName,ProductId,Quantity,UnitPrice,LineTotal\n";
             }
         }
         catch (PostgresException ex) when (IsLegacyTypeComparisonError(ex))
@@ -564,10 +564,10 @@ public class MvpPreOrderService : IMvpPreOrderService
                 throw new KeyNotFoundException($"Menu item not found for external id {line.MenuItemExternalId}");
             }
 
-            if (!menuItem.SellableProductId.HasValue)
-            {
-                throw new InvalidOperationException($"Menu item '{menuItem.Name}' is not linked to a sellable product. Link it in admin before accepting preorders for this item.");
-            }
+            // if (!menuItem.SellableProductId.HasValue)
+            // {
+            //     throw new InvalidOperationException($"Menu item '{menuItem.Name}' is not linked to a sellable product. Link it in admin before accepting preorders for this item.");
+            // }
 
             if (line.Quantity < 1)
             {
@@ -728,10 +728,11 @@ public class MvpPreOrderService : IMvpPreOrderService
             .Where(group => group.Count() == 1)
             .ToDictionary(group => group.Key, group => group.First().Id);
 
-        if (!uniqueProductIdsByName.TryGetValue(UnlinkedSellableProductName, out var unlinkedProductId))
-        {
-            throw new InvalidOperationException("Sellable product 'Unlinked' must exist as an active for-sale product before preorders can use default product linking.");
-        }
+        // We will just menu items to NULL
+        // if (!uniqueProductIdsByName.TryGetValue(UnlinkedSellableProductName, out var unlinkedProductId))
+        // {
+        //     throw new InvalidOperationException("Sellable product 'Unlinked' must exist as an active for-sale product before preorders can use default product linking.");
+        // }
 
         foreach (var menuItem in unresolved)
         {
@@ -743,7 +744,7 @@ public class MvpPreOrderService : IMvpPreOrderService
                 continue;
             }
 
-            menuItem.SellableProductId = unlinkedProductId;
+            menuItem.SellableProductId = null;
             menuItem.UpdatedAt = DateTime.UtcNow;
             _logger.LogWarning("Menu item {MenuItemName} was automatically linked to the Unlinked sellable product for organization {OrganizationId}.", menuItem.Name, organizationId);
         }
@@ -821,7 +822,7 @@ public class MvpPreOrderService : IMvpPreOrderService
 
         var columns = new string[]
         {
-            order.ExternalId.ToString(),
+            order.Id.ToString(),
             order.CreatedAt.ToString("MM-dd-yyyy h:mm tt"),
             order.OrderStatus,
             order.HolidayEvent?.Name ?? string.Empty,

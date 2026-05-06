@@ -54,6 +54,7 @@ export interface PublicCreatePreOrderRequest {
 }
 
 export interface PublicPreOrderResponse {
+  id: number;
   externalId: string;
   customerName: string;
   customerEmail: string;

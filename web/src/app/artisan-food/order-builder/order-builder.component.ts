@@ -42,10 +42,7 @@ interface CustomerForm {
 export class OrderBuilderComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly preorderService = inject(PublicPreorderService);
-
-constructor(
-  private snackBar: MatSnackBar
-) {}
+  private readonly snackBar = inject(MatSnackBar);
 
   currentStep = 1;
   totalSteps = 4;

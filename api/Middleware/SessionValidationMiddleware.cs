@@ -108,7 +108,8 @@ public class SessionValidationMiddleware
                path.StartsWith("/api/auth/register") ||
                path.StartsWith("/api/auth/check-username") ||
                path.StartsWith("/api/auth/refresh-token") ||
-               path.StartsWith("/api/public/preorders");
+               path.StartsWith("/api/public/preorders") ||
+               (path.StartsWith("/api/orders/") && path.EndsWith("/pickup-slot"));
     }
 
     private static async Task WriteUnauthorizedAsync(HttpContext context, string message, string reason)

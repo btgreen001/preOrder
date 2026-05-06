@@ -11,7 +11,7 @@ public class Order
     public string? CustomerPhone { get; set; }
     public long? HolidayEventId { get; set; }
     public long? PickupSlotId { get; set; }
-    public Guid? DeliveryId { get; set; }
+    public decimal? DeliveryId { get; set; }
     public DateTime OrderDate { get; set; }
     public string OrderStatus { get; set; } = "PENDING"; // PENDING, CONFIRMED, COMPLETED, CANCELLED
     public decimal TotalAmount { get; set; }

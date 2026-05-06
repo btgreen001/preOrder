@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError, timer, EMPTY } from 'rxjs';
-import { catchError, map, tap, switchMap, share, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError, EMPTY } from 'rxjs';
+import { catchError, map, tap, switchMap, share } from 'rxjs/operators';
 import { 
   AuthResponse, 
   LoginRequest, 
@@ -36,7 +36,7 @@ export class AuthService {
   private accessToken: string | null = null;
   private organizationId: string | null = null; // Preserve org ID even after session expires (for PIN users endpoint)
   // Refresh token is stored in HttpOnly cookie by backend - not accessible to JavaScript
-  private tokenExpirationTimer: any;
+  private tokenExpirationTimer: ReturnType<typeof setTimeout> | null = null;
   private refreshInProgress: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private isRefreshing = false;
 
@@ -52,6 +52,16 @@ export class AuthService {
   public get currentUserValue(): AuthResponse | null {
     return this.currentUserSubject.value;
   }
+
+  getRefreshToken(): string | null {
+    // Refresh token is stored in HttpOnly cookie by backend - not accessible to JavaScript
+    return null;
+  }
+
+  getBasicAuthHeader(): string | null {
+    return null;
+  }
+
 
   public getAccessToken(): string | null {
     return this.accessToken;
@@ -214,7 +224,8 @@ export class AuthService {
     console.debug('[AuthService] clearLocalState: Layer 2 cleared, Layer 1 (terminal context) preserved');
   }
 
-  logout(allSessions: boolean = false, redirectTo: 'login' | 'pin-signin' = 'login'): void {
+
+  logout(allSessions = false, redirectTo: 'login' | 'pin-signin' = 'login'): void {
     // Capture token BEFORE clearing state — the backend endpoint is [Authorize]
     // and needs a valid Bearer token to identify the session via jti claim.
     const tokenSnapshot = this.accessToken;
@@ -258,15 +269,15 @@ export class AuthService {
         
         // Extract and preserve organization ID from token for use during idle timeout
         if (response.accessToken) {
-          const tokenPayload = this.decodeToken(response.accessToken);
-          this.organizationId = tokenPayload?.org_id as string || this.organizationId; // Keep previous org ID if new token doesn't have one
+          const tokenPayload = this.decodeToken(response.accessToken) as { org_id?: string } | null;
+          this.organizationId = tokenPayload?.org_id || this.organizationId; // Keep previous org ID if new token doesn't have one
         }
         
         this.currentUserSubject.next(response);
         this.scheduleTokenRefresh();
         console.debug('Session restored from refresh token');
       }),
-      catchError(error => {
+      catchError(() => {
         // No valid session or refresh failed - user needs to log in
         // This is normal for first-time visitors or expired sessions
         // 401 is expected when there's no refresh token cookie
@@ -374,7 +385,7 @@ export class AuthService {
   }
 
   // JWT token decoder (format: header.payload.signature)
-  private decodeToken(token: string): any {
+  private decodeToken(token: string): { exp?: number } | null {
     try {
       // JWT has three parts separated by dots
       const parts = token.split('.');
@@ -397,7 +408,7 @@ export class AuthService {
   }
 
   // Handle token expiration errors
-  handleTokenExpiration(): Observable<any> {
+  handleTokenExpiration(): Observable<AuthResponse> {
     // Always attempt refresh - refresh token is in HttpOnly cookie
     return this.refreshAccessToken();
   }

@@ -22,6 +22,7 @@ public interface IEmailService
         string organizationContactEmail,
         string customerName,
         string orderId,
+        string externalId,
         DateTime? pickupSlotStartAt,
         DateTime? pickupSlotEndAt,
         IEnumerable<OrderEmailLineItem> lines,
@@ -165,6 +166,7 @@ public class EmailService : IEmailService
         string organizationContactEmail,
         string customerName,
         string orderId,
+        string externalId,
         DateTime? pickupSlotStartAt,
         DateTime? pickupSlotEndAt,
         IEnumerable<OrderEmailLineItem> lines,
@@ -198,7 +200,7 @@ public class EmailService : IEmailService
                 username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
             throw new InvalidOperationException("Order email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
-        var orderLink = BuildOrderLink(orderBaseUrl, orderId);
+        var orderLink = BuildOrderLink(orderBaseUrl, externalId);
         var normalizedLines = (lines ?? Enumerable.Empty<OrderEmailLineItem>())
             .Where(line => line.Quantity > 0)
             .Select(line => new OrderEmailLineItem
@@ -217,6 +219,7 @@ public class EmailService : IEmailService
                 organizationName,
                 customerName,
                 orderId,
+                externalId,
                 pickupSlotStartAt,
                 pickupSlotEndAt,
                 orderLink,
@@ -255,10 +258,10 @@ public class EmailService : IEmailService
         }
     }
 
-    private static string BuildOrderLink(string orderBaseUrl, string orderId)
+    private static string BuildOrderLink(string orderBaseUrl, string externalId)
     {
         var joiner = orderBaseUrl.Contains('?') ? "&" : "?";
-        return $"{orderBaseUrl}{joiner}externalId={Uri.EscapeDataString(orderId)}";
+        return $"{orderBaseUrl}{joiner}externalId={Uri.EscapeDataString(externalId)}";
     }
     private static string BuildInviteLink(string registerBaseUrl, string inviteCode, string email)
     {
@@ -312,6 +315,7 @@ private static string BuildOrderHtmlBody(
     string organizationName,
     string customerName,
     string orderId,
+    string externalId,
     DateTime? pickupSlotStartAt,
     DateTime? pickupSlotEndAt,
     string orderLink,
@@ -325,6 +329,7 @@ private static string BuildOrderHtmlBody(
     var org = WebUtility.HtmlEncode(organizationName);
     var safeCustomerName = WebUtility.HtmlEncode(customerName);
     var safeOrderId = WebUtility.HtmlEncode(orderId);
+    var safeConfirmationId = WebUtility.HtmlEncode(externalId);
     var linkText = WebUtility.HtmlEncode(orderLink);
     var safeHref = orderLink;
     var pickupWindowText = pickupSlotStartAt.HasValue && pickupSlotEndAt.HasValue
@@ -380,6 +385,7 @@ private static string BuildOrderHtmlBody(
             <p>Thank you for your order with <strong>{org}</strong> on BakeAhead.</p>
 
             <p><strong>Order ID:</strong> {safeOrderId}</p>
+            <p><strong>Confirmation ID:</strong> {safeConfirmationId}</p>
 
             <p><strong>Pickup Window:</strong> {WebUtility.HtmlEncode(pickupWindowText)}</p>
             <p>Orders not picked up during this scheduled window may become unavailable. Please contact the merchant if you have any questions about pickup.</p>

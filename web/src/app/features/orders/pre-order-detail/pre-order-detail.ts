@@ -5,7 +5,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
 import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-orders.service';
 
-
 @Component({
   selector: 'app-order-detail',
   standalone: true,
@@ -24,7 +23,8 @@ import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-order
       <div class="notice notice-success" *ngIf="cancelNotice">{{ cancelNotice }}</div>
       <div class="notice notice-error" *ngIf="cancelError">{{ cancelError }}</div>
       <div class="order-info">
-        <p><strong>Order ID:</strong> {{ order.externalId }}</p>
+        <p><strong>Order ID:</strong> {{ order.id }}</p>
+        <p><strong>Confirmation:</strong> {{ order.externalId }}</p>
         <p><strong>Order Date:</strong> {{ order.orderDate | date:'medium' }}</p>
         <p><strong>Status:</strong> <span class="status-badge status-{{ order.orderStatus }}">{{ order.orderStatus | titlecase }}</span></p>
         <p><strong>Event:</strong> {{ order.eventName }}</p>
@@ -53,15 +53,23 @@ import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-order
         </table>
       </div>
 
-      <div class="pickup-location" *ngIf="order.pickupSlot">
-        <h2>Pickup Location</h2>
-        <p><strong>Merchant:</strong> {{ order.organization?.organizationName }}</p>
-        <p><strong>Address:</strong> {{ order.organization?.addressLine1 }} {{ order.organization?.addressLine2 }}</p>
-        <p><strong>City:</strong> {{ order.organization?.city }}</p>
-        <p><strong>State:</strong> {{ order.organization?.state }}</p>
-        <p><strong>Phone:</strong> {{ order.organization?.contactPhone }}</p>
-        <p><strong>Email:</strong> {{ order.organization?.contactEmail }}</p>
-      </div>
+      @if (order.pickupSlot) {
+        <div class="pickup-location">
+          <h2>Pickup Location</h2>
+          <p>{{ order.organization?.organizationName }}</p>
+          <p>{{ order.organization?.addressLine1 }} {{ order.organization?.addressLine2 }}</p>
+          <p>{{ order.organization?.city }}@if (order.organization?.state) {,  {{ order.organization?.state }} }</p>
+          <p></p>
+          @if (order.organization?.contactPhone) {
+            <p><strong>Phone:</strong> {{ order.organization?.contactPhone }}</p>
+          }
+
+          @if (order.organization?.contactEmail) {
+            <p><strong>Email:</strong> {{ order.organization?.contactEmail }}</p>
+          }
+        </div>
+      }
+
 
       <div class="pickup-slot" *ngIf="order.pickupSlot">
         <h2>Pickup Time</h2>
@@ -374,6 +382,11 @@ startAnotherOrder() {
     if (!this.order || this.isCancelling) {
       return;
     }
+    if (confirm('Are you sure you want to cancel this order?')) {
+      // proceed with cancellation
+    } else {
+      return; // user cancelled the action
+    }
 
     if (!this.canCancel(this.order.orderStatus)) {
       this.cancelError = `Order cannot be cancelled from status '${this.order.orderStatus}'.`;
@@ -388,9 +401,9 @@ startAnotherOrder() {
     this.orders.cancelOrder(this.order.externalId).subscribe({
       next: updatedOrder => {
         this.order = updatedOrder;
-        this.cancelNotice = 'Your order has been cancelled.';
         this.availablePickupSlots = [];
         this.isCancelling = false;
+        this.snackBar.open('Order cancelled successfully.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       },
       error: error => {
         const apiMessage = (error?.error?.error ?? error?.error?.message ?? '').toString().trim();
