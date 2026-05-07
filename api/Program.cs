@@ -20,16 +20,22 @@ using AuditService = PreOrderApp.Services.AuditService;
 
 // Load environment variables from .env file in parent directory
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
+var builder = WebApplication.CreateBuilder(args);
+
 if (File.Exists(envPath))
 {
     DotNetEnv.Env.Load(envPath);
-}
+    if (builder.Environment.IsDevelopment())
+    {
+        DotNetEnv.Env.Load(".env.local");
+    }
+
+    }
 else
 {
     Console.WriteLine($"WARNING: .env file not found at {Path.GetFullPath(envPath)}");
 }
 
-var builder = WebApplication.CreateBuilder(args);
 
 // Add environment variables to configuration
 var pasetoSecretKey = Environment.GetEnvironmentVariable("PASETO_SECRET_KEY");

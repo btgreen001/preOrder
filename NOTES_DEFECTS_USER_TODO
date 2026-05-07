@@ -1,5 +1,20 @@
+Deploy work
+Then in container web server config (Nginx or similar): /api -> http://preorder-api:5124
 
-I need to get this app ready for build and deploy to dev.  Currently I'm referencing localhost or static IP address.  IP is 192.168.50.50 and 192.168.50.147.  Let's 
+Runtime Config Walkthrough (container-friendly)
+
+Add runtime config file served by Angular assets (for example under assets).
+Load it before app boot using APP_INITIALIZER in app.config.ts.
+Expose values through a small config service.
+Keep environment file minimal (production flag + safe defaults).
+In services, consume config service instead of hardcoded host values over time.
+
+
+
+
+
+
+
 
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
@@ -10,6 +25,9 @@ Need a forget user/password; and need page to be able to perform change password
 Also need a forgot my username on forgot password screen.
 Need to test update profile 
 Need to test update company profile
+
+
+
 
 
 As part of company registration we need to ensure license is setup.
