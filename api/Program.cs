@@ -337,7 +337,7 @@ using (var scope = app.Services.CreateScope())
         reader.Close();
 
         using var schemaCmd = conn.CreateCommand();
-        schemaCmd.CommandText = "SELECT 1 FROM app_user LIMIT 1";
+        schemaCmd.CommandText = "SELECT table_name, table_schema FROM information_schema.tables WHERE table_type = 'BASE TABLE';";
         try
         {
             schemaCmd.ExecuteScalar();
