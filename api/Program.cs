@@ -318,11 +318,42 @@ else
     Console.WriteLine("INFO: Skipping automatic EF migrations (set APPLY_MIGRATIONS_ON_STARTUP=true to enable).");
 }
 
+// Verify actual database connection and log the server-reported database name
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
+    try
+    {
+        var conn = db.Database.GetDbConnection();
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT current_database(), version()";
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            Console.WriteLine($"INFO: Connected to database '{reader.GetString(0)}'");
+            Console.WriteLine($"INFO: PostgreSQL {reader.GetString(1)}");
+        }
+        conn.Close();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"ERROR: Could not connect to database at {dbHost}:{dbPort}/{dbName} — {ex.Message}");
+    }
+}
+
 // Seed a default Admin user if none exist
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
-    if (!db.SystemUsers.Any())
+    bool hasUsers = false;
+    try { hasUsers = db.SystemUsers.Any(); }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"WARNING: Could not check for existing users (schema may not be initialized): {ex.Message}");
+        Console.WriteLine("INFO: Skipping admin seed. Apply schema_ddl.sql to the database first.");
+    }
+    if (!hasUsers)
     {
         // Seed a default organization
         var orgId = Guid.NewGuid();
