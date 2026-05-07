@@ -1,19 +1,20 @@
 app = "preorder-db"
 primary_region = "iad"
 
-[build]
-  dockerfile = 'Dockerfile'
-
 [processes]
   app = "postgres"
 
 [mounts]
   source = "pg_data"
-  destination = "/var/lib/postgresql/data"
+  destination = "/var/lib/postgresql"   # <— mount here, NOT at .../data or .../pgdata
+
+[env]
+  PGDATA = "/var/lib/postgresql/pgdata" # <— Postgres will create/use this subdirectory
 
 [[services]]
   internal_port = 5432
   protocol = "tcp"
+  processes = ["app"]
 
   [[services.ports]]
     port = 5432

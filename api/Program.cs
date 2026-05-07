@@ -293,14 +293,22 @@ builder.WebHost.ConfigureKestrel(options =>
 // Basic authentication will be handled manually in controllers or middleware.
 var app = builder.Build();
 
-// Ensure database is created and apply migrations
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
-    
-    // Apply any pending migrations
-    db.Database.Migrate();
+// Apply migrations only when explicitly enabled.
+// This avoids startup crashes in environments where schema is provisioned by SQL DDL scripts.
+var applyMigrations = string.Equals(
+    Environment.GetEnvironmentVariable("APPLY_MIGRATIONS_ON_STARTUP"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
 
+if (applyMigrations)
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
+    db.Database.Migrate();
+}
+else
+{
+    Console.WriteLine("INFO: Skipping automatic EF migrations (set APPLY_MIGRATIONS_ON_STARTUP=true to enable).");
 }
 
 // Seed a default Admin user if none exist
