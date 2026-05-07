@@ -248,7 +248,15 @@ var explicitHttpsOff = string.Equals(httpsMode, "false", StringComparison.Ordina
 var explicitHttpsOn = string.Equals(httpsMode, "true", StringComparison.OrdinalIgnoreCase);
 var urlsAreHttpOnly = aspNetCoreUrls.Contains("http://", StringComparison.OrdinalIgnoreCase)
     && !aspNetCoreUrls.Contains("https://", StringComparison.OrdinalIgnoreCase);
-var useHttps = explicitHttpsOn || (!explicitHttpsOff && !urlsAreHttpOnly);
+//var useHttps = explicitHttpsOn || (!explicitHttpsOff && !urlsAreHttpOnly);
+var runningOnFly = Environment.GetEnvironmentVariable("FLY_APP_NAME") != null;
+
+var useHttps =
+    !runningOnFly && (
+        explicitHttpsOn ||
+        (!explicitHttpsOff && !urlsAreHttpOnly)
+    );
+
 
 builder.WebHost.ConfigureKestrel(options =>
 {
