@@ -334,6 +334,20 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine($"INFO: Connected to database '{reader.GetString(0)}'");
             Console.WriteLine($"INFO: PostgreSQL {reader.GetString(1)}");
         }
+        reader.Close();
+
+        using var schemaCmd = conn.CreateCommand();
+        schemaCmd.CommandText = "SELECT 1 FROM app_user LIMIT 1";
+        try
+        {
+            schemaCmd.ExecuteScalar();
+            Console.WriteLine("INFO: Schema check passed — app_user table exists.");
+        }
+        catch (Exception schemaEx)
+        {
+            Console.WriteLine($"WARNING: Schema check failed — app_user not found. Apply schema_ddl.sql before deploying. ({schemaEx.Message})");
+        }
+
         conn.Close();
     }
     catch (Exception ex)
