@@ -257,7 +257,6 @@ var useHttps =
         (!explicitHttpsOff && !urlsAreHttpOnly)
     );
 
-
 builder.WebHost.ConfigureKestrel(options =>
 {
     // Default to HTTPS, but allow controlled HTTP mode for container/dev reliability.
