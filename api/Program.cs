@@ -307,6 +307,8 @@ var applyMigrations = string.Equals(
     "true",
     StringComparison.OrdinalIgnoreCase);
 
+applyMigrations = true;
+
 if (applyMigrations)
 {
     using var scope = app.Services.CreateScope();
