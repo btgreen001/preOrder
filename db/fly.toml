@@ -1,11 +1,19 @@
-app = "preorder-db"
+# fly.toml app configuration file generated for preorder-db on 2026-05-07T15:34:05Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-primary_region = "iad"
+app = 'preorder-db'
+primary_region = 'ord'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [http_service]
-  internal_port = 5432
-  force_https = false
+  internal_port = 8080
 
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024
