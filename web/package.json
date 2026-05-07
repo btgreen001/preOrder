@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "dotenv -e .env -e .env.local -- ng serve",
     "start": "ng serve",
     "start:https": "ng serve --configuration=https",
     "build": "ng build",
@@ -39,6 +40,7 @@
     "angular-eslint": "20.3.0",
     "baseline-browser-mapping": "^2.10.0",
     "cypress": "^15.4.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.35.0",
     "jasmine-core": "^5.10.0",
     "karma": "^6.4.4",
