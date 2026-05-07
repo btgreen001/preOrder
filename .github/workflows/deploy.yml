@@ -1,19 +1,32 @@
-name: Deploy to Fly.io
+name: Deploy API and Web
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  deploy:
+  deploy-api:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy
-        run: flyctl deploy --remote-only --create-app
+      - name: Deploy API
+        working-directory: ./api
+        run: flyctl deploy --remote-only --app preorder-api
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy Web
+        working-directory: ./web
+        run: flyctl deploy --remote-only --app preorder-web
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
