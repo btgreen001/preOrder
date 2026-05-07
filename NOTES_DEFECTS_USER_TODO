@@ -1,3 +1,6 @@
+
+I need to get this app ready for build and deploy to dev.  Currently I'm referencing localhost or static IP address.  IP is 192.168.50.50 and 192.168.50.147.  Let's 
+
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 

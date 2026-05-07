@@ -1,0 +1,206 @@
+.pin-entry-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.pin-entry-card {
+  max-width: 450px;
+  width: 100%;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+
+  button[mat-icon-button] {
+    flex-shrink: 0;
+    color: inherit;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .user-info {
+    flex: 1;
+    text-align: center;
+
+    h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
+      font-weight: 400;
+    }
+
+    .user-name {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #666;
+    }
+  }
+}
+
+.change-user-link {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: none;
+    font-size: 0.95rem;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  .pin-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    transition: all 0.2s ease;
+
+    &.filled {
+      background-color: #1976d2;
+      border-color: #1976d2;
+      transform: scale(1.2);
+    }
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #d32f2f;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  animation: shake 0.3s ease;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.number-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  .number-button {
+    font-size: 1.5rem;
+    height: 70px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+      background-color: #e3f2fd;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 70px;
+    border-radius: 8px;
+    font-size: 1rem;
+
+    &:hover {
+      background-color: #f5f5f5;
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  .pin-entry-card {
+    padding: 1.5rem;
+  }
+
+  .header .user-info h2 {
+    font-size: 1.5rem;
+  }
+
+  .pin-dots {
+    gap: 1rem;
+
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .number-pad {
+    gap: 0.75rem;
+
+    .number-button,
+    .action-button {
+      height: 60px;
+    }
+
+    .number-button {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+/* Touch-friendly sizing for tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .number-pad {
+    .number-button,
+    .action-button {
+      height: 80px;
+    }
+
+    .number-button {
+      font-size: 1.75rem;
+    }
+  }
+}

@@ -1,0 +1,202 @@
+<div class="ingredients-container">
+  <h2 class="page-title">Preparation Ingredients</h2>
+  
+  <!-- Two Column Layout: List on Left, Form on Right -->
+  <div class="two-column-layout" style="display: flex !important; flex-direction: row !important; gap: 24px !important; width: 100% !important;">
+    <!-- Left Column: Ingredients List -->
+    <div class="left-column" style="flex: 1 1 60% !important; min-width: 0 !important;">
+      <mat-card class="ingredients-list-card">
+        <mat-card-header>
+          <mat-card-title>Current Ingredients</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Loading State -->
+          <div *ngIf="loading" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading ingredients...</p>
+          </div>
+
+          <!-- Ingredients Table -->
+          <div *ngIf="!loading && ingredients.length > 0" class="table-container">
+            <table mat-table [dataSource]="ingredients" class="ingredients-table" data-testid="ingredients-table">
+              <!-- Item Name Column -->
+              <ng-container matColumnDef="itemName">
+                <th mat-header-cell *matHeaderCellDef>Item Name</th>
+                <td mat-cell *matCellDef="let element">{{ element.inventoryItemName }}</td>
+              </ng-container>
+
+              <!-- SKU Column -->
+              <ng-container matColumnDef="sku">
+                <th mat-header-cell *matHeaderCellDef>SKU</th>
+                <td mat-cell *matCellDef="let element">{{ element.inventoryItemSku }}</td>
+              </ng-container>
+
+              <!-- Quantity Required Column -->
+              <ng-container matColumnDef="quantityRequired">
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let element">
+                  <span 
+                    (click)="updateIngredient(element, 'quantityRequired', element.quantityRequired)"
+                    class="editable-cell"
+                    [attr.data-testid]="'quantity-' + element.externalId">
+                    {{ element.quantityRequired }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Unit Column -->
+              <ng-container matColumnDef="unit">
+                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                <td mat-cell *matCellDef="let element">
+                  <span 
+                    (click)="updateIngredient(element, 'unit', element.unit)"
+                    class="editable-cell"
+                    [attr.data-testid]="'unit-' + element.externalId">
+                    {{ element.unit }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Cost Per Unit Column -->
+              <ng-container *ngIf="isAdmin" matColumnDef="costPerUnit">
+                <th mat-header-cell *matHeaderCellDef>Cost/Unit</th>
+                <td mat-cell *matCellDef="let element">
+                  <span 
+                    (click)="updateIngredient(element, 'costPerUnit', element.costPerUnit)"
+                    class="editable-cell"
+                    [attr.data-testid]="'costPerUnit-' + element.externalId">
+                    ${{ element.costPerUnit.toFixed(2) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Total Cost Column -->
+              <ng-container *ngIf="isAdmin" matColumnDef="totalCost">
+                <th mat-header-cell *matHeaderCellDef>Total Cost</th>
+                <td mat-cell *matCellDef="let element">
+                  <strong>${{ element.totalCost.toFixed(2) }}</strong>
+                </td>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let element">
+                  <button 
+                    mat-icon-button 
+                    color="warn" 
+                    (click)="removeIngredient(element)"
+                    [attr.data-testid]="'remove-' + element.externalId"
+                    matTooltip="Remove ingredient">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!loading && ingredients.length === 0" class="empty-state" data-testid="empty-ingredients">
+            <p>No ingredients added yet. Add an ingredient to get started.</p>
+          </div>
+          
+          <!-- Total Cost Summary -->
+          <div *ngIf="isAdmin && ingredients.length > 0" class="total-cost-summary">
+            <strong>Total Ingredient Cost: ${{ getTotalCost() }}</strong>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Right Column: Add Ingredient Form -->
+    <div class="right-column" style="flex: 0 0 400px !important; max-width: 400px !important;">
+      <mat-card class="form-card" data-testid="add-ingredient-form">
+        <mat-card-header>
+          <mat-card-title>Add Ingredient</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="addIngredientForm" (ngSubmit)="addIngredient()">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Ingredient*</mat-label>
+              <mat-select 
+                formControlName="inventoryItemExternalId"
+                data-testid="inventory-item-select"
+                placeholder="Select ingredient">
+                <mat-option *ngFor="let item of inventoryItems" [value]="item.externalId">
+                  {{ item.productName || item.name }} ({{ item.sku }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Quantity*</mat-label>
+              <input 
+                matInput 
+                type="text" 
+                formControlName="quantityRequired"
+                (blur)="updateQuantityPreview()"
+                data-testid="quantity-input"
+                placeholder="1, 1.5, 1/2, 1 1/2">
+              <mat-error *ngIf="addIngredientForm.get('quantityRequired')?.hasError('quantityRequired')">
+                Quantity is required.
+              </mat-error>
+              <mat-error *ngIf="addIngredientForm.get('quantityRequired')?.hasError('quantityFormat')">
+                {{ addIngredientForm.get('quantityRequired')?.errors?.['quantityMessage'] || 'Invalid quantity format.' }}
+              </mat-error>
+              <mat-error *ngIf="addIngredientForm.get('quantityRequired')?.hasError('quantityMin')">
+                Quantity must be greater than 0.
+              </mat-error>
+            </mat-form-field>
+
+            <div class="cost-preview" *ngIf="quantityFractionPreview">
+              Fraction Preview: {{ quantityFractionPreview }}
+            </div>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Unit*</mat-label>
+              <mat-select
+                formControlName="unit"
+                data-testid="unit-input"
+                placeholder="Select unit">
+                <mat-option *ngFor="let unit of unitOptions" [value]="unit">
+                  {{ unit }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field *ngIf="isAdmin" appearance="outline" class="form-field">
+              <mat-label>Cost Per Unit</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="costPerUnit"
+                data-testid="cost-input"
+                placeholder="0.00">
+            </mat-form-field>
+            
+            <div class="cost-preview" *ngIf="isAdmin && getCostPreviewTotal() !== null">
+              {{ addIngredientForm.get('quantityRequired')?.value }} × ${{ addIngredientForm.get('costPerUnit')?.value }} = 
+              ${{ getCostPreviewTotal()!.toFixed(2) }}
+            </div>
+
+            <div class="button-group">
+              <button 
+                mat-icon-button
+                color="primary" 
+                type="submit"
+                data-testid="submit-ingredient-btn"
+                [disabled]="saving || !addIngredientForm.valid"
+                matTooltip="Add Ingredient">
+                <mat-icon>add_circle</mat-icon>
+              </button>
+              <span class="button-label">Add Ingredient</span>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

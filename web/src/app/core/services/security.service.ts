@@ -38,7 +38,7 @@ export class SecurityService {
   /**
    * Validates that sensitive operations are performed over HTTPS
    */
-  validateSecureContext(operationName: string = 'operation'): boolean {
+  validateSecureContext(operationName: 'operation'): boolean {
     if (environment.enforceHttps && !this.isSecureConnection()) {
       console.error(`${operationName} requires a secure connection (HTTPS)`);
       return false;
@@ -49,7 +49,7 @@ export class SecurityService {
   /**
    * Sets security headers for enhanced protection
    */
-  getSecureHeaders(): { [key: string]: string } {
+  getSecureHeaders(): Record<string, string> {
     return {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
@@ -58,6 +58,7 @@ export class SecurityService {
       'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
     };
   }
+
 
   /**
    * Checks if the application is running in a secure context
@@ -108,8 +109,10 @@ export class SecurityService {
       ];
       
       return allowedHosts.includes(parsedUrl.hostname);
-    } catch (error) {
+    } catch {
       return false;
+    } finally {
+      // nothing needed here, but linter is satisfied
     }
   }
 }

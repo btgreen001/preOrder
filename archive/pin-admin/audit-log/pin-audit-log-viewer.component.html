@@ -1,0 +1,141 @@
+<div class="pin-audit-log-viewer">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Audit Log Viewer</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="loadAuditLogs()" [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-raised-button color="accent" (click)="exportToCSV()" [disabled]="filteredLogs.length === 0">
+        <mat-icon>download</mat-icon>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <mat-progress-spinner *ngIf="loading" diameter="50" class="loading"></mat-progress-spinner>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Filter Card -->
+  <mat-card class="filter-card">
+    <mat-card-header>
+      <mat-card-title>Filter Audit Logs</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <div class="form-row">
+          <mat-form-field class="form-field">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startDatePicker" formControlName="startDate" />
+            <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #startDatePicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field class="form-field">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endDatePicker" formControlName="endDate" />
+            <mat-datepicker-toggle matIconSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #endDatePicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field class="form-field">
+            <mat-label>Action Type</mat-label>
+            <mat-select formControlName="action">
+              <mat-option value="">All Actions</mat-option>
+              <mat-option *ngFor="let action of actionTypes" [value]="action">{{ action }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field class="form-field">
+            <mat-label>Performed By</mat-label>
+            <input matInput placeholder="Admin user..." formControlName="performedBy" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="form-field full-width">
+            <mat-label>Search Details</mat-label>
+            <input matInput placeholder="Search in action details..." formControlName="searchText" />
+          </mat-form-field>
+        </div>
+
+        <div class="filter-actions">
+          <button mat-raised-button color="primary" (click)="onFilterChange()">
+            <mat-icon>filter_list</mat-icon>
+            Apply Filters
+          </button>
+          <button mat-stroked-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Audit Logs Table -->
+  <mat-card class="logs-card">
+    <mat-card-header>
+      <mat-card-title>Audit Logs ({{ totalLogs }} total)</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="filteredLogs.length === 0 && !loading" class="empty-state">
+        No audit logs found matching your filters.
+      </div>
+
+      <div *ngIf="filteredLogs.length > 0" class="logs-list">
+        <div *ngFor="let log of filteredLogs | slice: currentPage * pageSize : (currentPage + 1) * pageSize" 
+             class="log-item"
+             [ngStyle]="{ borderLeftColor: getActionColor(log.action) }">
+          <div class="log-content">
+            <div class="log-header">
+              <div class="log-meta">
+                <span class="timestamp">{{ formatTimestamp(log.loggedAt) }}</span>
+                <span class="days-ago">({{ getDaysAgo(log.loggedAt) }})</span>
+              </div>
+              <span class="action-badge" [ngClass]="'action-' + log.action.toLowerCase()">
+                {{ log.action }}
+              </span>
+            </div>
+            <div class="log-details">
+              {{ log.details }}
+            </div>
+            <div class="log-footer">
+              <span class="performed-by">
+                <mat-icon>account_circle</mat-icon>
+                {{ log.performedBy }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <mat-paginator
+        *ngIf="filteredLogs.length > 0"
+        [length]="totalLogs"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Navigation -->
+  <div class="navigation-footer">
+    <button mat-stroked-button (click)="navigateToDashboard()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Dashboard
+    </button>
+    <button mat-stroked-button (click)="navigateToUserManagement()">
+      <mat-icon>people</mat-icon>
+      Manage Users
+    </button>
+  </div>
+</div>

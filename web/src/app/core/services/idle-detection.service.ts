@@ -1,6 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { fromEvent, merge, Subject, timer } from 'rxjs';
+import { fromEvent, merge, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { TerminalContextService } from './terminal-context.service';
 import { IDLE_CONFIG, IdleConfig } from '../../app.config';
@@ -36,11 +36,10 @@ export class IdleDetectionService {
   private config: IdleConfig = inject(IDLE_CONFIG);
 
   private proactiveRedirectInProgress = false;
-
+  private router = inject(Router);
+  private terminalContext = inject(TerminalContextService);
+  private ngZone = inject(NgZone);
   constructor(
-    private router: Router,
-    private ngZone: NgZone,
-    private terminalContext: TerminalContextService
   ) {
     console.debug('[IdleDetectionService] Initialized');
   }

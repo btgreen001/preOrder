@@ -1,0 +1,100 @@
+<div class="customer-notifications">
+  <h1>Customer Order Tracking</h1>
+  
+  <div class="tracking-demo">
+    <h2>Customer Tracking Demo</h2>
+    <p>This is what customers see when they visit their tracking link:</p>
+    
+    <div class="customer-tracking-view">
+      <div class="tracking-header">
+        <h3>Order Status - {{ selectedOrder.id }}</h3>
+        <p>Thank you, {{ selectedOrder.customer }}!</p>
+      </div>
+      
+      <div class="status-timeline">
+        <div class="timeline-item" [class.completed]="isStatusCompleted('submitted')" [class.active]="selectedOrder.status === 'submitted'">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h4>Order Submitted</h4>
+            <p>{{ selectedOrder.submittedAt | date:'medium' }}</p>
+          </div>
+        </div>
+        
+        <div class="timeline-item" [class.completed]="isStatusCompleted('confirmed')" [class.active]="selectedOrder.status === 'confirmed'">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h4>Order Confirmed</h4>
+            <p *ngIf="selectedOrder.confirmedAt">{{ selectedOrder.confirmedAt | date:'medium' }}</p>
+            <p *ngIf="!selectedOrder.confirmedAt" class="pending">Pending confirmation</p>
+          </div>
+        </div>
+        
+        <div class="timeline-item" [class.completed]="isStatusCompleted('planned')" [class.active]="selectedOrder.status === 'planned'">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h4>Planned for Delivery</h4>
+            <p *ngIf="selectedOrder.plannedFor">Scheduled: {{ selectedOrder.plannedFor | date:'medium' }}</p>
+            <p *ngIf="!selectedOrder.plannedFor" class="pending">Being scheduled</p>
+          </div>
+        </div>
+        
+        <div class="timeline-item" [class.completed]="isStatusCompleted('out-for-delivery')" [class.active]="selectedOrder.status === 'out-for-delivery'">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h4>Out for Delivery</h4>
+            <p *ngIf="selectedOrder.outForDeliveryAt">{{ selectedOrder.outForDeliveryAt | date:'medium' }}</p>
+            <p *ngIf="!selectedOrder.outForDeliveryAt" class="pending">Not yet dispatched</p>
+          </div>
+        </div>
+        
+        <div class="timeline-item" [class.completed]="isStatusCompleted('delivered')" [class.active]="selectedOrder.status === 'delivered'">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h4>Delivered</h4>
+            <p *ngIf="selectedOrder.deliveredAt">{{ selectedOrder.deliveredAt | date:'medium' }}</p>
+            <p *ngIf="!selectedOrder.deliveredAt" class="pending">Delivery in progress</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="order-summary">
+        <h4>Order Summary</h4>
+        <ul>
+          <li *ngFor="let item of selectedOrder.items">{{ item }}</li>
+        </ul>
+        <div class="order-total">Total: ${{ selectedOrder.amount }}</div>
+      </div>
+      
+      <div class="customer-support">
+        <p>Questions about your order? Contact us at <strong>(555) 123-BAKE</strong> or <strong>support@bakery.com</strong></p>
+        <p>Reference your order number: <strong>{{ selectedOrder.id }}</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Notification History -->
+  <div class="notification-history">
+    <h2>Notification History</h2>
+    
+    <div class="order-selector">
+      <label>
+        View notifications for:
+        <select [(ngModel)]="selectedOrderId" (change)="updateSelectedOrder()">
+          <option *ngFor="let order of customerOrders" [value]="order.id">
+            {{ order.id }} - {{ order.customer }}
+          </option>
+        </select>
+      </label>
+    </div>
+    
+    <div class="notifications-list">
+      <div *ngFor="let notification of selectedOrder.notifications" class="notification-item" [class]="notification.status">
+        <div class="notification-type">{{ notification.type | titlecase }}</div>
+        <div class="notification-details">
+          <div>{{ notification.channel | uppercase }} • {{ notification.sentAt | date:'medium' }}</div>
+          <div class="notification-status">{{ notification.status | titlecase }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

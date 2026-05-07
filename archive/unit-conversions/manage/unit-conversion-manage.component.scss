@@ -1,0 +1,88 @@
+.unit-conversions-page {
+  padding: 16px;
+}
+
+.subtitle {
+  margin-top: -6px;
+  opacity: 0.8;
+}
+
+.alert {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.alert.error {
+  background: #fde7e9;
+}
+
+.alert.success {
+  background: #e7f7ed;
+}
+
+.editor {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+label.span-4 {
+  grid-column: span 2;
+}
+
+label.checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-wrap th,
+.table-wrap td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.actions-inline {
+  display: flex;
+  gap: 8px;
+}

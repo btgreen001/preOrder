@@ -1,0 +1,63 @@
+<div class="pin-signin-container" data-testid="pin-signin-container">
+  <div class="pin-signin-header">
+    <div class="header-top">
+      <!-- Back button on user list screen (when already authenticated) -->
+      <button 
+        *ngIf="isUserAlreadyAuthenticated && !showPinEntry"
+        mat-icon-button 
+        (click)="goBackToDashboard()" 
+        class="back-button"
+        title="Back to Dashboard"
+        data-testid="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-title">
+        <h1>Select User</h1>
+        <p class="subtitle">Choose a user to sign in</p>
+      </div>
+    </div>
+    <div *ngIf="pinError" class="error-banner" data-testid="pin-error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ pinError }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="!showPinEntry" class="user-grid" data-testid="user-grid">
+    <div *ngIf="isLoading" class="loading-spinner" data-testid="loading-spinner">
+      <mat-icon class="spinner">hourglass_empty</mat-icon>
+      <p>Loading users...</p>
+    </div>
+    <mat-card 
+      *ngFor="let user of users" 
+      class="user-tile"
+      (click)="selectUser(user)"
+      [attr.data-testid]="'user-tile'">
+      <mat-card-content>
+        <div class="avatar" [style.background-color]="user.avatarColor" data-testid="user-avatar">
+          {{ user.initials }}
+        </div>
+        <div class="user-name" data-testid="user-name">{{ user.displayName }}</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <app-pin-entry
+    *ngIf="showPinEntry && selectedUser"
+    [userName]="selectedUser.displayName"
+    (pinComplete)="onPinComplete($event)"
+    (cancel)="onPinCancel()"
+    [isUserAlreadyAuthenticated]="isUserAlreadyAuthenticated"
+    data-testid="pin-entry-component">
+  </app-pin-entry>
+
+  <div class="footer-actions">
+    <button 
+      mat-raised-button 
+      color="primary" 
+      routerLink="/login"
+      data-testid="use-password-login">
+      <mat-icon>vpn_key</mat-icon>
+      Sign in with Password
+    </button>
+  </div>
+</div>

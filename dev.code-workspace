@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": "api"
+    },
+    {
+      "path": "web"
+    },
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "web/node_modules/typescript/lib"
+  }
+}

@@ -1,0 +1,249 @@
+.pin-user-management {
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #333;
+}
+
+.page-header button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading {
+  margin-bottom: 20px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c62828;
+}
+
+.add-form-card {
+  margin-bottom: 30px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-form-card mat-card-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.add-form-card mat-card-content {
+  padding: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.add-form-card mat-card-actions {
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+}
+
+.users-list-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.users-list-card mat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.users-list-card mat-card-title {
+  margin: 0;
+}
+
+.user-count {
+  color: #666;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+.users-list-card mat-card-content {
+  padding: 0;
+}
+
+.user-card {
+  border-bottom: 1px solid #eee;
+  padding: 20px;
+  transition: background-color 0.2s;
+}
+
+.user-card:hover {
+  background-color: #f9f9f9;
+}
+
+.user-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.user-header {
+  flex: 1;
+}
+
+.user-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.user-name strong {
+  font-size: 16px;
+  color: #333;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.status-active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.status-locked {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-badge.status-inactive {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.user-email {
+  color: #666;
+  font-size: 14px;
+}
+
+.user-details {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  min-width: 250px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.detail-value {
+  color: #333;
+}
+
+.detail-value.critical {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.user-actions button {
+  flex-shrink: 0;
+}
+
+.edit-form {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .page-header button {
+    width: 100%;
+  }
+
+  .user-display {
+    flex-direction: column;
+  }
+
+  .user-details {
+    width: 100%;
+  }
+
+  .user-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
