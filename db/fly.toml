@@ -1,11 +1,19 @@
 app = "preorder-db"
-
 primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
 
-[http_service]
-  internal_port = 5432
-  force_https = false
+[processes]
+  app = "postgres"
 
+[mounts]
+  source = "pg_data"
+  destination = "/var/lib/postgresql/data"
+
+[[services]]
+  internal_port = 5432
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 5432
