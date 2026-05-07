@@ -1,0 +1,10 @@
+app = "preorder-db"
+
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 5432
+  force_https = false
