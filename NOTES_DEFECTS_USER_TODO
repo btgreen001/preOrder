@@ -27,7 +27,7 @@ And for internal DNS:
 API DB host = preorder-db
 Web upstream for API proxy = preorder-api
 
-
+docker compose yaml has       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
 
 
 

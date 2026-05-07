@@ -1,0 +1,56 @@
+services:
+  preorder-db:
+    image: postgres:16-alpine
+    container_name: preorder-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-appdb}
+      POSTGRES_USER: ${DB_USER:-appuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - preorder-db-data:/var/lib/postgresql/data
+    networks:
+      - preorder-net
+
+  preorder-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: preorder-api
+    depends_on:
+      - preorder-db
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5124
+      BAKEBOARD_ENABLE_HTTPS: "false"
+      DB_HOST: preorder-db
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-appdb}
+      DB_USER: ${DB_USER:-appuser}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PASETO_SECRET_KEY: ${PASETO_SECRET_KEY}
+      SMTP_API_KEY: ${SMTP_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+    ports:
+      - "5124:5124"
+    networks:
+      - preorder-net
+
+  preorder-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: preorder-web
+    depends_on:
+      - preorder-api
+    ports:
+      - "4200:80"
+    networks:
+      - preorder-net
+
+networks:
+  preorder-net:
+
+volumes:
+  preorder-db-data:

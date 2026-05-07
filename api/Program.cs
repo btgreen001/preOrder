@@ -60,6 +60,12 @@ var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "appdb";
 var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "appuser";
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "defaultpassword";
+var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
+if (!string.IsNullOrWhiteSpace(frontendUrl))
+{
+    builder.Configuration["Emails:RegisterBaseUrl"] = $"{frontendUrl.TrimEnd('/')}/register";
+    builder.Configuration["Emails:OrderBaseUrl"] = $"{frontendUrl.TrimEnd('/')}/preorders/external";
+}
 var connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SslMode=Disable;Timeout=30;";
 
 Console.WriteLine($"INFO: Database connection details:");
@@ -136,15 +142,23 @@ builder.Services.AddCors(options =>
         // Production: Restrict to known origins
         options.AddPolicy("AllowReact", policy =>
         {
-            policy.WithOrigins(
-                    "https://localhost:4200",
-                    "https://192.168.50.10:4200",
-                    "http://localhost:4200",
-                    "http://192.168.50.10:4200"
-                  )
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
+            if (!string.IsNullOrWhiteSpace(frontendUrl))
+            {
+                policy.WithOrigins(frontendUrl)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            }
+            else
+            {
+                policy.WithOrigins(
+                        "https://localhost:4200",
+                        "http://localhost:4200"
+                      )
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            }
         });
     }
 });
