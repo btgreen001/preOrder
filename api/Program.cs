@@ -337,15 +337,34 @@ using (var scope = app.Services.CreateScope())
         reader.Close();
 
         using var schemaCmd = conn.CreateCommand();
-        schemaCmd.CommandText = "SELECT table_name, table_schema FROM information_schema.tables WHERE table_type = 'BASE TABLE';";
+        schemaCmd.CommandText = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_schema, table_name;";
         try
         {
-            schemaCmd.ExecuteScalar();
-            Console.WriteLine("INFO: Schema check passed — app_user table exists.");
+            using var schemaReader = schemaCmd.ExecuteReader();
+            var tables = new System.Collections.Generic.List<string>();
+            while (schemaReader.Read())
+                tables.Add($"{schemaReader.GetString(0)}.{schemaReader.GetString(1)}");
+            schemaReader.Close();
+
+            if (tables.Count == 0)
+            {
+                Console.WriteLine("WARNING: No tables found — schema has not been applied. Run schema_ddl.sql against the database.");
+            }
+            else
+            {
+                Console.WriteLine($"INFO: {tables.Count} table(s) found in database:");
+                foreach (var t in tables)
+                    Console.WriteLine($"  {t}");
+
+                bool hasAppUser = tables.Any(t => t.EndsWith(".app_user", StringComparison.OrdinalIgnoreCase));
+                Console.WriteLine(hasAppUser
+                    ? "INFO: Schema check passed — app_user table exists."
+                    : "WARNING: app_user table not found — schema may be incomplete.");
+            }
         }
         catch (Exception schemaEx)
         {
-            Console.WriteLine($"WARNING: Schema check failed — app_user not found. Apply schema_ddl.sql before deploying. ({schemaEx.Message})");
+            Console.WriteLine($"WARNING: Schema check failed — {schemaEx.Message}");
         }
 
         conn.Close();
