@@ -314,6 +314,7 @@ if (applyMigrations)
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
     db.Database.Migrate();
+    Console.WriteLine("INFO: Automatic EF migrations applied (set APPLY_MIGRATIONS_ON_STARTUP=true to enable).");
 }
 else
 {
