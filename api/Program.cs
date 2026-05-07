@@ -18,19 +18,19 @@ using System.IO;
 using IAuditService = PreOrderApp.Services.IAuditService;
 using AuditService = PreOrderApp.Services.AuditService;
 
-// Load environment variables from .env file in parent directory
+// Load environment variables from repository root (.env, then .env.local override)
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
+var envLocalPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env.local");
 var builder = WebApplication.CreateBuilder(args);
 
 if (File.Exists(envPath))
 {
     DotNetEnv.Env.Load(envPath);
-    if (builder.Environment.IsDevelopment())
+    if (builder.Environment.IsDevelopment() && File.Exists(envLocalPath))
     {
-        DotNetEnv.Env.Load(".env.local");
+        DotNetEnv.Env.Load(envLocalPath);
     }
-
-    }
+}
 else
 {
     Console.WriteLine($"WARNING: .env file not found at {Path.GetFullPath(envPath)}");

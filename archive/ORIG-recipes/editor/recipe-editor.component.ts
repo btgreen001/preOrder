@@ -1,7 +1,3 @@
-
-
-
-
 //working on adding listeners and onchange onblur so that the normalized details will shows.
 
 
@@ -22,10 +18,9 @@ import { MatAutocompleteModule, MatAutocompleteTrigger, MAT_AUTOCOMPLETE_SCROLL_
 import { Overlay } from '@angular/cdk/overlay';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, forkJoin, map, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
 
 import {
-  CreateRecipeWithDetailsRequest,
   RecipeService,
   RecipeVersionSummaryDto,
   UpdateRecipeWithDetailsRequest
@@ -33,11 +28,11 @@ import {
 import { RecipeIngredientService } from '../services/recipe-ingredient.service';
 import { RecipeCompositionService } from '../services/recipe-composition.service';
 import { ProductService, SellableProductDto } from '../services/product.service';
-import { ProductsService } from '../../products/services/products.service';
+import { ProductsService } from '../../../features/products/services/products.service';
 import { UnitOptionsService } from '../../../core/services/unit-options.service';
 import { IngredientPanelComponent } from '../components/ingredient-panel/ingredient-panel.component';
 import { CompositionPanelComponent } from '../components/composition-panel/composition-panel.component';
-import { ProductComponentCreateComponent, ProductComponentCreateModel } from '../../products/components/product-component-create/product-component-create.component';
+import { ProductComponentCreateComponent, ProductComponentCreateModel } from '../../../features/products/components/product-component-create/product-component-create.component';
 import { RoleService } from '../../../../shared-data-services/role.service';
 import { IdleDetectionService } from '../../../core/services/idle-detection.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';

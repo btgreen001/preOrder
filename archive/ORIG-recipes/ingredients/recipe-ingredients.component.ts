@@ -14,7 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RecipeService, RecipeIngredientDto, AddRecipeIngredientRequest } from '../services/recipe.service';
-import { InventoryService } from '../../inventory/services/inventory.service';
+import { InventoryService } from '../../../features/inventory/services/inventory.service';
 import { ViewEncapsulation } from '@angular/core';
 import { quantityFormatValidator, wholeNumberValidator } from '../../../shared/validators/quantity-format.validator';
 import { formatAsFraction, parseQuantityInput } from '../../../shared/utils/quantity-format.util';
