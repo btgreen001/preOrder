@@ -340,7 +340,7 @@ using (var scope = app.Services.CreateScope())
         reader.Close();
 
         using var schemaCmd = conn.CreateCommand();
-        schemaCmd.CommandText = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_schema, table_name;";
+        schemaCmd.CommandText = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' and table_schema='public' ORDER BY table_schema, table_name LIMIT 5;";
         try
         {
             using var schemaReader = schemaCmd.ExecuteReader();

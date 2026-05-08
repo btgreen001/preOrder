@@ -16,7 +16,7 @@ RUN dotnet build "PreOrderApp.csproj" -c $configuration -o /app/build
 
 FROM build AS publish
 ARG configuration=Release
-RUN dotnet publish "PreOrderApp.csproj" -c $configuration -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "PreOrderApp.csproj" -c $configuration -o /app/publish /p:UseAppHost=false --no-incremental
 
 FROM base AS final
 WORKDIR /app

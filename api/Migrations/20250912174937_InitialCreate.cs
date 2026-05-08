@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,76 +10,64 @@ namespace PreOrderApp.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Organization",
-                columns: table => new
-                {
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationName = table.Column<string>(type: "text", nullable: false),
-                    PrimaryEmail = table.Column<string>(type: "text", nullable: false),
-                    AddressLine1 = table.Column<string>(type: "text", nullable: true),
-                    AddressLine2 = table.Column<string>(type: "text", nullable: true),
-                    AddressLine3 = table.Column<string>(type: "text", nullable: true),
-                    Locality = table.Column<string>(type: "text", nullable: true),
-                    Region = table.Column<string>(type: "text", nullable: true),
-                    PostalCode = table.Column<string>(type: "text", nullable: true),
-                    CountryCode = table.Column<string>(type: "text", nullable: true),
-                    RegistrationToken = table.Column<string>(type: "text", nullable: false),
-                    IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ModifiedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Organization", x => x.OrganizationId);
-                });
+            migrationBuilder.Sql(@"
+                CREATE TABLE IF NOT EXISTS ""Organization"" (
+                    ""OrganizationId""      uuid        NOT NULL,
+                    ""OrganizationName""    text        NOT NULL,
+                    ""PrimaryEmail""        text        NOT NULL,
+                    ""AddressLine1""        text,
+                    ""AddressLine2""        text,
+                    ""AddressLine3""        text,
+                    ""Locality""            text,
+                    ""Region""              text,
+                    ""PostalCode""          text,
+                    ""CountryCode""         text,
+                    ""RegistrationToken""   text        NOT NULL,
+                    ""IsEnabled""           boolean     NOT NULL,
+                    ""CreatedOn""           timestamp with time zone NOT NULL,
+                    ""ModifiedOn""          timestamp with time zone NOT NULL,
+                    CONSTRAINT ""PK_Organization"" PRIMARY KEY (""OrganizationId"")
+                );
+            ");
 
-            migrationBuilder.CreateTable(
-                name: "Order",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CustomerName = table.Column<string>(type: "text", nullable: true),
-                    OrderDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Order", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Order_Organization_OrganizationId",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organization",
-                        principalColumn: "OrganizationId",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            migrationBuilder.Sql(@"
+                CREATE TABLE IF NOT EXISTS ""Order"" (
+                    ""Id""             uuid    NOT NULL,
+                    ""OrganizationId"" uuid    NOT NULL,
+                    ""CustomerName""   text,
+                    ""OrderDate""      timestamp with time zone NOT NULL,
+                    CONSTRAINT ""PK_Order"" PRIMARY KEY (""Id"")
+                );
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Order_OrganizationId",
-                table: "Order",
-                column: "OrganizationId");
+            // Add FK only if it doesn't already exist (PostgreSQL has no ADD CONSTRAINT IF NOT EXISTS)
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.table_constraints
+                        WHERE constraint_name = 'FK_Order_Organization_OrganizationId'
+                          AND table_name = 'Order'
+                    ) THEN
+                        ALTER TABLE ""Order""
+                            ADD CONSTRAINT ""FK_Order_Organization_OrganizationId""
+                            FOREIGN KEY (""OrganizationId"")
+                            REFERENCES ""Organization"" (""OrganizationId"")
+                            ON DELETE CASCADE;
+                    END IF;
+                END $$;
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Organization_PrimaryEmail",
-                table: "Organization",
-                column: "PrimaryEmail",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Organization_RegistrationToken",
-                table: "Organization",
-                column: "RegistrationToken",
-                unique: true);
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS ""IX_Order_OrganizationId"" ON ""Order"" (""OrganizationId"");");
+            migrationBuilder.Sql(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Organization_PrimaryEmail"" ON ""Organization"" (""PrimaryEmail"");");
+            migrationBuilder.Sql(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Organization_RegistrationToken"" ON ""Organization"" (""RegistrationToken"");");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Order");
-
-            migrationBuilder.DropTable(
-                name: "Organization");
+            migrationBuilder.Sql(@"DROP TABLE IF EXISTS ""Order"";");
+            migrationBuilder.Sql(@"DROP TABLE IF EXISTS ""Organization"";");
         }
     }
 }
