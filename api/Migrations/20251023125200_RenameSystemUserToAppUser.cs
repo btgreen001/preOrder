@@ -4,20 +4,41 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace PreOrderApp.Migrations
 {
-    /// <inheritdoc />
     [Migration("20251023125200_RenameSystemUserToAppUser")]
     public partial class RenameSystemUserToAppUser : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("ALTER TABLE public.system_user RENAME TO app_user;");
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM pg_tables 
+                        WHERE schemaname = 'public' 
+                        AND tablename = 'system_user'
+                    ) THEN
+                        ALTER TABLE public.system_user RENAME TO app_user;
+                    END IF;
+                END
+                $$;
+            ");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("ALTER TABLE public.app_user RENAME TO system_user;");
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM pg_tables 
+                        WHERE schemaname = 'public' 
+                        AND tablename = 'app_user'
+                    ) THEN
+                        ALTER TABLE public.app_user RENAME TO system_user;
+                    END IF;
+                END
+                $$;
+            ");
         }
     }
 }
