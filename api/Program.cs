@@ -207,16 +207,35 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Add JWT Bearer authentication (using symmetric key from Paseto:SecretKey)
+var jwtSecret = builder.Configuration["Paseto:SecretKey"]
+    ?? Environment.GetEnvironmentVariable("PASETO_SECRET_KEY");
+
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException("PASETO_SECRET_KEY environment variable is not configured");
+}
+
+byte[] jwtKey;
+try
+{
+    // Primary format: Base64-encoded symmetric key
+    jwtKey = Convert.FromBase64String(jwtSecret);
+}
+catch (FormatException)
+{
+    // Backward-compatible fallback: treat secret as raw text bytes
+    jwtKey = System.Text.Encoding.UTF8.GetBytes(jwtSecret);
+    Console.WriteLine("WARNING: PASETO_SECRET_KEY is not Base64; using UTF-8 bytes fallback. Use Base64 to avoid ambiguity.");
+}
+
+if (jwtKey.Length < 32)
+{
+    Console.WriteLine($"WARNING: JWT signing key is short ({jwtKey.Length} bytes). Recommend at least 32 bytes.");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Read PASETO secret key from environment variable
-        var keyBase64 = Environment.GetEnvironmentVariable("PASETO_SECRET_KEY");
-        if (string.IsNullOrWhiteSpace(keyBase64))
-        {
-            throw new InvalidOperationException("PASETO_SECRET_KEY environment variable is not configured");
-        }
-        var key = Convert.FromBase64String(keyBase64);
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -225,7 +244,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = "preorderapp",
             ValidAudience = "preorderapp-api",
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(jwtKey),
             ClockSkew = TimeSpan.FromSeconds(10) // Allow 10 seconds of clock skew for time sync issues
         };
         
