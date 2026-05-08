@@ -375,19 +375,19 @@ using (var scope = app.Services.CreateScope())
             else
             {
                 Console.WriteLine($"INFO: {tables.Count} table(s) found in database:");
-                foreach (var t in tables.Take(15))
-                    Console.WriteLine($"  {t}");
-                if (tables.Count > 15)
-                {
-                    Console.WriteLine($"INFO: ...and {tables.Count - 15} more table(s).");
-                }
+                // foreach (var t in tables.Take(15))
+                //     Console.WriteLine($"  {t}");
+                // if (tables.Count > 15)
+                // {
+                //     Console.WriteLine($"INFO: ...and {tables.Count - 15} more table(s).");
+                // }
 
-                using var appUserCmd = conn.CreateCommand();
-                appUserCmd.CommandText = "SELECT to_regclass('public.app_user') IS NOT NULL;";
-                var hasAppUser = appUserCmd.ExecuteScalar() is bool exists && exists;
-                Console.WriteLine(hasAppUser
-                    ? "INFO: Schema check passed — app_user table exists."
-                    : "WARNING: app_user table not found — schema may be incomplete.");
+                // using var appUserCmd = conn.CreateCommand();
+                // appUserCmd.CommandText = "SELECT to_regclass('public.app_user') IS NOT NULL;";
+                // var hasAppUser = appUserCmd.ExecuteScalar() is bool exists && exists;
+                // Console.WriteLine(hasAppUser
+                //     ? "INFO: Schema check passed — app_user table exists."
+                //     : "WARNING: app_user table not found — schema may be incomplete.");
             }
         }
         catch (Exception schemaEx)
