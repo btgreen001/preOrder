@@ -37,7 +37,7 @@ namespace PreOrderApp.Middleware
             // Allow anonymous access to some public endpoints (health, root, ping, swagger, registration)
             var path = context.Request.Path.ToString().ToLowerInvariant();
 
-            if (IsBypassedPath(path, context))
+            if (IsBypassedPath(context))
             {
                 await _next(context);
                 return;
@@ -190,7 +190,7 @@ namespace PreOrderApp.Middleware
         }
 
 
-        private static bool IsBypassedPath(string path, HttpContext context)
+        private static bool IsBypassedPath(HttpContext context)
         {
 
             var endpoint = context.GetEndpoint();

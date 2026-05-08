@@ -48,7 +48,7 @@ public class TerminalIdleTimeoutMiddleware
             // - Terminal lookup endpoints (called immediately after login)
             // - Health/swagger endpoints
             var path = context.Request.Path.ToString().ToLower();
-            if (IsBypassedPath(path, context))
+            if (IsBypassedPath(context))
             {
                 await _next(context);
                 return;
@@ -232,7 +232,7 @@ public class TerminalIdleTimeoutMiddleware
         }
     }
 
-    private static bool IsBypassedPath(string path, HttpContext context)
+    private static bool IsBypassedPath(HttpContext context)
     {
 
         var endpoint = context.GetEndpoint();

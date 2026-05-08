@@ -23,8 +23,8 @@ public class SessionValidationMiddleware
         try
         {
             var path = context.Request.Path.ToString().ToLowerInvariant();
-            
-            if (IsBypassedPath(path, context))
+
+            if (IsBypassedPath(context))
             {
                 await _next(context);
                 return;
@@ -96,7 +96,7 @@ public class SessionValidationMiddleware
         }
     }
 
-    private static bool IsBypassedPath(string path, HttpContext context)
+    private static bool IsBypassedPath(HttpContext context)
     {
 
         var endpoint = context.GetEndpoint();
@@ -104,20 +104,7 @@ public class SessionValidationMiddleware
         {
             return true;
         }
-
-        return path == "/" ||
-               path.StartsWith("/health") ||
-               path.StartsWith("/ping") ||
-               path.StartsWith("/swagger") ||
-               path.StartsWith("/api/health") ||
-               path.StartsWith("/api/auth/login") ||
-               path.StartsWith("/api/auth/pin-login") ||
-               path.StartsWith("/api/auth/pin-users") ||
-               path.StartsWith("/api/auth/register") ||
-               path.StartsWith("/api/auth/check-username") ||
-               path.StartsWith("/api/auth/refresh-token") ||
-               path.StartsWith("/api/public/preorders") ||
-               (path.StartsWith("/api/orders/") && path.EndsWith("/pickup-slot"));
+        return false;
     }
 
     private static async Task WriteUnauthorizedAsync(HttpContext context, string message, string reason)
