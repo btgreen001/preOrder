@@ -1,4 +1,6 @@
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
@@ -179,6 +181,7 @@ public class EmailService : IEmailService
                 username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
             throw new InvalidOperationException("Order email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
+        var toEmailFingerprint = GetEmailFingerprint(toEmail);
         var orderLink = BuildOrderLink(orderBaseUrl, externalId);
         var normalizedLines = (lines ?? Enumerable.Empty<OrderEmailLineItem>())
             .Where(line => line.Quantity > 0)
@@ -214,15 +217,27 @@ public class EmailService : IEmailService
 
         try
         {
-            _logger.LogInformation("Sending order email to {Email} via {Host}:{Port}", toEmail, host, port);
+            _logger.LogInformation("Sending order email to recipient {EmailFingerprint} via {Host}:{Port}", toEmailFingerprint, host, port);
             await SendViaMailKitAsync(host, port, username, password, message);
-            _logger.LogInformation("Order email sent successfully to {Email}", toEmail);
+            _logger.LogInformation("Order email sent successfully to recipient {EmailFingerprint}", toEmailFingerprint);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending to {Email} on {Host}:{Port}", toEmail, host, port);
+            _logger.LogError(ex, "SMTP error sending to recipient {EmailFingerprint} on {Host}:{Port}", toEmailFingerprint, host, port);
             throw;
         }
+    }
+
+    private static string GetEmailFingerprint(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "empty";
+        }
+
+        var normalized = email.Trim().ToLowerInvariant();
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(hash)[..12];
     }
 
     private static async Task SendViaMailKitAsync(
