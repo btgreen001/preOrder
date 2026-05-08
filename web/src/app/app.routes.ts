@@ -24,6 +24,6 @@ export const routes: Routes = [
 //	{ path: 'preorders/external/cancel/:id', loadComponent: () => import('./features/orders/pre-order-detail/pre-order-detail').then(m => m.OrderDetailComponent) },
 
 
-	{ path: '', redirectTo: '/BakeAhead', pathMatch: 'full' },
-	{ path: '**', redirectTo: '/BakeAhead' }
+	{ path: '', redirectTo: '/login', pathMatch: 'full' },
+	{ path: '**', redirectTo: '/login' }
 ];
