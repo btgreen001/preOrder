@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -99,8 +99,8 @@ export interface PublicSendOrderEmailRequest {
 })
 export class PublicPreorderService {
   private readonly apiUrl = `${environment.apiUrl}/public/preorders`;
+  private readonly http = inject(HttpClient);
 
-  constructor(private readonly http: HttpClient) {}
 
   getHolidayEvents(orgToken: string): Observable<PublicHolidayEvent[]> {
     return this.http.get<unknown[]>(`${this.apiUrl}/preorder-event`, {

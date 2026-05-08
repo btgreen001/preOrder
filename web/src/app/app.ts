@@ -86,7 +86,7 @@ export class App implements OnInit, OnDestroy {
   }
   ngOnInit() {
     // Subscribe to user changes to update navigation when role changes
-    this.userSubscription = this.authService.currentUser.subscribe(user => {
+    this.userSubscription = this.authService.currentUser.subscribe(() => {
       this.updateNavigation();
 
       // Start idle detection monitoring when user is authenticated.
@@ -192,12 +192,14 @@ export class App implements OnInit, OnDestroy {
 
 
   logoutAllSessions() {
-    this.terminalService.releaseDeviceContext().subscribe({ error: () => {} });
+    this.terminalService.releaseDeviceContext().subscribe();
+
     this.authService.logout(true);
     this.terminalContextService.clearTerminalContext();
     sessionStorage.clear();
     this.router.navigate(['/login']);
   }
+
 
   changeUser() {
     // APP_INITIALIZER already rehydrated terminal context from device_token cookie on page load.

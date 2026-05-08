@@ -25,6 +25,14 @@ interface CartItem {
   maxPerOrder?: number | null;
 }
 
+export interface PickupSlot {
+  externalId: string;
+  slotStartAt: Date | string;
+  slotEndAt: Date | string;
+  reservedCount: number;
+  capacity: number;
+}
+
 interface CustomerForm {
   name: string;
   email: string;
@@ -83,6 +91,19 @@ export class OrderBuilderComponent implements OnInit {
     }
 
     this.loadHolidayEvents();
+  }
+
+  onSelect(slot: PickupSlot) {
+    if (slot.reservedCount < slot.capacity) {
+      this.selectedPickupSlotExternalId = slot.externalId;
+    }
+  }
+
+  onKeydown(event: KeyboardEvent, slot: PickupSlot) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.onSelect(slot);
+    }
   }
 
   get selectedHolidayEvent(): PublicHolidayEvent | undefined {

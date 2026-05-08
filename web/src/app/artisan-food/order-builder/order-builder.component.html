@@ -23,7 +23,7 @@
   <ng-container *ngIf="!isLoading && !loadError && !submitSuccess">
     <!-- Holiday event selector (only when multiple events) -->
     <div *ngIf="holidayEvents.length > 1" class="form-group event-selector">
-      <label for="holidayEvent" class="event-label">Select Pre-Order Event</label>
+      <label for="holidayEvent" class="event-label">{{ organization?.organizationName }} Pre-Order Event Selection</label>
       <select id="holidayEvent"
               [(ngModel)]="selectedHolidayEventExternalId"
               (ngModelChange)="onHolidayEventChange()">
@@ -34,11 +34,15 @@
     </div>
 
     <div *ngIf="holidayEvents.length === 1" class="order-builder form-group event-selector">
-      <label class="event-label">Pre-Order Event</label>
+      <span class="event-label">
+        {{ organization?.organizationName }} Pre-Order Event
+      </span>
+
       <div class="single-event-name">
-        {{ holidayEvents[0].name }}
+        <strong>{{ holidayEvents[0].name }}</strong>
       </div>
     </div>
+
 
     <div *ngIf="holidayEvents.length === 0" class="empty-state">
       No active events are currently accepting preorders.
@@ -178,14 +182,21 @@
             <div *ngIf="pickupSlots.length === 0" class="empty-state">
               No pickup slots are currently available for this event.
             </div>
-            <div *ngFor="let slot of pickupSlots" class="pickup-slot-option"
-                 [class.selected]="selectedPickupSlotExternalId === slot.externalId"
-                 [class.full]="slot.reservedCount >= slot.capacity"
-                 (click)="slot.reservedCount < slot.capacity && (selectedPickupSlotExternalId = slot.externalId)">
+            <div
+              *ngFor="let slot of pickupSlots"
+              class="pickup-slot-option"
+              [class.selected]="selectedPickupSlotExternalId === slot.externalId"
+              [class.full]="slot.reservedCount >= slot.capacity"
+              tabindex="0"
+              role="button"
+              (click)="onSelect(slot)"
+              (keydown)="onKeydown($event, slot)"
+            >
               <div class="slot-time">
-                {{ slot.slotStartAt | date:'EEEE, MMMM d' }} &mdash;
+                {{ slot.slotStartAt | date:'EEEE, MMMM d' }} —
                 {{ slot.slotStartAt | date:'shortTime' }} to {{ slot.slotEndAt | date:'shortTime' }}
               </div>
+
               <div class="slot-availability">
                 <span *ngIf="slot.reservedCount < slot.capacity">
                   {{ slot.capacity - slot.reservedCount }} spot(s) remaining
@@ -193,6 +204,7 @@
                 <span *ngIf="slot.reservedCount >= slot.capacity" class="slot-full">Full</span>
               </div>
             </div>
+
           </div>
         </div>
 

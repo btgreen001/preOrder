@@ -193,7 +193,7 @@ public class EmailService : IEmailService
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(fromName, fromEmail));
         message.To.Add(MailboxAddress.Parse(toEmail));
-        message.Subject = $"Your {organizationName} order confirmation";
+        message.Subject = $"{organizationName} order confirmation";
         message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
         {
             Text = BuildOrderHtmlBody(
