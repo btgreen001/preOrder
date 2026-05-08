@@ -609,6 +609,8 @@ public class UnitConversionService : IUnitConversionService
                 toUnit);
             return null;
         }
+        var safeInventoryItemExternalId = inventoryItemExternalId?.ToString() ?? "NULL_GUID";
+
 
         var fromCategory = GetCategoryForUnit(fromUnit);
         var toCategory = GetCategoryForUnit(toUnit);
@@ -620,25 +622,31 @@ public class UnitConversionService : IUnitConversionService
         {
             _logger.LogDebug(
                 "Density fallback skipped for item {InventoryItemExternalId}: {FromUnit}->{ToUnit} is not cross-category (from={FromCategory}, to={ToCategory}).",
-                inventoryItemExternalId,
+                safeInventoryItemExternalId,
                 fromUnit,
                 toUnit,
                 fromCategory ?? "unknown",
                 toCategory ?? "unknown");
             return null;
         }
+        
+        if (inventoryItemExternalId is null)
+            return null;
+
+        Guid externalId = inventoryItemExternalId.Value;
 
         var item = await _context.InventoryItems
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ExternalId == inventoryItemExternalId.Value
-                                   && x.OrganizationId == organizationGuidId
-                                   && x.IsActive);
-
+            .FirstOrDefaultAsync(x =>
+                x.ExternalId == externalId &&
+                x.OrganizationId == organizationGuidId &&
+                x.IsActive);
+                
         if (item == null)
         {
             _logger.LogWarning(
                 "Density fallback failed for item {InventoryItemExternalId}: inventory item not found for organization {OrganizationGuidId}.",
-                inventoryItemExternalId,
+                safeInventoryItemExternalId,
                 organizationGuidId);
             return null;
         }
@@ -648,9 +656,10 @@ public class UnitConversionService : IUnitConversionService
 
         if (string.IsNullOrWhiteSpace(purchaseUnit) || !density.HasValue || density.Value <= 0)
         {
+
             _logger.LogWarning(
                 "Density fallback failed for item {InventoryItemExternalId}: missing/invalid purchase unit or density (purchaseUnit='{PurchaseUnit}', density={Density}).",
-                inventoryItemExternalId,
+                safeInventoryItemExternalId,
                 purchaseUnit,
                 density);
             return null;
@@ -661,7 +670,7 @@ public class UnitConversionService : IUnitConversionService
         {
             _logger.LogDebug(
                 "Skipping density fallback for item {InventoryItemExternalId}. Purchase unit '{PurchaseUnit}' category '{PurchaseUnitCategory}' is not density-bridge compatible.",
-                inventoryItemExternalId,
+                safeInventoryItemExternalId,
                 purchaseUnit,
                 purchaseUnitCategory ?? "unknown");
             return null;
