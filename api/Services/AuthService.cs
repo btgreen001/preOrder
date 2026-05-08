@@ -774,10 +774,26 @@ public class AuthService : IAuthService
         if (session == null)
             return (null, false);
 
+        if (session.User == null)
+        {
+            _logger.LogWarning("[RefreshTokenAsync] Session {SessionId} has no linked user. Marking inactive.", session.SessionId);
+            session.IsActive = false;
+            await _context.SaveChangesAsync();
+            return (null, false);
+        }
+
         var user = session.User;
         var organization = user.Organization;
 
-        if (organization == null || !organization.IsEnabled || !user.IsEnabled)
+        if (organization == null)
+        {
+            _logger.LogWarning("[RefreshTokenAsync] User {UserId} has no linked organization. Marking session {SessionId} inactive.", user.UserId, session.SessionId);
+            session.IsActive = false;
+            await _context.SaveChangesAsync();
+            return (null, false);
+        }
+
+        if (!organization.IsEnabled || !user.IsEnabled)
             return (null, false);
 
         // CRITICAL SECURITY FIX (Jan 2026): DO NOT check idle timeout in RefreshTokenAsync!
@@ -844,7 +860,16 @@ public class AuthService : IAuthService
 
         // Generate new access token using the SAME session id (jti) as the refresh-token session.
         // This keeps middleware session validation consistent across refresh cycles.
-        var accessToken = _tokenService.GenerateAccessToken(user, terminalUidForToken, session.SessionId);
+        string accessToken;
+        try
+        {
+            accessToken = _tokenService.GenerateAccessToken(user, terminalUidForToken, session.SessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[RefreshTokenAsync] Failed to generate access token for session {SessionId}, user {UserId}", session.SessionId, user.UserId);
+            return (null, false);
+        }
 
         return (new AuthResponse
         {

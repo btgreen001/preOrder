@@ -407,7 +407,19 @@ public class AuthController : ControllerBase
         }
 
         // Pass terminal info to refresh token check (will lock terminal and logout if idle)
-        var (response, isIdleTimeout) = await _authService.RefreshTokenAsync(refreshToken, organizationId, terminalId);
+        AuthResponse? response;
+        bool isIdleTimeout;
+        try
+        {
+            (response, isIdleTimeout) = await _authService.RefreshTokenAsync(refreshToken, organizationId, terminalId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected exception during refresh-token processing");
+            DeleteRefreshTokenCookie();
+            return Unauthorized(new { message = "Invalid or expired refresh token" });
+        }
+
         if (response == null)
         {
             // Distinguish between idle timeout and other auth failures

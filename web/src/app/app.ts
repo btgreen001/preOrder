@@ -63,7 +63,7 @@ export class App implements OnInit, OnDestroy {
   
   get storePreviewUrl(): string {
     const token = this.authService.currentUserValue?.registrationToken;
-    return token ? `/BakeAhead?org=${encodeURIComponent(token)}` : '/BakeAhead';
+    return token ? `/BakeAhead?org=${encodeURIComponent(token)}` : '/login';
   }
 
   private allNavItems = [
