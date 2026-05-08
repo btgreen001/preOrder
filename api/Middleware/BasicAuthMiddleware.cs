@@ -159,7 +159,7 @@ namespace PreOrderApp.Middleware
             try
             {
                 passwordValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
-                logger?.LogDebug("[BasicAuth] Password verification result for {Username}: {Result}", username, passwordValid);
+                //logger?.LogDebug("[BasicAuth] Password verification result for {Username}: {Result}", username, passwordValid);
             }
             catch (Exception ex)
             {
