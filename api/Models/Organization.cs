@@ -15,7 +15,7 @@ public class Organization
     public string? PostalCode { get; set; }
     public string? CountryCode { get; set; }
     public string RegistrationToken { get; set; } = string.Empty;
-    public string HashSalt { get; set; } = string.Empty;
+    public string? HashSalt { get; set; }
     public bool IsEnabled { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime ModifiedOn { get; set; }

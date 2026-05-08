@@ -230,7 +230,7 @@ namespace PreOrderApp.Controllers
             if (org == null) return NotFound("Organization not found");
 
             // Generate the identity hash
-            var identityHash = LicenseUtils.ComputeIdentityHash(org.OrganizationName, org.PrimaryEmail, org.HashSalt);
+            var identityHash = LicenseUtils.ComputeIdentityHash(org.OrganizationName, org.PrimaryEmail, org.HashSalt ?? string.Empty);
 
             // Create the license
             var license = new LicenseSubscription
@@ -268,7 +268,7 @@ namespace PreOrderApp.Controllers
             if (license == null) return NotFound("No active license subscription");
 
             // Recompute the identity hash
-            var expectedHash = LicenseUtils.ComputeIdentityHash(org.OrganizationName, org.PrimaryEmail, org.HashSalt);
+            var expectedHash = LicenseUtils.ComputeIdentityHash(org.OrganizationName, org.PrimaryEmail, org.HashSalt ?? string.Empty);
 
             // Compare hashes
             bool isValid = license.IdentityHash == expectedHash;
