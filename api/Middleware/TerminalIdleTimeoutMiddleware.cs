@@ -48,8 +48,9 @@ public class TerminalIdleTimeoutMiddleware
             // - Health/swagger endpoints
             var path = context.Request.Path.ToString().ToLower();
             
+            var isRefreshTokenEndpoint = path.StartsWith("/api/auth/refresh-token");
             // CRITICAL: Refresh-token MUST bypass idle timeout check - it's the recovery mechanism
-            if (path.StartsWith("/api/auth/refresh-token"))
+            if (isRefreshTokenEndpoint)
             {
                 _logger.LogDebug("[TerminalIdleTimeout] BYPASS: Refresh-token endpoint - session recovery allowed");
                 await _next(context);
@@ -59,7 +60,8 @@ public class TerminalIdleTimeoutMiddleware
             // CRITICAL: PIN users endpoint MUST bypass idle timeout check
             // This endpoint is called AFTER refresh-token succeeds to load org's PIN users
             // It's part of the idle timeout recovery flow (refresh → load users → PIN signin)
-            if (path.StartsWith("/api/auth/pin-users"))
+            var isPinUserEndpoint = path.StartsWith("/api/auth/pin-users");
+            if (isPinUserEndpoint)
             {
                 _logger.LogDebug("[TerminalIdleTimeout] BYPASS: PIN users endpoint - part of idle recovery flow");
                 await _next(context);
@@ -67,7 +69,8 @@ public class TerminalIdleTimeoutMiddleware
             }
 
             // Public order pickup-slot change endpoint should never be blocked by terminal/session checks.
-            if (path.StartsWith("/api/orders/") && path.EndsWith("/pickup-slot"))
+            var isPickupSlotEndpoint = path.StartsWith("/api/orders/") && path.EndsWith("/pickup-slot");    
+            if (isPickupSlotEndpoint)
             {
                 _logger.LogDebug("[TerminalIdleTimeout] BYPASS: public order pickup-slot endpoint");
                 await _next(context);
