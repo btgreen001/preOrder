@@ -27,6 +27,6 @@ jobs:
 
       - name: Deploy Web
         working-directory: ./web
-        run: flyctl deploy --remote-only --app preorder-web --org john-stamose
+        run: flyctl deploy --remote-only --app preorder-web
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
