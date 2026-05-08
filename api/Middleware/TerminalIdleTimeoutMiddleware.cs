@@ -73,15 +73,15 @@ public class TerminalIdleTimeoutMiddleware
                 await _next(context);
                 return;
             }
-            
-            if (path.StartsWith("/api/auth/login") || 
-                path.StartsWith("/api/auth/register") ||
-                path.StartsWith("/api/auth/pin-login") ||
-                path.StartsWith("/api/terminal") ||  // Skip terminal lookups called right after login
-                path.StartsWith("/api/terminals") ||  // Skip terminals list endpoint
-                path.StartsWith("/api/health") || 
-                path.StartsWith("/swagger"))
+            var isNoAuthRoute = path.StartsWith("/api/auth/login") || 
+                              path.StartsWith("/api/auth/register") ||
+                              path.StartsWith("/api/auth/company-register") ||
+                              path.StartsWith("/api/auth/pin-login");
+            var isTerminalLookup = path.StartsWith("/api/terminal") || path.StartsWith("/api/terminals");
+            var isHealthOrDocs = path.StartsWith("/api/health") || path.StartsWith("/swagger");
+            if (isNoAuthRoute || isTerminalLookup || isHealthOrDocs)
             {
+                _logger.LogDebug("[TerminalIdleTimeout] BYPASS: Auth/terminal/health/docs endpoint - path={Path}", path);
                 await _next(context);
                 return;
             }
