@@ -48,6 +48,8 @@ public class TerminalIdleTimeoutMiddleware
             // - Terminal lookup endpoints (called immediately after login)
             // - Health/swagger endpoints
             var path = context.Request.Path.ToString().ToLower();
+            var safePath = path.Replace("\n", "").Replace("\r", "");
+
             if (IsBypassedPath(context))
             {
                 await _next(context);
@@ -55,7 +57,7 @@ public class TerminalIdleTimeoutMiddleware
             }
 
 
-            var isRefreshTokenEndpoint = path.StartsWith("/api/auth/refresh-token");
+            var isRefreshTokenEndpoint = safePath.StartsWith("/api/auth/refresh-token");
             // CRITICAL: Refresh-token MUST bypass idle timeout check - it's the recovery mechanism
             if (isRefreshTokenEndpoint)
             {
@@ -67,7 +69,7 @@ public class TerminalIdleTimeoutMiddleware
             // CRITICAL: PIN users endpoint MUST bypass idle timeout check
             // This endpoint is called AFTER refresh-token succeeds to load org's PIN users
             // It's part of the idle timeout recovery flow (refresh → load users → PIN signin)
-            var isPinUserEndpoint = path.StartsWith("/api/auth/pin-users");
+            var isPinUserEndpoint = safePath.StartsWith("/api/auth/pin-users");
             if (isPinUserEndpoint)
             {
                 _logger.LogDebug("[TerminalIdleTimeout] BYPASS: PIN users endpoint - part of idle recovery flow");
@@ -76,19 +78,19 @@ public class TerminalIdleTimeoutMiddleware
             }
 
             // Public order pickup-slot change endpoint should never be blocked by terminal/session checks.
-            var isPickupSlotEndpoint = path.StartsWith("/api/orders/") && path.EndsWith("/pickup-slot");    
+            var isPickupSlotEndpoint = safePath.StartsWith("/api/orders/") && safePath.EndsWith("/pickup-slot");    
             if (isPickupSlotEndpoint)
             {
                 _logger.LogDebug("[TerminalIdleTimeout] BYPASS: public order pickup-slot endpoint");
                 await _next(context);
                 return;
             }
-            var isNoAuthRoute = path.StartsWith("/api/auth/login") || 
-                              path.StartsWith("/api/auth/register") ||
-                              path.StartsWith("/api/auth/company-register") ||
-                              path.StartsWith("/api/auth/pin-login");
-            var isTerminalLookup = path.StartsWith("/api/terminal") || path.StartsWith("/api/terminals");
-            var isHealthOrDocs = path.StartsWith("/api/health") || path.StartsWith("/swagger");
+            var isNoAuthRoute = safePath.StartsWith("/api/auth/login") || 
+                              safePath.StartsWith("/api/auth/register") ||
+                              safePath.StartsWith("/api/auth/company-register") ||
+                              safePath.StartsWith("/api/auth/pin-login");
+            var isTerminalLookup = safePath.StartsWith("/api/terminal") || safePath.StartsWith("/api/terminals");
+            var isHealthOrDocs = safePath.StartsWith("/api/health") || safePath.StartsWith("/swagger");
             if (isNoAuthRoute || isTerminalLookup || isHealthOrDocs)
             {
                 _logger.LogDebug("[TerminalIdleTimeout] BYPASS: Auth/terminal/health/docs endpoint - path={Path}", path);
@@ -127,8 +129,8 @@ public class TerminalIdleTimeoutMiddleware
 
             // Determine if this is a "background" request that shouldn't update activity time
             // (e.g., token refresh, heartbeat). These are automatic/periodic, not user-initiated.
-            bool isBackgroundRequest = path.StartsWith("/api/auth/refresh-token") || 
-                                       path.StartsWith("/api/auth/heartbeat");
+            bool isBackgroundRequest = safePath.StartsWith("/api/auth/refresh-token") || 
+                                       safePath.StartsWith("/api/auth/heartbeat");
 
             // Refresh token is fallback when jti is missing
             context.Request.Cookies.TryGetValue("refreshToken", out var refreshToken);
