@@ -279,7 +279,7 @@ var useHttps =
 builder.WebHost.ConfigureKestrel(options =>
 {
     // Default to HTTPS, but allow controlled HTTP mode for container/dev reliability.
-    options.Listen(System.Net.IPAddress.Any, 5124, listenOptions =>
+    options.ListenAnyIP(5124, listenOptions =>
     {
         if (!useHttps)
         {
