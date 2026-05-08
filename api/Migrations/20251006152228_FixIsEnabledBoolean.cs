@@ -13,6 +13,128 @@ namespace PreOrderApp.Migrations
             migrationBuilder.Sql("""
                 DO $$
                 BEGIN
+                    -- Physical names from AppDbContext mappings
+                    IF to_regclass('public.app_user') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='user_name') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "user_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='user_role') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "user_role" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='password_hash') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "password_hash" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='organization_id') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "organization_id" TYPE uuid USING "organization_id"::uuid;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='last_name') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "last_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='last_login_on') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "last_login_on" TYPE timestamptz USING NULLIF("last_login_on"::text, '')::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='is_enabled') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "is_enabled" TYPE boolean USING CASE WHEN lower(coalesce("is_enabled"::text, '')) IN ('1','true','t') THEN true ELSE false END;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='first_name') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "first_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='email_address') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "email_address" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='created_on') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "created_on" TYPE timestamptz USING "created_on"::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='user_id') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "user_id" TYPE uuid USING "user_id"::uuid;
+                        END IF;
+                    END IF;
+
+                    IF to_regclass('public.organization') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='registration_token') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "registration_token" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='region') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "region" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='primary_email') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "primary_email" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='postal_code') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "postal_code" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='organization_name') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "organization_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='modified_on') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "modified_on" TYPE timestamptz USING NULLIF("modified_on"::text, '')::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='locality') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "locality" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='is_enabled') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "is_enabled" TYPE boolean USING CASE WHEN lower(coalesce("is_enabled"::text, '')) IN ('1','true','t') THEN true ELSE false END;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='created_on') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "created_on" TYPE timestamptz USING "created_on"::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='country_code') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "country_code" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='address_line3') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "address_line3" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='address_line2') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "address_line2" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='address_line1') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "address_line1" TYPE text;
+                        END IF;
+                    END IF;
+
+                    IF to_regclass('public.customer_order') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='organization_id') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "organization_id" TYPE uuid USING "organization_id"::uuid;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='order_date') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "order_date" TYPE timestamptz USING "order_date"::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='customer_name') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "customer_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='id') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "id" TYPE uuid USING "id"::uuid;
+                        END IF;
+                    END IF;
+
+                    IF to_regclass('public.license_subscription') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='tier') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "tier" TYPE integer USING NULLIF("tier"::text, '')::integer;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='referral_code') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "referral_code" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='organization_id') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "organization_id" TYPE uuid USING "organization_id"::uuid;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='modified_on') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "modified_on" TYPE timestamptz USING "modified_on"::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='is_active') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "is_active" TYPE boolean USING CASE WHEN lower(coalesce("is_active"::text, '')) IN ('1','true','t') THEN true ELSE false END;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='end_date') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "end_date" TYPE timestamptz USING "end_date"::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='created_on') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "created_on" TYPE timestamptz USING "created_on"::timestamptz;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='subscription_id') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "subscription_id" TYPE uuid USING "subscription_id"::uuid;
+                        END IF;
+                    END IF;
+
+                    -- Legacy PascalCase fallback
                     IF to_regclass('public."SystemUser"') IS NOT NULL THEN
                         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='SystemUser' AND column_name='UserName') THEN
                             ALTER TABLE "SystemUser" ALTER COLUMN "UserName" TYPE text;
@@ -137,6 +259,134 @@ namespace PreOrderApp.Migrations
             migrationBuilder.Sql("""
                 DO $$
                 BEGIN
+                    -- Physical names from AppDbContext mappings
+                    IF to_regclass('public.app_user') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='user_name') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "user_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='user_role') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "user_role" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='password_hash') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "password_hash" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='organization_id') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "organization_id" TYPE text USING "organization_id"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='last_name') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "last_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='last_login_on') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "last_login_on" TYPE text USING "last_login_on"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='is_enabled') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "is_enabled" TYPE integer USING CASE WHEN lower(coalesce("is_enabled"::text, '')) IN ('1','true','t') THEN 1 ELSE 0 END;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='first_name') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "first_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='email_address') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "email_address" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='created_on') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "created_on" TYPE text USING "created_on"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_user' AND column_name='user_id') THEN
+                            ALTER TABLE "app_user" ALTER COLUMN "user_id" TYPE text USING "user_id"::text;
+                        END IF;
+                    END IF;
+
+                    IF to_regclass('public.organization') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='registration_token') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "registration_token" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='region') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "region" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='primary_email') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "primary_email" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='postal_code') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "postal_code" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='organization_name') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "organization_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='modified_on') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "modified_on" TYPE text USING "modified_on"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='locality') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "locality" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='is_enabled') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "is_enabled" TYPE integer USING CASE WHEN lower(coalesce("is_enabled"::text, '')) IN ('1','true','t') THEN 1 ELSE 0 END;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='created_on') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "created_on" TYPE text USING "created_on"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='country_code') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "country_code" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='address_line3') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "address_line3" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='address_line2') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "address_line2" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='address_line1') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "address_line1" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='organization' AND column_name='organization_id') THEN
+                            ALTER TABLE "organization" ALTER COLUMN "organization_id" TYPE text USING "organization_id"::text;
+                        END IF;
+                    END IF;
+
+                    IF to_regclass('public.customer_order') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='organization_id') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "organization_id" TYPE text USING "organization_id"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='order_date') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "order_date" TYPE text USING "order_date"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='customer_name') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "customer_name" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_order' AND column_name='id') THEN
+                            ALTER TABLE "customer_order" ALTER COLUMN "id" TYPE text USING "id"::text;
+                        END IF;
+                    END IF;
+
+                    IF to_regclass('public.license_subscription') IS NOT NULL THEN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='tier') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "tier" TYPE integer USING NULLIF("tier"::text, '')::integer;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='start_date') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "start_date" TYPE text USING "start_date"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='referral_code') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "referral_code" TYPE text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='organization_id') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "organization_id" TYPE text USING "organization_id"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='modified_on') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "modified_on" TYPE text USING "modified_on"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='is_active') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "is_active" TYPE integer USING CASE WHEN lower(coalesce("is_active"::text, '')) IN ('1','true','t') THEN 1 ELSE 0 END;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='end_date') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "end_date" TYPE text USING "end_date"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='created_on') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "created_on" TYPE text USING "created_on"::text;
+                        END IF;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='license_subscription' AND column_name='subscription_id') THEN
+                            ALTER TABLE "license_subscription" ALTER COLUMN "subscription_id" TYPE text USING "subscription_id"::text;
+                        END IF;
+                    END IF;
+
+                    -- Legacy PascalCase fallback
                     IF to_regclass('public."SystemUser"') IS NOT NULL THEN
                         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='SystemUser' AND column_name='UserName') THEN
                             ALTER TABLE "SystemUser" ALTER COLUMN "UserName" TYPE text;
