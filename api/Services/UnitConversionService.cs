@@ -601,12 +601,16 @@ public class UnitConversionService : IUnitConversionService
         string toUnit,
         Guid? inventoryItemExternalId)
     {
+        var fromUt = NormalizeUnit(fromUnit);
+        var toUt = NormalizeUnit(toUnit);
         if (!inventoryItemExternalId.HasValue)
         {
+
+
             _logger.LogDebug(
                 "Density fallback skipped for {FromUnit}->{ToUnit}: inventoryItemExternalId missing.",
-                fromUnit,
-                toUnit);
+                fromUt,
+                toUt);
             return null;
         }
         var safeInventoryItemExternalId = inventoryItemExternalId?.ToString() ?? "NULL_GUID";
@@ -623,8 +627,8 @@ public class UnitConversionService : IUnitConversionService
             _logger.LogDebug(
                 "Density fallback skipped for item {InventoryItemExternalId}: {FromUnit}->{ToUnit} is not cross-category (from={FromCategory}, to={ToCategory}).",
                 safeInventoryItemExternalId,
-                fromUnit,
-                toUnit,
+                fromUt,
+                toUt,
                 fromCategory ?? "unknown",
                 toCategory ?? "unknown");
             return null;
