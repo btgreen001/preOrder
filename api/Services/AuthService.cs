@@ -39,10 +39,11 @@ public class AuthService : IAuthService
     private readonly ITerminalLockService _terminalLockService;
     private readonly IEmailService _emailService;
     private readonly ILogger<AuthService> _logger;
+    private readonly IOrganizationContextService _organizationContextService;
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuthService(IConfiguration configuration, AppDbContext context, IPasetoTokenService tokenService, ITerminalLockService terminalLockService, IEmailService emailService, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor)
+    public AuthService(IConfiguration configuration, AppDbContext context, IPasetoTokenService tokenService, ITerminalLockService terminalLockService, IEmailService emailService, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor, IOrganizationContextService organizationContextService)
     {
         _configuration = configuration;
         _context = context;
@@ -51,6 +52,7 @@ public class AuthService : IAuthService
         _emailService = emailService;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _organizationContextService = organizationContextService;
     }
 
     private static string GeneratePasswordResetCode()
@@ -277,11 +279,47 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request, Guid? terminalId = null)
     {
-        _logger.LogInformation($"[LoginAsync] Started. TerminalId from parameter: {terminalId}, TerminalId from request: {request.TerminalId}");
+        if (request == null)
+        {
+            _logger.LogWarning("[LoginAsync] Request payload was null.");
+            return null;
+        }
 
-        var user = await _context.SystemUsers
+        if (string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            _logger.LogWarning("[LoginAsync] Username or password missing.");
+            return null;
+        }
+
+        _logger.LogInformation("[LoginAsync] Started. TerminalId from parameter: {TerminalId}, TerminalId from request: {RequestTerminalId}", terminalId, request.TerminalId);
+
+        if (!terminalId.HasValue || terminalId == Guid.Empty)
+        {
+            terminalId = request.TerminalId;
+            _logger.LogInformation("[LoginAsync] Using TerminalId from request: {TerminalId}", terminalId);
+        }
+        var organizationId = Guid.Empty;
+        try{
+             _organizationContextService.TryGetCurrentOrganizationId(out organizationId);
+
+        }
+        catch{
+            _logger.LogInformation("[LoginAsync] Unable to TryGetCurrentOrganizationId");
+        }
+        if (organizationId != Guid.Empty){
+            _logger.LogInformation("[LoginAsync] Resolved organizationId from claims context: {organizationId}", organizationId);
+        }
+
+        var query = _context.SystemUsers
             .AsNoTracking()
-            .Where(u => u.UserName == request.UserName)
+            .Where(u => u.UserName == request.UserName);
+
+        if (organizationId != Guid.Empty)
+        {
+            query = query.Where(u => u.OrganizationId == organizationId);
+        }
+
+        var user = await query
             .Select(u => new
             {
                 u.UserId,

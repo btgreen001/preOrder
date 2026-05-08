@@ -9,4 +9,5 @@ public interface IOrganizationService
     Task<bool> ValidateRegistrationTokenAsync(string token);
     Task<IEnumerable<Organization>> GetAllAsync();
     Task UpdateAsync(Organization organization);
+
 }

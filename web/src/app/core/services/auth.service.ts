@@ -217,6 +217,8 @@ export class AuthService {
       clearTimeout(this.tokenExpirationTimer);
       this.tokenExpirationTimer = null;
     }
+    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('currentUser');
     this.accessToken = null;
     this.isRefreshing = false;
     this.refreshInProgress.next(false);
@@ -229,7 +231,6 @@ export class AuthService {
     // Capture token BEFORE clearing state — the backend endpoint is [Authorize]
     // and needs a valid Bearer token to identify the session via jti claim.
     const tokenSnapshot = this.accessToken;
-
     // Clear local state immediately so the UI reacts right away
     this.clearLocalState();
 

@@ -66,18 +66,20 @@ export class App implements OnInit, OnDestroy {
     return token ? `/BakeAhead?org=${encodeURIComponent(token)}` : '/login';
   }
 
-  private allNavItems = [
-    { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
-    { label: 'Menu',                  route: '/admin/menu',   isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'restaurant_menu' },
-    { label: 'Pickup Slots',          route: '/admin/slots',  isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
-    { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long'},
-    { label: 'Invite Staff',          route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'person_add' ,dividerBefore: true },
-    { label: 'Company Profile',       route: '/admin/company-profile',        roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'business' },
-    { label: 'My Profile',            route: '/profile',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'person' },
+  private getAllNavItems(): NavItem[] {
+    return [
+      { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
+      { label: 'Menu',                  route: '/admin/menu',   isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'restaurant_menu' },
+      { label: 'Pickup Slots',          route: '/admin/slots',  isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
+      { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long'},
+      { label: 'Invite Staff',          route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'person_add' ,dividerBefore: true },
+      { label: 'Company Profile',       route: '/admin/company-profile',        roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'business' },
+      { label: 'My Profile',            route: '/profile',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'person' },
 
-    { label: 'Store Preview',         externalUrl: this.storePreviewUrl,      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'preview',dividerBefore: true}
+      { label: 'Store Preview',         externalUrl: this.storePreviewUrl,      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'preview',dividerBefore: true}
+    ];
+  }
 
-];
   currentYear = new Date().getFullYear();
   constructor() {
     // Initial setup
@@ -114,7 +116,7 @@ export class App implements OnInit, OnDestroy {
 
   private updateNavigation() {
     this.currentRole = this.roleService.getCurrentRole();
-    this.sidebarNav = this.allNavItems.filter(nav => nav.roles.includes(this.currentRole));
+    this.sidebarNav = this.getAllNavItems().filter(nav => nav.roles.includes(this.currentRole));
   }
 
   private syncShellForCurrentRoute(): void {
@@ -190,13 +192,21 @@ export class App implements OnInit, OnDestroy {
     return false;
   }
 
+    logoutThisSession() {
+    // Release device binding server-side so device-context returns null on next reload.
+    // This is the authoritative signal — no client-side flags needed.
+    this.terminalService.releaseDeviceContext().subscribe();
+    this.authService.logout(false);
+    sessionStorage.clear();
+    this.router.navigate(['/login']);
+  }
 
   logoutAllSessions() {
     this.terminalService.releaseDeviceContext().subscribe();
-
     this.authService.logout(true);
     this.terminalContextService.clearTerminalContext();
     sessionStorage.clear();
+    localStorage.clear();
     this.router.navigate(['/login']);
   }
 

@@ -11,13 +11,22 @@
     </div>
     <span class="spacer"></span>
     <div class="nav-controls" *ngIf="showAdminShell">
-      <button class="logout-btn" (click)="logoutAllSessions()" title="Logout" data-testid="logout-button">
+      <button class="logout-btn" (click)="logoutThisSession()" title="Logout" data-testid="logout-button">
         <mat-icon>logout</mat-icon>
         Logout
       </button>
     </div>
   </nav>
-  <div class="mobile-sidebar-backdrop" *ngIf="showAdminShell && isSidebarOpen" (click)="closeSidebar()"></div>
+  <div
+    class="mobile-sidebar-backdrop"
+    *ngIf="showAdminShell && isSidebarOpen"
+    role="button"
+    tabindex="0"
+    (click)="closeSidebar()"
+    (keydown.enter)="closeSidebar()"
+    (keydown.space)="closeSidebar()"
+  >
+  </div>
   <div class="main-layout">
   <aside class="sidebar" *ngIf="showAdminShell" [class.mobile-open]="isSidebarOpen">
   <ul>
@@ -30,7 +39,7 @@
 
       <!-- External link -->
       <a *ngIf="nav.externalUrl"
-         [href]="nav.externalUrl"
+        [href]="nav.label === 'Store Preview' ? storePreviewUrl : nav.externalUrl"
          target="_blank"
          rel="noopener noreferrer">
         <mat-icon>{{ nav.icon }}</mat-icon>
