@@ -29,4 +29,11 @@
   <!-- JWT-related packages removed because the app uses Basic Auth middleware instead -->
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Database/*.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
