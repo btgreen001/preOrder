@@ -278,12 +278,38 @@ public class AuthService : IAuthService
     public async Task<AuthResponse?> LoginAsync(LoginRequest request, Guid? terminalId = null)
     {
         _logger.LogInformation($"[LoginAsync] Started. TerminalId from parameter: {terminalId}, TerminalId from request: {request.TerminalId}");
-        
+
         var user = await _context.SystemUsers
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.UserName == request.UserName);
+            .Where(u => u.UserName == request.UserName)
+            .Select(u => new
+            {
+                u.UserId,
+                u.UserName,
+                u.EmailAddress,
+                u.PasswordHash,
+                u.FirstName,
+                u.LastName,
+                u.OrganizationId,
+                u.UserRole
+            })
+            .FirstOrDefaultAsync();
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user == null || string.IsNullOrWhiteSpace(user.PasswordHash))
+            return null;
+
+        bool isPasswordValid;
+        try
+        {
+            isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[LoginAsync] Password hash verification failed for user {UserName}", request.UserName);
+            return null;
+        }
+
+        if (!isPasswordValid)
             return null;
 
         // Use terminalId from request if parameter is null
@@ -323,12 +349,19 @@ public class AuthService : IAuthService
             _logger.LogInformation($"[LoginAsync] No terminal ID provided - skipping validation");
         }
         // Update last login time
-        user.LastLoginOn = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await _context.SystemUsers
+            .Where(u => u.UserId == user.UserId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.LastLoginOn, DateTime.UtcNow));
 
         var organization = await _context.Organizations
             .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.OrganizationId == user.OrganizationId);
+            .Where(o => o.OrganizationId == user.OrganizationId)
+            .Select(o => new
+            {
+                o.OrganizationName,
+                o.RegistrationToken
+            })
+            .FirstOrDefaultAsync();
 
         if (organization == null)
             throw new InvalidOperationException("Organization not found");
@@ -337,6 +370,7 @@ public class AuthService : IAuthService
             .AsNoTracking()
             .Where(ls => ls.OrganizationId == user.OrganizationId && ls.IsActive)
             .OrderByDescending(ls => ls.StartDate)
+            .Select(ls => new { ls.Tier })
             .FirstOrDefaultAsync();
 
         var licenseTier = subscription?.Tier ?? LicenseTier.Basic;
@@ -345,7 +379,15 @@ public class AuthService : IAuthService
         var sessionId = Guid.NewGuid();
 
         // Generate tokens using PASETO, include terminalId and sessionId
-        var accessToken = _tokenService.GenerateAccessToken(user, terminalId, sessionId);
+        var tokenUser = new SystemUser
+        {
+            UserId = user.UserId,
+            UserName = user.UserName,
+            UserRole = user.UserRole,
+            OrganizationId = user.OrganizationId
+        };
+
+        var accessToken = _tokenService.GenerateAccessToken(tokenUser, effectiveTerminalId, sessionId);
         var refreshToken = _tokenService.GenerateRefreshToken();
 
         // Store refresh token in DB
@@ -365,10 +407,10 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         // Activate terminal session if terminal is provided (unlocks if previously locked, marks as active)
-        if (terminalId.HasValue && terminalId != Guid.Empty)
+        if (effectiveTerminalId.HasValue && effectiveTerminalId != Guid.Empty)
         {
             var terminal = await _context.Terminals
-                .FirstOrDefaultAsync(t => t.TerminalUid == terminalId.Value && t.IsActive);
+                .FirstOrDefaultAsync(t => t.TerminalUid == effectiveTerminalId.Value && t.IsActive);
             if (terminal != null)
             {
                 await _terminalLockService.ActivateTerminalSessionAsync(user.OrganizationId, terminal.TerminalId);
