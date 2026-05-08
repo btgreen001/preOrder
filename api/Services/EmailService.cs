@@ -64,6 +64,7 @@ public class EmailService : IEmailService
         var fromEmail = _configuration["Emails:FromEmail"] ?? username ?? "no-reply@example.com";
         var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
         var registerBaseUrl = _configuration["Emails:RegisterBaseUrl"] ?? "https://localhost:4200/register";
+        var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
@@ -104,6 +105,7 @@ public class EmailService : IEmailService
             _logger.LogWarning("Email sending is disabled by configuration.");
             toEmail = _configuration["Emails:AdminEmail"] ?? "";
         }
+        var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
         var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
         var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
@@ -130,13 +132,13 @@ public class EmailService : IEmailService
 
         try
         {
-            _logger.LogInformation("Sending password reset code email to {Email} via {Host}:{Port}", toEmail, host, port);
+            _logger.LogInformation("Sending password reset code email to {toEmailFingerprint} via {Host}:{Port}", toEmailFingerprint, host, port);
             await SendViaMailKitAsync(host, port, username, password, message);
-            _logger.LogInformation("Password reset code email sent successfully to {Email}", toEmail);
+            _logger.LogInformation("Password reset code email sent successfully to {toEmailFingerprint}", toEmailFingerprint);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending password reset code to {Email} on {Host}:{Port}", toEmail, host, port);
+            _logger.LogError(ex, "SMTP error sending password reset code to {toEmailFingerprint} on {Host}:{Port}", toEmailFingerprint, host, port);
             throw;
         }
     }
@@ -163,6 +165,7 @@ public class EmailService : IEmailService
             _logger.LogWarning("Email sending is disabled by configuration.");
             toEmail = _configuration["Emails:AdminEmail"] ?? "";
         }
+        var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
         var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
         var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
@@ -181,7 +184,6 @@ public class EmailService : IEmailService
                 username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
             throw new InvalidOperationException("Order email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
-        var toEmailFingerprint = GetEmailFingerprint(toEmail);
         var orderLink = BuildOrderLink(orderBaseUrl, externalId);
         var normalizedLines = (lines ?? Enumerable.Empty<OrderEmailLineItem>())
             .Where(line => line.Quantity > 0)
