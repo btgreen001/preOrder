@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
@@ -22,8 +23,8 @@ public class SessionValidationMiddleware
         try
         {
             var path = context.Request.Path.ToString().ToLowerInvariant();
-
-            if (IsBypassedPath(path))
+            
+            if (IsBypassedPath(path, context))
             {
                 await _next(context);
                 return;
@@ -95,8 +96,15 @@ public class SessionValidationMiddleware
         }
     }
 
-    private static bool IsBypassedPath(string path)
+    private static bool IsBypassedPath(string path, HttpContext context)
     {
+
+        var endpoint = context.GetEndpoint();
+        if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+        {
+            return true;
+        }
+
         return path == "/" ||
                path.StartsWith("/health") ||
                path.StartsWith("/ping") ||

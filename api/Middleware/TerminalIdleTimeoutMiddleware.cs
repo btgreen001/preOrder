@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PreOrderApp.Data;
@@ -47,7 +48,13 @@ public class TerminalIdleTimeoutMiddleware
             // - Terminal lookup endpoints (called immediately after login)
             // - Health/swagger endpoints
             var path = context.Request.Path.ToString().ToLower();
-            
+            if (IsBypassedPath(path, context))
+            {
+                await _next(context);
+                return;
+            }
+
+
             var isRefreshTokenEndpoint = path.StartsWith("/api/auth/refresh-token");
             // CRITICAL: Refresh-token MUST bypass idle timeout check - it's the recovery mechanism
             if (isRefreshTokenEndpoint)
@@ -224,6 +231,18 @@ public class TerminalIdleTimeoutMiddleware
             await _next(context);
         }
     }
+
+    private static bool IsBypassedPath(string path, HttpContext context)
+    {
+
+        var endpoint = context.GetEndpoint();
+        if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
     private static async Task WriteUnauthorizedAsync(HttpContext context, string message, string reason)
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;

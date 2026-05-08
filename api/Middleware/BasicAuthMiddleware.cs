@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PreOrderApp.Data;
 using System;
@@ -34,7 +35,14 @@ namespace PreOrderApp.Middleware
                 logger?.LogWarning("[BasicAuth] Missing Authorization Header");
             }
             // Allow anonymous access to some public endpoints (health, root, ping, swagger, registration)
-            var path = context.Request.Path.Value?.ToLower();
+            var path = context.Request.Path.ToString().ToLowerInvariant();
+
+            if (IsBypassedPath(path, context))
+            {
+                await _next(context);
+                return;
+            }
+
             if (path != null && (
                 path == "/" ||
                 path.Contains("/health") ||
@@ -179,6 +187,18 @@ namespace PreOrderApp.Middleware
             context.Items["SystemUser"] = user;
 
             await _next(context);
+        }
+
+
+        private static bool IsBypassedPath(string path, HttpContext context)
+        {
+
+            var endpoint = context.GetEndpoint();
+            if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
