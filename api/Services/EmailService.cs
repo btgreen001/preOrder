@@ -1,5 +1,7 @@
 using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -70,36 +72,24 @@ public class EmailService : IEmailService
 
         var inviteLink = BuildInviteLink(registerBaseUrl, inviteCode, toEmail);
 
-        using var message = new MailMessage
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.To.Add(MailboxAddress.Parse(toEmail));
+        message.Subject = $"Your {organizationName} staff invite";
+        message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
         {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = $"Your {organizationName} staff invite",
-            Body = BuildHtmlBody(organizationName, inviteCode, expiresOnUtc, inviteLink),
-            IsBodyHtml = true
-        };
-
-        message.To.Add(toEmail);
-
-        // EnableSsl=true triggers STARTTLS negotiation on port 587 (correct for Gmail App Passwords).
-        using var smtpClient = new SmtpClient(host, port)
-        {
-            EnableSsl = true,
-            Credentials = new NetworkCredential(username, password),
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Timeout = 10000
+            Text = BuildHtmlBody(organizationName, inviteCode, expiresOnUtc, inviteLink)
         };
 
         try
         {
             _logger.LogInformation("Sending invite email to {Email} via {Host}:{Port}", toEmail, host, port);
-            await smtpClient.SendMailAsync(message);
+            await SendViaMailKitAsync(host, port, username, password, message);
             _logger.LogInformation("Invite email sent successfully to {Email}", toEmail);
         }
-        catch (SmtpException ex)
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending to {Email} on {Host}:{Port}. Status: {StatusCode}", 
-                toEmail, host, port, ex.StatusCode);
+            _logger.LogError(ex, "SMTP error sending to {Email} on {Host}:{Port}", toEmail, host, port);
             throw;
         }
     }
@@ -127,35 +117,24 @@ public class EmailService : IEmailService
             throw new InvalidOperationException("Password reset SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
 
-        using var message = new MailMessage
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.To.Add(MailboxAddress.Parse(toEmail));
+        message.Subject = "Your BakeAhead password reset code";
+        message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
         {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = "Your BakeAhead password reset code",
-            Body = BuildPasswordResetHtmlBody(firstName, code, expiresOnUtc),
-            IsBodyHtml = true
-        };
-
-        message.To.Add(toEmail);
-
-        using var smtpClient = new SmtpClient(host, port)
-        {
-            EnableSsl = true,
-            Credentials = new NetworkCredential(username, password),
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Timeout = 10000
+            Text = BuildPasswordResetHtmlBody(firstName, code, expiresOnUtc)
         };
 
         try
         {
             _logger.LogInformation("Sending password reset code email to {Email} via {Host}:{Port}", toEmail, host, port);
-            await smtpClient.SendMailAsync(message);
+            await SendViaMailKitAsync(host, port, username, password, message);
             _logger.LogInformation("Password reset code email sent successfully to {Email}", toEmail);
         }
-        catch (SmtpException ex)
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending password reset code to {Email} on {Host}:{Port}. Status: {StatusCode}",
-                toEmail, host, port, ex.StatusCode);
+            _logger.LogError(ex, "SMTP error sending password reset code to {Email} on {Host}:{Port}", toEmail, host, port);
             throw;
         }
     }
@@ -211,11 +190,13 @@ public class EmailService : IEmailService
             })
             .ToList();
 
-        using var message = new MailMessage
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.To.Add(MailboxAddress.Parse(toEmail));
+        message.Subject = $"Your {organizationName} order confirmation";
+        message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
         {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = $"Your {organizationName} order confirmation",
-            Body = BuildOrderHtmlBody(
+            Text = BuildOrderHtmlBody(
                 organizationName,
                 customerName,
                 orderId,
@@ -228,34 +209,32 @@ public class EmailService : IEmailService
                 pickupCity,
                 pickupState,
                 contactPhone,
-                contactEmail),
-            IsBodyHtml = true
-        };
-
-        message.To.Add(toEmail);
-
-        // EnableSsl=true triggers STARTTLS negotiation on port 587 (correct for Gmail App Passwords).
-        using var smtpClient = new SmtpClient(host, port)
-        {
-            EnableSsl = true,
-            Credentials = new NetworkCredential(username, password),
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Timeout = 10000
+                contactEmail)
         };
 
         try
         {
             _logger.LogInformation("Sending order email to {Email} via {Host}:{Port}", toEmail, host, port);
-            await smtpClient.SendMailAsync(message);
+            await SendViaMailKitAsync(host, port, username, password, message);
             _logger.LogInformation("Order email sent successfully to {Email}", toEmail);
         }
-        catch (SmtpException ex)
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending to {Email} on {Host}:{Port}. Status: {StatusCode}", 
-                toEmail, host, port, ex.StatusCode);
+            _logger.LogError(ex, "SMTP error sending to {Email} on {Host}:{Port}", toEmail, host, port);
             throw;
         }
+    }
+
+    private static async Task SendViaMailKitAsync(
+        string host, int port, string? username, string? password, MimeMessage message)
+    {
+        using var client = new MailKit.Net.Smtp.SmtpClient();
+        // Auto picks STARTTLS on port 587, SMTPS on 465, plain on 25
+        await client.ConnectAsync(host, port, SecureSocketOptions.Auto);
+        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+            await client.AuthenticateAsync(username, password);
+        await client.SendAsync(message);
+        await client.DisconnectAsync(true);
     }
 
     private static string BuildOrderLink(string orderBaseUrl, string externalId)
