@@ -290,6 +290,7 @@ namespace PreOrderApp.Controllers
         /// <summary>
         /// Cancel an order
         /// </summary>
+        [AllowAnonymous] // Allow public cancellation of orders (e.g. by customers)
         [HttpPut("{externalId:guid}/cancel")]
         public async Task<IActionResult> CancelOrder(Guid externalId)
         {
@@ -318,6 +319,7 @@ namespace PreOrderApp.Controllers
         /// <summary>
         /// Change the pickup slot for a public order
         /// </summary>
+        [AllowAnonymous] // Allow public access to change pickup slot (e.g. by customers)
         [HttpPut("{externalId:guid}/pickup-slot")]
         public async Task<IActionResult> ChangePickupSlot(Guid externalId, [FromBody] ChangePickupSlotRequest request)
         {
