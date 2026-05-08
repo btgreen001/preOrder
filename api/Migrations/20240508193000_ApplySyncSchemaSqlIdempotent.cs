@@ -1,11 +1,15 @@
 using System;
 using System.IO;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using PreOrderApp.Data;
 
 #nullable disable
 
 namespace PreOrderApp.Migrations
 {
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20240508193000_ApplySyncSchemaSqlIdempotent")]
     public partial class ApplySyncSchemaSqlIdempotent : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

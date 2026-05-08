@@ -340,7 +340,7 @@ using (var scope = app.Services.CreateScope())
         reader.Close();
 
         using var schemaCmd = conn.CreateCommand();
-        schemaCmd.CommandText = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' and table_schema='public' ORDER BY table_schema, table_name LIMIT 5;";
+        schemaCmd.CommandText = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' and table_schema='public' ORDER BY table_schema, table_name;";
         try
         {
             using var schemaReader = schemaCmd.ExecuteReader();
@@ -356,10 +356,16 @@ using (var scope = app.Services.CreateScope())
             else
             {
                 Console.WriteLine($"INFO: {tables.Count} table(s) found in database:");
-                foreach (var t in tables)
+                foreach (var t in tables.Take(15))
                     Console.WriteLine($"  {t}");
+                if (tables.Count > 15)
+                {
+                    Console.WriteLine($"INFO: ...and {tables.Count - 15} more table(s).");
+                }
 
-                bool hasAppUser = tables.Any(t => t.EndsWith(".app_user", StringComparison.OrdinalIgnoreCase));
+                using var appUserCmd = conn.CreateCommand();
+                appUserCmd.CommandText = "SELECT to_regclass('public.app_user') IS NOT NULL;";
+                var hasAppUser = appUserCmd.ExecuteScalar() is bool exists && exists;
                 Console.WriteLine(hasAppUser
                     ? "INFO: Schema check passed — app_user table exists."
                     : "WARNING: app_user table not found — schema may be incomplete.");
@@ -473,13 +479,17 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
-        var unitSeedPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", "20260227_TODO1032_UnitConversionSeed.sql");
-        if (!File.Exists(unitSeedPath))
+        var unitSeedFile = "20260227_TODO1032_UnitConversionSeed.sql";
+        var candidateUnitSeedPaths = new[]
         {
-            unitSeedPath = Path.Combine(Directory.GetCurrentDirectory(), "Database", "20260227_TODO1032_UnitConversionSeed.sql");
-        }
+            Path.Combine(AppContext.BaseDirectory, "Database", unitSeedFile),
+            Path.Combine(Directory.GetCurrentDirectory(), "Database", unitSeedFile),
+            Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", unitSeedFile)
+        };
 
-        if (File.Exists(unitSeedPath))
+        var unitSeedPath = candidateUnitSeedPaths.FirstOrDefault(File.Exists);
+
+        if (!string.IsNullOrWhiteSpace(unitSeedPath))
         {
             var sql = File.ReadAllText(unitSeedPath);
             db.Database.ExecuteSqlRaw(sql);
@@ -487,7 +497,7 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            logger?.LogWarning("Unit conversion bootstrap SQL not found at expected paths");
+            logger?.LogWarning("Unit conversion bootstrap SQL not found. Checked paths: {Paths}", string.Join(" | ", candidateUnitSeedPaths));
         }
     }
     catch (Exception ex)
