@@ -424,6 +424,10 @@ public class RecipeService : IRecipeService
             // 1) Active recipe (RecipeStatusCd = 'A')
             // 2) Latest Draft recipe (RecipeStatusCd = 'D') if no Active
             // 3) Latest version if no Active or Draft
+
+            var safeSortBy = CleanString(sortBy);
+            var safeDirection = CleanString(sortDirection ?? "asc");
+
             var allRecipes = await _context.RecipeDetails
                 .AsNoTracking()
                 .Where(r => r.OrganizationId == organizationId && !r.IsDeleted)
@@ -451,10 +455,10 @@ public class RecipeService : IRecipeService
                 .ToList();
 
             // Apply sorting if specified
-            if (!string.IsNullOrEmpty(sortBy))
+            if (!string.IsNullOrEmpty(safeSortBy))
             {
-                var isDescending = sortDirection?.ToLower() == "desc";
-                selectedRecipes = sortBy.ToLower() switch
+                var isDescending = safeDirection == "desc";
+                selectedRecipes = safeSortBy switch
                 {
                     "name" => isDescending 
                         ? selectedRecipes.OrderByDescending(r => r.RecipeName).ToList() 
@@ -473,7 +477,7 @@ public class RecipeService : IRecipeService
                         : selectedRecipes.OrderBy(r => GetStatusName(r.RecipeStatusCd.ToString())).ToList(),
                     _ => selectedRecipes.OrderBy(r => r.RecipeName).ToList() // Default to name ascending
                 };
-                _logger.LogInformation("Sorted recipes by {SortBy} {Direction}", sortBy, sortDirection ?? "asc");
+                _logger.LogInformation("Sorted recipes by {SortBy} {Direction}", safeSortBy, safeDirection);
             }
             else
             {
@@ -548,6 +552,31 @@ public class RecipeService : IRecipeService
         }
     }
 
+
+    private static string CleanString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "empty";
+
+        // Normalize
+        var trimmed = value.Trim().ToLowerInvariant();
+
+        // Remove dangerous characters (newlines, tabs, control chars)
+        trimmed = trimmed
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace("\t", "");
+
+        // Keep only safe characters
+        trimmed = string.Concat(trimmed.Where(c =>
+            char.IsLetterOrDigit(c) || c == '-' || c == '_'));
+
+        if (trimmed.Length == 0)
+            return "invalid";
+
+        // Limit length to avoid log flooding
+        return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
+    }
     /// <summary>
     /// Helper method to map status code to display name for sorting
     /// </summary>
@@ -1779,6 +1808,7 @@ public class PaginatedResult<T>
     public int PageSize { get; set; }
     public int TotalPages => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
 }
+
 
 // Note: RecipeIngredient DTOs moved to RecipeIngredientDtos.cs (TODO-1020)
 // Note: RecipeComposition DTOs moved to RecipeCompositionDtos.cs (TODO-1020)
