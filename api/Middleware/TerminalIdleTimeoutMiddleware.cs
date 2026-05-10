@@ -93,7 +93,7 @@ public class TerminalIdleTimeoutMiddleware
             var isHealthOrDocs = safePath.StartsWith("/api/health") || safePath.StartsWith("/swagger");
             if (isNoAuthRoute || isTerminalLookup || isHealthOrDocs)
             {
-                _logger.LogDebug("[TerminalIdleTimeout] BYPASS: Auth/terminal/health/docs endpoint - path={Path}", path);
+                _logger.LogDebug("[TerminalIdleTimeout] BYPASS: Auth/terminal/health/docs endpoint - path={Path}", safePath);
                 await _next(context);
                 return;
             }
@@ -166,7 +166,7 @@ public class TerminalIdleTimeoutMiddleware
                 _logger.LogWarning(
                     "[SessionValidation] Invalid session. UserId={UserId}, Path={Path}, HasJti={HasJti}, HasRefreshCookie={HasRefreshCookie}",
                     userId,
-                    path,
+                    safePath,
                     !string.IsNullOrWhiteSpace(jtiClaim),
                     !string.IsNullOrWhiteSpace(refreshToken));
 
@@ -190,7 +190,7 @@ public class TerminalIdleTimeoutMiddleware
                         idleTimeoutMinutes,
                         session.SessionId,
                         session.LastAccessedOn,
-                        path);
+                        safePath);
 
                     // Block the request - idle timeout exceeded
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
