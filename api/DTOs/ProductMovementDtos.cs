@@ -1,9 +1,10 @@
+using Preorder.Domain.Enums;
 namespace PreOrderApp.DTOs;
 
 /// <summary>Create ProductMovement request DTO</summary>
 public record CreateProductMovementDto(
     long SellableProductId,
-    string MovementType,
+    MovementType MovementType,
     decimal Quantity,
     string UnitOfMeasure,
     string? Reason,
@@ -13,12 +14,14 @@ public record CreateProductMovementDto(
     DateTime? MovementDate
 );
 
+
+
 /// <summary>ProductMovement response DTO</summary>
 public record ProductMovementDto(
     Guid ExternalId,
     long SellableProductId,
     string ProductName,
-    string MovementType,
+    MovementType MovementType,
     decimal Quantity,
     string UnitOfMeasure,
     string? Reason,
@@ -39,7 +42,7 @@ public record ProductMovementListItemDto(
     Guid ExternalId,
     long SellableProductId,
     string ProductName,
-    string MovementType,
+    MovementType MovementType,
     decimal Quantity,
     string UnitOfMeasure,
     string? ReferenceId,
@@ -49,7 +52,7 @@ public record ProductMovementListItemDto(
 
 /// <summary>Product movement summary by type DTO</summary>
 public record ProductMovementSummaryDto(
-    string MovementType,
+    MovementType MovementType,
     int Count,
     decimal TotalQuantity,
     DateTime? FirstMovement,
@@ -61,7 +64,7 @@ public record ProductMovementHistoryDto(
     Guid ExternalId,
     long SellableProductId,
     string ProductName,
-    string MovementType,
+    MovementType MovementType,
     decimal Quantity,
     string UnitOfMeasure,
     string? ReferenceId,

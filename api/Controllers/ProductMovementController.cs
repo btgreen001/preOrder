@@ -4,6 +4,7 @@ using PreOrderApp.DTOs;
 using PreOrderApp.Services;
 using System.Security.Claims;
 using PreOrderApp.Filters;
+using Preorder.Domain.Enums;
 namespace PreOrderApp.Controllers;
 
 /// <summary>
@@ -49,9 +50,10 @@ public class ProductMovementController : ControllerBase
     [HttpGet("by-product/{productId:long}")]
     [ProducesResponseType(typeof(List<ProductMovementListItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+
     public async Task<ActionResult<List<ProductMovementListItemDto>>> GetMovementsByProduct(
-        long productId, 
-        [FromQuery] string? movementType = null)
+        long productId,
+        [FromQuery] MovementType? movementType = null)
     {
         var organizationId = _orgContext.GetCurrentOrganizationId();
         var movements = await _service.GetMovementsByProductAsync(productId, organizationId, movementType);
@@ -63,7 +65,7 @@ public class ProductMovementController : ControllerBase
     [ProducesResponseType(typeof(List<ProductMovementListItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<ProductMovementListItemDto>>> GetMovementsByType(
-        string movementType,
+        MovementType movementType,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {

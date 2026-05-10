@@ -2,15 +2,23 @@ using PreOrderApp.Data;
 using PreOrderApp.DTOs;
 using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Preorder.Domain.Enums;
 
 namespace PreOrderApp.Services;
 
 public interface IProductMovementService
 {
     Task<ProductMovementDto?> GetMovementByExternalIdAsync(Guid externalId, Guid organizationId);
-    Task<List<ProductMovementListItemDto>> GetMovementsByProductAsync(long productId, Guid organizationId, string? movementType = null);
-    Task<List<ProductMovementListItemDto>> GetMovementsByTypeAsync(string movementType, Guid organizationId, int pageNumber = 1, int pageSize = 20);
-    Task<List<ProductMovementListItemDto>> GetAllMovementsAsync(Guid organizationId, int pageNumber = 1, int pageSize = 20);
+    Task<List<ProductMovementListItemDto>> GetMovementsByProductAsync(
+        long productId,
+        Guid organizationId,
+        MovementType? movementType = null);
+    Task<List<ProductMovementListItemDto>> GetMovementsByTypeAsync(
+        MovementType movementType,
+        Guid organizationId,
+        int pageNumber = 1,
+        int pageSize = 20);
+        Task<List<ProductMovementListItemDto>> GetAllMovementsAsync(Guid organizationId, int pageNumber = 1, int pageSize = 20);
     Task<ProductMovementSummaryDto[]> GetMovementSummaryAsync(Guid organizationId, DateTime? startDate = null, DateTime? endDate = null);
     Task<ProductMovementDto> RecordMovementAsync(CreateProductMovementDto dto, Guid organizationId, Guid createdBy);
     Task<ProductMovementDto> RecordReceivedAsync(long productId, decimal quantity, string unitOfMeasure, string? reason, string? referenceId, long? batchId, long? lotId, Guid organizationId, Guid createdBy);
@@ -40,15 +48,22 @@ public class ProductMovementService : IProductMovementService
         return movement == null ? null : MapToDto(movement);
     }
 
-    public async Task<List<ProductMovementListItemDto>> GetMovementsByProductAsync(long productId, Guid organizationId, string? movementType = null)
+    public async Task<List<ProductMovementListItemDto>> GetMovementsByProductAsync(long productId, Guid organizationId, MovementType? movementType = null)
     {
         var query = _context.ProductMovements
             .AsNoTracking()
             .Include(pm => pm.SellableProduct)
             .Where(pm => pm.SellableProductId == productId && pm.OrganizationId == organizationId);
 
-        if (!string.IsNullOrEmpty(movementType))
-            query = query.Where(pm => pm.MovementType == movementType);
+        string movementTypeString = "";
+        if (movementType.HasValue)
+        {
+            movementTypeString = movementType.Value.ToString();
+            query = query.Where(pm => pm.MovementType == movementTypeString);
+        }
+
+        if (!string.IsNullOrEmpty(movementTypeString))
+            query = query.Where(pm => pm.MovementType == movementTypeString);
 
         var movements = await query
             .OrderByDescending(pm => pm.MovementDate)
@@ -56,7 +71,7 @@ public class ProductMovementService : IProductMovementService
                 pm.ExternalId,
                 pm.SellableProductId,
                 pm.SellableProduct!.Name,
-                pm.MovementType,
+                Enum.Parse<MovementType>(pm.MovementType),   // ← FIX
                 pm.Quantity,
                 pm.UnitOfMeasure,
                 pm.ReferenceId,
@@ -68,13 +83,14 @@ public class ProductMovementService : IProductMovementService
         return movements;
     }
 
-    public async Task<List<ProductMovementListItemDto>> GetMovementsByTypeAsync(string movementType, Guid organizationId, int pageNumber = 1, int pageSize = 20)
+    public async Task<List<ProductMovementListItemDto>> GetMovementsByTypeAsync(MovementType movementType, Guid organizationId, int pageNumber = 1, int pageSize = 20)
     {
         var skip = (pageNumber - 1) * pageSize;
         var movements = await _context.ProductMovements
             .AsNoTracking()
             .Include(pm => pm.SellableProduct)
-            .Where(pm => pm.MovementType == movementType && pm.OrganizationId == organizationId)
+            .Where(pm => pm.MovementType == movementType.ToString()
+                    && pm.OrganizationId == organizationId)
             .OrderByDescending(pm => pm.MovementDate)
             .Skip(skip)
             .Take(pageSize)
@@ -82,7 +98,7 @@ public class ProductMovementService : IProductMovementService
                 pm.ExternalId,
                 pm.SellableProductId,
                 pm.SellableProduct!.Name,
-                pm.MovementType,
+                Enum.Parse<MovementType>(pm.MovementType), // convert string → enum
                 pm.Quantity,
                 pm.UnitOfMeasure,
                 pm.ReferenceId,
@@ -90,6 +106,7 @@ public class ProductMovementService : IProductMovementService
                 pm.CreatedAt
             ))
             .ToListAsync();
+
 
         return movements;
     }
@@ -108,7 +125,7 @@ public class ProductMovementService : IProductMovementService
                 pm.ExternalId,
                 pm.SellableProductId,
                 pm.SellableProduct!.Name,
-                pm.MovementType,
+                Enum.Parse<MovementType>(pm.MovementType), // convert string → enum
                 pm.Quantity,
                 pm.UnitOfMeasure,
                 pm.ReferenceId,
@@ -135,7 +152,7 @@ public class ProductMovementService : IProductMovementService
         var summary = await query
             .GroupBy(pm => pm.MovementType)
             .Select(g => new ProductMovementSummaryDto(
-                g.Key,
+                Enum.Parse<MovementType>(g.Key), // convert string → enum
                 g.Count(),
                 g.Sum(pm => pm.Quantity),
                 g.Min(pm => pm.MovementDate),
@@ -154,13 +171,14 @@ public class ProductMovementService : IProductMovementService
 
         if (product == null)
             throw new ArgumentException($"Product {dto.SellableProductId} not found");
-
+        
+      
         var movement = new ProductMovement
         {
             ExternalId = Guid.NewGuid(),
             OrganizationId = organizationId,
             SellableProductId = dto.SellableProductId,
-            MovementType = dto.MovementType,
+            MovementType = dto.MovementType.ToString(), // convert enum → string
             Quantity = dto.Quantity,
             UnitOfMeasure = dto.UnitOfMeasure,
             Reason = dto.Reason,
@@ -174,6 +192,10 @@ public class ProductMovementService : IProductMovementService
             UpdatedAt = DateTime.UtcNow
         };
 
+        if (!Enum.IsDefined(typeof(MovementType), dto.MovementType))
+            throw new ArgumentException("Invalid movement type");
+
+
         _context.ProductMovements.Add(movement);
         await _context.SaveChangesAsync();
 
@@ -186,7 +208,7 @@ public class ProductMovementService : IProductMovementService
     public async Task<ProductMovementDto> RecordReceivedAsync(long productId, decimal quantity, string unitOfMeasure, string? reason, string? referenceId, long? batchId, long? lotId, Guid organizationId, Guid createdBy)
     {
         return await RecordMovementAsync(
-            new CreateProductMovementDto(productId, "RECEIVED", quantity, unitOfMeasure, reason, referenceId, batchId, lotId, DateTime.UtcNow),
+            new CreateProductMovementDto(productId, MovementType.RECEIVED, quantity, unitOfMeasure, reason, referenceId, batchId, lotId, DateTime.UtcNow),
             organizationId,
             createdBy
         );
@@ -195,7 +217,7 @@ public class ProductMovementService : IProductMovementService
     public async Task<ProductMovementDto> RecordSaleAsync(long productId, decimal quantity, string unitOfMeasure, string? referenceId, Guid organizationId, Guid createdBy)
     {
         return await RecordMovementAsync(
-            new CreateProductMovementDto(productId, "SOLD", quantity, unitOfMeasure, "Customer order", referenceId, null, null, DateTime.UtcNow),
+            new CreateProductMovementDto(productId, MovementType.SOLD, quantity, unitOfMeasure, "Customer order", referenceId, null, null, DateTime.UtcNow),
             organizationId,
             createdBy
         );
@@ -204,7 +226,7 @@ public class ProductMovementService : IProductMovementService
     public async Task<ProductMovementDto> RecordWasteAsync(long productId, decimal quantity, string unitOfMeasure, string reason, string? referenceId, Guid organizationId, Guid createdBy)
     {
         return await RecordMovementAsync(
-            new CreateProductMovementDto(productId, "WASTED", quantity, unitOfMeasure, reason, referenceId, null, null, DateTime.UtcNow),
+            new CreateProductMovementDto(productId, MovementType.WASTE, quantity, unitOfMeasure, reason, referenceId, null, null, DateTime.UtcNow),
             organizationId,
             createdBy
         );
@@ -213,7 +235,7 @@ public class ProductMovementService : IProductMovementService
     public async Task<ProductMovementDto> RecordAdjustmentAsync(long productId, decimal quantity, string unitOfMeasure, string reason, Guid organizationId, Guid createdBy)
     {
         return await RecordMovementAsync(
-            new CreateProductMovementDto(productId, "ADJUSTED", quantity, unitOfMeasure, reason, null, null, null, DateTime.UtcNow),
+            new CreateProductMovementDto(productId, MovementType.ADJUSTMENT, quantity, unitOfMeasure, reason, null, null, null, DateTime.UtcNow),
             organizationId,
             createdBy
         );
@@ -225,7 +247,7 @@ public class ProductMovementService : IProductMovementService
             movement.ExternalId,
             movement.SellableProductId,
             movement.SellableProduct?.Name ?? "Unknown",
-            movement.MovementType,
+            Enum.Parse<MovementType>(movement.MovementType, ignoreCase: true),
             movement.Quantity,
             movement.UnitOfMeasure,
             movement.Reason,
@@ -240,5 +262,30 @@ public class ProductMovementService : IProductMovementService
             movement.UpdatedBy,
             movement.VersionNbr
         );
+    }
+
+    private static string CleanString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "empty";
+
+        // Normalize
+        var trimmed = value.Trim().ToLowerInvariant();
+
+        // Remove dangerous characters (newlines, tabs, control chars)
+        trimmed = trimmed
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace("\t", "");
+
+        // Keep only safe characters
+        trimmed = string.Concat(trimmed.Where(c =>
+            char.IsLetterOrDigit(c) || c == '-' || c == '_'));
+
+        if (trimmed.Length == 0)
+            return "invalid";
+
+        // Limit length to avoid log flooding
+        return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
     }
 }

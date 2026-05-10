@@ -577,6 +577,8 @@ public class RecipeService : IRecipeService
         // Limit length to avoid log flooding
         return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
     }
+
+    
     /// <summary>
     /// Helper method to map status code to display name for sorting
     /// </summary>
