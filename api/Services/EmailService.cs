@@ -86,13 +86,13 @@ public class EmailService : IEmailService
 
         try
         {
-            _logger.LogInformation("Sending invite email to {Email} via {Host}:{Port}", toEmail, host, port);
+            _logger.LogInformation("Sending invite email to {Email}", toEmail);
             await SendViaMailKitAsync(host, port, username, password, message);
             _logger.LogInformation("Invite email sent successfully to {Email}", toEmail);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending to {Email} on {Host}:{Port}", toEmail, host, port);
+            _logger.LogError(ex, "SMTP error sending to {Email}", toEmail);
             throw;
         }
     }
@@ -132,13 +132,13 @@ public class EmailService : IEmailService
 
         try
         {
-            _logger.LogInformation("Sending password reset code email to {toEmailFingerprint} via {Host}:{Port}", toEmailFingerprint, host, port);
+            _logger.LogInformation("Sending password reset code email to {toEmailFingerprint}", toEmailFingerprint);
             await SendViaMailKitAsync(host, port, username, password, message);
             _logger.LogInformation("Password reset code email sent successfully to {toEmailFingerprint}", toEmailFingerprint);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending password reset code to {toEmailFingerprint} on {Host}:{Port}", toEmailFingerprint, host, port);
+            _logger.LogError(ex, "SMTP error sending password reset code to {toEmailFingerprint}", toEmailFingerprint);
             throw;
         }
     }
@@ -219,13 +219,13 @@ public class EmailService : IEmailService
 
         try
         {
-            _logger.LogInformation("Sending order email to recipient {EmailFingerprint} via {Host}:{Port}", toEmailFingerprint, host, port);
+            _logger.LogInformation("Sending order email to recipient {EmailFingerprint}", toEmailFingerprint);
             await SendViaMailKitAsync(host, port, username, password, message);
             _logger.LogInformation("Order email sent successfully to recipient {EmailFingerprint}", toEmailFingerprint);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending to recipient {EmailFingerprint} on {Host}:{Port}", toEmailFingerprint, host, port);
+            _logger.LogError(ex, "SMTP error sending to recipient {EmailFingerprint}", toEmailFingerprint);
             throw;
         }
     }
