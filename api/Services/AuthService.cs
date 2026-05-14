@@ -292,13 +292,13 @@ public class AuthService : IAuthService
             _logger.LogWarning("[LoginAsync] Username or password missing.");
             return null;
         }
-        string sanitizedTerminalId = terminalId.HasValue ? StringSanitizer.SanitizeForLog(terminalId.Value.ToString()) : "null";
-        _logger.LogInformation("[LoginAsync] Started. TerminalId from parameter: {TerminalId}, TerminalId from request: {RequestTerminalId}", sanitizedTerminalId, request.TerminalId);
+        string sanitizedPassedTerminalId = terminalId.HasValue ? StringSanitizer.SanitizeForLog(terminalId.Value.ToString()) : "null";
+        string sanitizedRequestTerminalId = request.TerminalId != Guid.Empty ? StringSanitizer.SanitizeForLog(request.TerminalId.ToString()) : "null";
+
+        _logger.LogInformation("[LoginAsync] Started. TerminalId from parameter: {TerminalId}, TerminalId from request: {RequestTerminalId}", sanitizedPassedTerminalId, sanitizedRequestTerminalId);
 
         if (!terminalId.HasValue || terminalId == Guid.Empty)
         {
-            terminalId = request.TerminalId;
-            string sanitizedRequestTerminalId = terminalId.HasValue ? StringSanitizer.SanitizeForLog(terminalId.Value.ToString()) : "null";
             _logger.LogInformation("[LoginAsync] Using TerminalId from request: {TerminalId}", sanitizedRequestTerminalId);
         }
         var organizationId = Guid.Empty;
