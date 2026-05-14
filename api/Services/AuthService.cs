@@ -351,25 +351,31 @@ public class AuthService : IAuthService
         if (!isPasswordValid)
             return null;
 
-        // Use terminalId from request if parameter is null
-        var effectiveTerminalId = terminalId ?? request.TerminalId;
-        _logger.LogInformation($"[LoginAsync] Effective terminalId: {effectiveTerminalId}");
+        // Determine the effective terminal ID as a Guid
+        Guid effectiveTerminalId = terminalId 
+            ?? request.TerminalId 
+            ?? Guid.Empty;
+
+
+        // Log the string representation
+        string safeTerminalId = effectiveTerminalId.ToString("D");
+        _logger.LogInformation($"[LoginAsync] Effective terminalId: {safeTerminalId}");
 
         Terminal? loginTerminalContext = null;
         // Validate terminal organization match if terminalId provided
-        if (effectiveTerminalId.HasValue)
+        if (effectiveTerminalId != Guid.Empty)
         {
-            _logger.LogInformation($"[LoginAsync] Validating terminal: {effectiveTerminalId.Value}");
+            _logger.LogInformation($"[LoginAsync] Validating terminal: {effectiveTerminalId}");
             loginTerminalContext = await _context.Terminals
                 .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.TerminalUid == effectiveTerminalId.Value && t.IsActive);
+                .FirstOrDefaultAsync(t => t.TerminalUid == effectiveTerminalId && t.IsActive);
 
             _logger.LogInformation($"[LoginAsync] Terminal lookup result: {(loginTerminalContext == null ? "NULL" : $"Found - OrgId: {loginTerminalContext.OrganizationId}")}");
             // Check NULL first (invalid/non-existent terminal)
             if (loginTerminalContext == null)
             {
                 // Terminal not found or inactive - REJECT login
-                _logger.LogWarning($"[LoginAsync] Terminal not found or inactive: {effectiveTerminalId.Value}");
+                _logger.LogWarning($"[LoginAsync] Terminal not found or inactive: {effectiveTerminalId}");
                 throw new UnauthorizedAccessException("Terminal access denied.  Please confirm your login for this terminal.  Please contact your administrator.");
             }
             
@@ -446,10 +452,10 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         // Activate terminal session if terminal is provided (unlocks if previously locked, marks as active)
-        if (effectiveTerminalId.HasValue && effectiveTerminalId != Guid.Empty)
+        if (effectiveTerminalId != Guid.Empty)
         {
             var terminal = await _context.Terminals
-                .FirstOrDefaultAsync(t => t.TerminalUid == effectiveTerminalId.Value && t.IsActive);
+                .FirstOrDefaultAsync(t => t.TerminalUid == effectiveTerminalId && t.IsActive);
             if (terminal != null)
             {
                 await _terminalLockService.ActivateTerminalSessionAsync(user.OrganizationId, terminal.TerminalId);
