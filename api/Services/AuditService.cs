@@ -3,6 +3,7 @@ using PreOrderApp.Data;
 using PreOrderApp.Models;
 using System;
 using System.Threading.Tasks;
+using PreOrderApp.Infrastructure;
 
 namespace PreOrderApp.Services
 {
@@ -40,6 +41,7 @@ namespace PreOrderApp.Services
                                        string? entityType, string? entityId, string? ipAddress, 
                                        string? userAgent, string? details)
         {
+            var sanitizedDetails = StringSanitizer.SanitizeForLog(details);
             var auditLog = new AuditLog
             {
                 Action = action,
@@ -49,10 +51,9 @@ namespace PreOrderApp.Services
                 EntityId = entityId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Details = details,
+                Details = sanitizedDetails,
                 Timestamp = DateTime.UtcNow
             };
-
             // Log to console in development, database in production
             if (_isProduction)
             {
@@ -74,7 +75,8 @@ namespace PreOrderApp.Services
                 
                 if (!string.IsNullOrEmpty(details))
                 {
-                    _logger.LogInformation("{Message} | Details: {Details}", logMessage, details);
+                    var lclSanitizedDetails = StringSanitizer.SanitizeForLog(details);
+                    _logger.LogInformation("{Message} | Details: {Details}", logMessage, lclSanitizedDetails);
                 }
                 else
                 {

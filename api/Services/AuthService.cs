@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PreOrderApp.Models;
 using PreOrderApp.Data;
+using PreOrderApp.Infrastructure;
 using BCrypt.Net;
 
 namespace PreOrderApp.Services;
@@ -926,31 +927,6 @@ public class AuthService : IAuthService
         }, false); // Not an idle timeout
     }
 
-    private static string CleanString(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return "empty";
-
-        // Normalize
-        var trimmed = value.Trim().ToLowerInvariant();
-
-        // Remove dangerous characters (newlines, tabs, control chars)
-        trimmed = trimmed
-            .Replace("\r", "")
-            .Replace("\n", "")
-            .Replace("\t", "");
-
-        // Keep only safe characters
-        trimmed = string.Concat(trimmed.Where(c =>
-            char.IsLetterOrDigit(c) || c == '-' || c == '_'));
-
-        if (trimmed.Length == 0)
-            return "invalid";
-
-        // Limit length to avoid log flooding
-        return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
-    }
-    
     public async Task<AuthResponse?> PinLoginAsync(PinLoginRequest request, Guid? terminalId = null)
     {
         if (!Guid.TryParse(request.UserId, out var userId))

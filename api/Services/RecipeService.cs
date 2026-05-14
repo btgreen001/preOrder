@@ -425,8 +425,8 @@ public class RecipeService : IRecipeService
             // 2) Latest Draft recipe (RecipeStatusCd = 'D') if no Active
             // 3) Latest version if no Active or Draft
 
-            var safeSortBy = CleanString(sortBy);
-            var safeDirection = CleanString(sortDirection ?? "asc");
+            var safeSortBy = StringSanitizer.SanitizeForLog(sortBy);
+            var safeDirection = StringSanitizer.SanitizeForLog(sortDirection ?? "asc");
 
             var allRecipes = await _context.RecipeDetails
                 .AsNoTracking()
@@ -553,32 +553,6 @@ public class RecipeService : IRecipeService
     }
 
 
-    private static string CleanString(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return "empty";
-
-        // Normalize
-        var trimmed = value.Trim().ToLowerInvariant();
-
-        // Remove dangerous characters (newlines, tabs, control chars)
-        trimmed = trimmed
-            .Replace("\r", "")
-            .Replace("\n", "")
-            .Replace("\t", "");
-
-        // Keep only safe characters
-        trimmed = string.Concat(trimmed.Where(c =>
-            char.IsLetterOrDigit(c) || c == '-' || c == '_'));
-
-        if (trimmed.Length == 0)
-            return "invalid";
-
-        // Limit length to avoid log flooding
-        return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
-    }
-
-    
     /// <summary>
     /// Helper method to map status code to display name for sorting
     /// </summary>

@@ -3,6 +3,7 @@ using PreOrderApp.DTOs;
 using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Preorder.Domain.Enums;
+using PreOrderApp.Infrastructure;
 
 namespace PreOrderApp.Services;
 
@@ -264,28 +265,4 @@ public class ProductMovementService : IProductMovementService
         );
     }
 
-    private static string CleanString(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return "empty";
-
-        // Normalize
-        var trimmed = value.Trim().ToLowerInvariant();
-
-        // Remove dangerous characters (newlines, tabs, control chars)
-        trimmed = trimmed
-            .Replace("\r", "")
-            .Replace("\n", "")
-            .Replace("\t", "");
-
-        // Keep only safe characters
-        trimmed = string.Concat(trimmed.Where(c =>
-            char.IsLetterOrDigit(c) || c == '-' || c == '_'));
-
-        if (trimmed.Length == 0)
-            return "invalid";
-
-        // Limit length to avoid log flooding
-        return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
-    }
 }
