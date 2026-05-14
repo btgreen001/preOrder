@@ -5,6 +5,7 @@ using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using PreOrderApp.Infrastructure;
 
 namespace PreOrderApp.Middleware
 {
@@ -111,6 +112,7 @@ namespace PreOrderApp.Middleware
             var encodedCredentials = authHeader.Substring("Basic ".Length).Trim();
             string username = string.Empty;
             string password = string.Empty;
+            string sanitizedUsername = string.Empty;
             try
             {
                 var credentialBytes = Convert.FromBase64String(encodedCredentials);
@@ -125,8 +127,9 @@ namespace PreOrderApp.Middleware
                 }
                 username = credentials[0];
                 password = credentials[1];
+                sanitizedUsername = StringSanitizer.SanitizeForLog(username);
                 // Do NOT log plaintext passwords. Log only the username.
-                logger?.LogInformation("[BasicAuth] Decoded username: {Username}", username);
+                logger?.LogInformation("[BasicAuth] Decoded username: {sanitizedUsername}", sanitizedUsername);
             }
             catch (Exception ex)
             {
@@ -137,8 +140,10 @@ namespace PreOrderApp.Middleware
             }
 
             // Resolve DbContext per request
+            sanitizedUsername = StringSanitizer.SanitizeForLog(username);
             var dbContext = context.RequestServices.GetService(typeof(PreOrderApp.Data.AppDbContext)) as PreOrderApp.Data.AppDbContext;
-            logger?.LogDebug("[BasicAuth] Looking up user in DB: {Username}", username);
+            logger?.LogDebug("[BasicAuth] Looking up user in DB: {sanitizedUsername}", sanitizedUsername);
+
             if (dbContext == null)
             {
                 logger?.LogError("Database context unavailable");
@@ -149,15 +154,15 @@ namespace PreOrderApp.Middleware
 
             // Look up user in DB (any enabled user)
             var user = await dbContext.SystemUsers
-                .FirstOrDefaultAsync(u => u.UserName == username && u.IsEnabled);
+                .FirstOrDefaultAsync(u => u.UserName == sanitizedUsername && u.IsEnabled);
             if (user != null)
             {
-                logger?.LogDebug("[BasicAuth] User found: {UserName}, Role: {Role}, IsEnabled: {IsEnabled}", user.UserName, user.UserRole, user.IsEnabled);
+                logger?.LogDebug("[BasicAuth] User found: {UserId}, Role: {Role}, IsEnabled: {IsEnabled}", user.UserId, user.UserRole, user.IsEnabled);
             }
 
             if (user == null)
             {
-                logger?.LogWarning("[BasicAuth] User not found or not enabled: {Username}", username);
+                logger?.LogWarning("[BasicAuth] User not found or not enabled: {Username}", sanitizedUsername);
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await context.Response.WriteAsync("Invalid Username or Password");
                 return;
@@ -171,18 +176,18 @@ namespace PreOrderApp.Middleware
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "[BasicAuth] Error verifying password for user: {Username}", username);
+                logger?.LogError(ex, "[BasicAuth] Error verifying password for user: {UserId}", user.UserId);
             }
 
             if (!passwordValid)
             {
-                logger?.LogWarning("[BasicAuth] Password verification failed for user: {Username}", username);
+                logger?.LogWarning("[BasicAuth] Password verification failed for user: {UserId}", user.UserId);
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await context.Response.WriteAsync("Invalid Username or Password");
                 return;
             }
 
-            logger?.LogInformation("[BasicAuth] User {Username} authenticated successfully", username);
+            logger?.LogInformation("[BasicAuth] User {UserId} authenticated successfully", user.UserId);
             // Optionally, set user info in context for downstream use
             context.Items["SystemUser"] = user;
 
