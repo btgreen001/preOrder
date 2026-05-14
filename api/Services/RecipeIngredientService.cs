@@ -32,8 +32,11 @@ public class RecipeIngredientService : IRecipeIngredientService
     {
         try
         {
+            var safeRecipeId = StringSanitizer.SanitizeForLog(request.RecipeExternalId);
+            _logger.LogInformation("Creating recipe ingredient for recipe {RecipeId} in organization {OrgId}", safeRecipeId, organizationId);
+
             if (string.IsNullOrEmpty(request.RecipeExternalId))
-                throw new InvalidOperationException($"Recipe with external ID {request.RecipeExternalId} is incorrect or empty");
+                throw new InvalidOperationException($"Recipe with external ID {safeRecipeId} is incorrect or empty");
 
             bool hasInventory = request.InventoryItemExternalId.HasValue;
             bool hasComponent = request.RecipeComponentProductExternalId.HasValue;
@@ -48,7 +51,7 @@ public class RecipeIngredientService : IRecipeIngredientService
                 .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.ExternalId == recipeExternalId && r.OrganizationId == organizationId && !r.IsDeleted);
             if (recipe == null)
-                throw new InvalidOperationException($"Recipe with external ID {request.RecipeExternalId} not found or does not belong to organization");
+                throw new InvalidOperationException($"Recipe with external ID {safeRecipeId} not found or does not belong to organization");
 
             if (request.QuantityRequired <= 0)
                 throw new ArgumentException("Quantity required must be greater than 0");
@@ -103,13 +106,14 @@ public class RecipeIngredientService : IRecipeIngredientService
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Created recipe ingredient {ExternalId} for recipe {RecipeId}",
-                ingredient.ExternalId, request.RecipeExternalId);
+                ingredient.ExternalId, safeRecipeId);
 
             return MapToDto(ingredient, recipe.ExternalId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating recipe ingredient for recipe {RecipeId}", request.RecipeExternalId);
+            var safeRecipeId = StringSanitizer.SanitizeForLog(request.RecipeExternalId);
+            _logger.LogError(ex, "Error creating recipe ingredient for recipe {RecipeId}", safeRecipeId);
             throw;
         }
     }

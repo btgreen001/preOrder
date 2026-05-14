@@ -4,6 +4,7 @@ using PreOrderApp.Data;
 using PreOrderApp.DTOs;
 using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
+using PreOrderApp.Infrastructure;
 
 /// <summary>
 /// Service for terminal CRUD operations
@@ -203,11 +204,12 @@ public class TerminalService : ITerminalService
 
             if (string.IsNullOrWhiteSpace(request.Location))
                 throw new ArgumentException("Location is required");
+            string sanitizedTerminalCode = StringSanitizer.SanitizeForLog(request.TerminalCode.Trim());
 
             var newTerminal = new Terminal
             {
                 OrganizationId = organizationId,
-                TerminalCode = request.TerminalCode.Trim(),
+                TerminalCode = sanitizedTerminalCode,
                 Location = request.Location.Trim(),
                 TerminalUid = Guid.NewGuid(),
                 IsActive = true,
@@ -217,14 +219,13 @@ public class TerminalService : ITerminalService
 
             _context.Terminals.Add(newTerminal);
             await _context.SaveChangesAsync();
-
-            _logger.LogInformation("[TerminalService.CreateAsync] Created terminal {TerminalUid} ({TerminalCode}) for org {OrgId}",
-                newTerminal.TerminalUid, newTerminal.TerminalCode, organizationId);
+             _logger.LogInformation("[TerminalService.CreateAsync] Created terminal {TerminalUid} ({TerminalCode}) for org {OrgId}",
+                newTerminal.TerminalUid, sanitizedTerminalCode, organizationId);
 
             return new TerminalDto
             {
                 TerminalUid = newTerminal.TerminalUid,
-                TerminalCode = newTerminal.TerminalCode,
+                TerminalCode = sanitizedTerminalCode,
                 Location = newTerminal.Location,
                 IsActive = newTerminal.IsActive,
                 CreatedAt = newTerminal.CreatedAt,
@@ -234,9 +235,10 @@ public class TerminalService : ITerminalService
         catch (DbUpdateException ex) 
             when (ex.InnerException?.Message?.Contains("uk_terminal_org_code") == true)
             {
+                string sanitizedTerminalCode = StringSanitizer.SanitizeForLog(request.TerminalCode.Trim());
                 _logger.LogWarning("[TerminalService.CreateAsync] Duplicate terminal code '{TerminalCode}' for org {OrgId}", 
-                    request.TerminalCode, organizationId);
-                throw new ArgumentException($"A terminal with code '{request.TerminalCode}' already exists for this organization.");
+                    sanitizedTerminalCode, organizationId);
+                throw new ArgumentException($"A terminal with code '{sanitizedTerminalCode}' already exists for this organization.");
             }
         catch (Exception ex)
         {
