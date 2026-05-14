@@ -21,3 +21,12 @@ primary_region = 'iad'
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 256
+
+[processes]
+  app = []
+
+[deploy]
+  strategy = "rolling"
+
+[machines]
+  count = 1
