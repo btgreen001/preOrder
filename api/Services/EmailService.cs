@@ -68,8 +68,8 @@ public class EmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogError("SMTP credentials not configured. Username: {Username}, Password present: {HasPassword}", 
-                username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
+            _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}", 
+               !string.IsNullOrWhiteSpace(password));
             throw new InvalidOperationException("Invite email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
 
@@ -86,13 +86,13 @@ public class EmailService : IEmailService
 
         try
         {
-            _logger.LogInformation("Sending invite email to {Email}", toEmail);
+            _logger.LogInformation("Sending invite email to {Email}", toEmailFingerprint);
             await SendViaMailKitAsync(host, port, username, password, message);
-            _logger.LogInformation("Invite email sent successfully to {Email}", toEmail);
+            _logger.LogInformation("Invite email sent successfully to {Email}", toEmailFingerprint);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SMTP error sending to {Email}", toEmail);
+            _logger.LogError(ex, "SMTP error sending to {Email}", toEmailFingerprint);
             throw;
         }
     }
@@ -116,8 +116,8 @@ public class EmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogError("SMTP credentials not configured. Username: {Username}, Password present: {HasPassword}",
-                username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
+            _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}",
+                !string.IsNullOrWhiteSpace(password));
             throw new InvalidOperationException("Password reset SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
 
@@ -180,8 +180,8 @@ public class EmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogError("SMTP credentials not configured. Username: {Username}, Password present: {HasPassword}", 
-                username ?? "(empty)", !string.IsNullOrWhiteSpace(password));
+            _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}", 
+                !string.IsNullOrWhiteSpace(password));
             throw new InvalidOperationException("Order email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
         }
         var orderLink = BuildOrderLink(orderBaseUrl, externalId);
