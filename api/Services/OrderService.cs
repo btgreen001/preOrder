@@ -586,7 +586,8 @@ namespace PreOrderApp.Services
 
         public async Task<List<OrderDto>> GetOrdersByStatusAsync(Guid organizationId, string status)
         {
-            _logger.LogDebug($"Getting orders with status '{status}' for organization {organizationId}");
+            var sanitizedStatus = StringSanitizer.SanitizeForLog(status);
+            _logger.LogDebug($"Getting orders with status '{sanitizedStatus}' for organization {organizationId}");
             
             // Convert status to UPPERCASE to match database values (PENDING, PROCESSING, etc.)
             var statusUpper = status.ToUpper();

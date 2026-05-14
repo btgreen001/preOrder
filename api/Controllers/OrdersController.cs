@@ -371,8 +371,9 @@ namespace PreOrderApp.Controllers
         {
             try
             {
+                var sanitizedStatus = StringSanitizer.SanitizeForLog(status);
                 var organizationId = _orgContext.GetCurrentOrganizationId();
-                _logger.LogInformation($"Getting orders with status {status}");
+                _logger.LogInformation($"Getting orders with status {sanitizedStatus}");
                 
                 var orders = await _orderService.GetOrdersByStatusAsync(organizationId, status);
                 return Ok(orders);
