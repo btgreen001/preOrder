@@ -280,24 +280,26 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request, Guid? terminalId = null)
     {
+        string sanitizedUser = StringSanitizer.SanitizeForLog(request?.UserName);
         if (request == null)
         {
             _logger.LogWarning("[LoginAsync] Request payload was null.");
             return null;
         }
 
-        if (string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
+        if (string.IsNullOrWhiteSpace(sanitizedUser) || string.IsNullOrWhiteSpace(request.Password))
         {
             _logger.LogWarning("[LoginAsync] Username or password missing.");
             return null;
         }
-
-        _logger.LogInformation("[LoginAsync] Started. TerminalId from parameter: {TerminalId}, TerminalId from request: {RequestTerminalId}", terminalId, request.TerminalId);
+        string sanitizedTerminalId = terminalId.HasValue ? StringSanitizer.SanitizeForLog(terminalId.Value.ToString()) : "null";
+        _logger.LogInformation("[LoginAsync] Started. TerminalId from parameter: {TerminalId}, TerminalId from request: {RequestTerminalId}", sanitizedTerminalId, request.TerminalId);
 
         if (!terminalId.HasValue || terminalId == Guid.Empty)
         {
             terminalId = request.TerminalId;
-            _logger.LogInformation("[LoginAsync] Using TerminalId from request: {TerminalId}", terminalId);
+            string sanitizedRequestTerminalId = terminalId.HasValue ? StringSanitizer.SanitizeForLog(terminalId.Value.ToString()) : "null";
+            _logger.LogInformation("[LoginAsync] Using TerminalId from request: {TerminalId}", sanitizedRequestTerminalId);
         }
         var organizationId = Guid.Empty;
         try{
@@ -313,7 +315,7 @@ public class AuthService : IAuthService
 
         var query = _context.SystemUsers
             .AsNoTracking()
-            .Where(u => u.UserName == request.UserName);
+            .Where(u => u.UserName == sanitizedUser);
 
         if (organizationId != Guid.Empty)
         {
@@ -344,7 +346,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[LoginAsync] Password hash verification failed for user {UserName}", request.UserName);
+            _logger.LogWarning(ex, "[LoginAsync] Password hash verification failed for user {UserName}", sanitizedUser);
             return null;
         }
 
@@ -489,11 +491,18 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> RegisterUserAsync(RegisterUserRequest request)
     {
+        string sanitizedUserName = StringSanitizer.SanitizeForLog(request.UserName);
+        string sanitizedEmail = StringSanitizer.SanitizeForLog(request.Email);
+        string sanitizedCompanyRegistrationCode = StringSanitizer.SanitizeForLog(request.CompanyRegistrationCode);
+        // Bad user names don't go any further
+        if (sanitizedUserName != request.UserName)
+            throw new InvalidOperationException("Username is not valid.");
+
         // Validate registration code
         var registrationCode = await _context.RegistrationCodes
             .AsNoTracking()
             .Include(rc => rc.Organization)
-            .FirstOrDefaultAsync(rc => rc.Code == request.CompanyRegistrationCode && !rc.IsUsed);
+            .FirstOrDefaultAsync(rc => rc.Code == sanitizedCompanyRegistrationCode && !rc.IsUsed);
 
         if (registrationCode == null)
             throw new InvalidOperationException("Invalid registration code");
@@ -509,11 +518,11 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("Organization is disabled");
 
         // Check if email is already in use
-        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.EmailAddress == request.Email))
+        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.EmailAddress == sanitizedEmail))
             throw new InvalidOperationException("Email address is already in use");
 
         // Check if userName is already in use
-        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == request.UserName))
+        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == sanitizedUserName))
             throw new InvalidOperationException("Username is already in use");
 
         // Get active license subscription
@@ -537,14 +546,17 @@ public class AuthService : IAuthService
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
+        var sanitizedFirstName = StringSanitizer.SanitizeForLog(request.FirstName);
+        var sanitizedLastName = StringSanitizer.SanitizeForLog(request.LastName);
+
         var user = new SystemUser
         {
             UserId = Guid.NewGuid(),
-            EmailAddress = request.Email,
-            UserName = request.UserName,
+            EmailAddress = sanitizedEmail,
+            UserName = sanitizedUserName,
             PasswordHash = passwordHash,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
+            FirstName = sanitizedFirstName,
+            LastName = sanitizedLastName,
             OrganizationId = organization.OrganizationId,
             UserRole = UserRoles.User,
             IsEnabled = true,
@@ -576,34 +588,52 @@ public class AuthService : IAuthService
 
     public async Task<CompanyRegistrationResponse> RegisterCompanyAsync(RegisterCompanyRequest request)
     {
+        string sanitizedAdminUserName = StringSanitizer.SanitizeForLog(request.AdminUserName);
+        string sanitizedAdminEmail = StringSanitizer.SanitizeForLog(request.AdminEmail);
+        string sanitizedEmail = StringSanitizer.SanitizeForLog(request.Email);
+
+        // Bad user names don't go any further
+        if (sanitizedAdminUserName != request.AdminUserName)
+            throw new InvalidOperationException("Username is not valid.");
+
+
         // Check if company email is already in use
-        if (await _context.Organizations.AsNoTracking().AnyAsync(o => o.PrimaryEmail == request.Email))
+        if (await _context.Organizations.AsNoTracking().AnyAsync(o => o.PrimaryEmail == sanitizedEmail))
             throw new InvalidOperationException("Company email is already in use");
 
         // Check if admin email is already in use
-        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.EmailAddress == request.AdminEmail))
+        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.EmailAddress == sanitizedAdminEmail))
             throw new InvalidOperationException("Admin email is already in use");
 
         // Check if admin userName is already in use
-        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == request.AdminUserName))
+        if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == sanitizedAdminUserName))
             throw new InvalidOperationException("Username is already in use");
 
         // Create a unique registration token
         var registrationToken = Guid.NewGuid().ToString("N");
 
         // Create organization
+        var sanitizedCompanyName = StringSanitizer.SanitizeForLog(request.CompanyName);
+        var sanitizedAddressLine1 = StringSanitizer.SanitizeForLog(request.AddressLine1);
+        var sanitizedAddressLine2 = StringSanitizer.SanitizeForLog(request.AddressLine2);
+        var sanitizedAddressLine3 = StringSanitizer.SanitizeForLog(request.AddressLine3);
+        var sanitizedLocality = StringSanitizer.SanitizeForLog(request.Locality);
+        var sanitizedRegion = StringSanitizer.SanitizeForLog(request.Region);
+        var sanitizedPostalCode = StringSanitizer.SanitizeForLog(request.PostalCode);
+        var sanitizedCountryCode = StringSanitizer.SanitizeForLog(request.CountryCode);
+
         var organization = new Organization
         {
             OrganizationId = Guid.NewGuid(),
-            OrganizationName = request.CompanyName,
-            PrimaryEmail = request.Email,
-            AddressLine1 = request.AddressLine1,
-            AddressLine2 = request.AddressLine2,
-            AddressLine3 = request.AddressLine3,
-            Locality = request.Locality,
-            Region = request.Region,
-            PostalCode = request.PostalCode,
-            CountryCode = request.CountryCode,
+            OrganizationName = sanitizedCompanyName,
+            PrimaryEmail = sanitizedEmail,
+            AddressLine1 = sanitizedAddressLine1,
+            AddressLine2 = sanitizedAddressLine2,
+            AddressLine3 = sanitizedAddressLine3,
+            Locality = sanitizedLocality,
+            Region = sanitizedRegion,
+            PostalCode = sanitizedPostalCode,
+            CountryCode = sanitizedCountryCode,
             RegistrationToken = registrationToken,
             IsEnabled = true,
             CreatedOn = DateTime.UtcNow,
@@ -625,14 +655,16 @@ public class AuthService : IAuthService
 
         // Create admin user
         var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.AdminPassword);
+        var sanitizedFirstName = StringSanitizer.SanitizeForLog(request.AdminFirstName);
+        var sanitizedLastName = StringSanitizer.SanitizeForLog(request.AdminLastName);
         var adminUser = new SystemUser
         {
             UserId = Guid.NewGuid(),
-            EmailAddress = request.AdminEmail,
-            UserName = request.AdminUserName,
+            EmailAddress = sanitizedAdminEmail,
+            UserName = sanitizedAdminUserName,
             PasswordHash = adminPasswordHash,
-            FirstName = request.AdminFirstName,
-            LastName = request.AdminLastName,
+            FirstName = sanitizedFirstName,
+            LastName = sanitizedLastName,
             OrganizationId = organization.OrganizationId,
             UserRole = UserRoles.CompanyAdmin,
             IsEnabled = true,
