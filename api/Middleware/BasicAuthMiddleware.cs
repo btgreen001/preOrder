@@ -24,10 +24,11 @@ namespace PreOrderApp.Middleware
         {
             var logger = context.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILogger<BasicAuthMiddleware>)) as Microsoft.Extensions.Logging.ILogger;
             string sanitizedPath = StringSanitizer.SanitizeForLog(context.Request.Path);
+            string sanitizedMethod = StringSanitizer.SanitizeForLog(context.Request.Method);
             // Allow anonymous access to some public endpoints (health, root, ping, swagger, registration)
             var path = sanitizedPath.ToString().ToLowerInvariant();
 
-            logger?.LogDebug("[BasicAuth] Incoming request: {Method} {Path}", context.Request.Method, path);
+            logger?.LogDebug("[BasicAuth] Incoming request: {Method} {Path}", sanitizedMethod, path);
 
             if (context.Request.Headers.ContainsKey(AUTH_HEADER))
             {
