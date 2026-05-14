@@ -4,6 +4,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using PreOrderApp.Data;
 using PreOrderApp.Models;
+using PreOrderApp.Infrastructure;
 
 namespace PreOrderApp.Middleware;
 
@@ -22,7 +23,8 @@ public class SessionValidationMiddleware
     {
         try
         {
-            var path = context.Request.Path.ToString().ToLowerInvariant();
+            string sanitizedPath = StringSanitizer.SanitizeForLog(context.Request.Path);
+            var path = sanitizedPath.ToString().ToLowerInvariant();
 
             if (IsBypassedPath(context))
             {
