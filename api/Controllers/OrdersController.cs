@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using PreOrderApp.Services;
 using PreOrderApp.Services.Interfaces;
 using PreOrderApp.Filters;
+using PreOrderApp.Infrastructure;
+
 namespace PreOrderApp.Controllers
 {
     [ApiController]
@@ -133,14 +135,15 @@ namespace PreOrderApp.Controllers
         [ValidateTenantAccess]
         public async Task<IActionResult> UpdateOrderStatus(Guid externalId, [FromBody] UpdateOrderStatusRequest request)
         {
+            var sanitizedNewStatus = StringSanitizer.SanitizeForLog(request?.NewStatus);
             try
             {
-                if (string.IsNullOrWhiteSpace(request?.NewStatus))
+                if (string.IsNullOrWhiteSpace(sanitizedNewStatus))
                     return BadRequest(new { error = "newStatus is required" });
 
-                _logger.LogInformation($"Updating order {externalId} status to {request.NewStatus}");
+                _logger.LogInformation($"Updating order {externalId} status to {sanitizedNewStatus}");
                 
-                var order = await _orderService.UpdateOrderStatusAsync(externalId, request.NewStatus);
+                var order = await _orderService.UpdateOrderStatusAsync(externalId, sanitizedNewStatus);
                 if (order == null)
                     return NotFound(new { error = "Order not found" });
                 
@@ -220,11 +223,14 @@ namespace PreOrderApp.Controllers
         {
             try
             {
+                if (request.Quantity <= 0)
+                    return BadRequest(new { error = "Quantity must be greater than zero" });
+                
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
-
+                var sanitizedInventoryItemId = StringSanitizer.SanitizeForLog(request.InventoryItemExternalId.ToString("D"));
                 var organizationId = _orgContext.GetCurrentOrganizationId();
-                _logger.LogInformation($"Checking availability for item {request.InventoryItemExternalId}");
+                _logger.LogInformation($"Checking availability for item {sanitizedInventoryItemId}");
                 
                 var response = await _orderService.CheckAvailabilityAsync(organizationId, request.InventoryItemExternalId, request.Quantity);
                 return Ok(response);
@@ -325,10 +331,12 @@ namespace PreOrderApp.Controllers
         {
             try
             {
+                
                 if (request == null || request.PickupSlotExternalId == Guid.Empty)
                     return BadRequest(new { error = "pickupSlotExternalId is required" });
 
-                _logger.LogInformation($"Changing pickup slot for order {externalId} to {request.PickupSlotExternalId}");
+                var sanitizedPickupSlotExternalId = StringSanitizer.SanitizeForLog(request.PickupSlotExternalId.ToString("D"));
+                _logger.LogInformation($"Changing pickup slot for order {externalId} to {sanitizedPickupSlotExternalId}");
 
                 var order = await _orderService.ChangePickupSlotAsync(externalId, request.PickupSlotExternalId);
                 if (order == null)
