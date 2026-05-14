@@ -23,8 +23,11 @@ namespace PreOrderApp.Middleware
         public async Task InvokeAsync(HttpContext context)
         {
             var logger = context.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILogger<BasicAuthMiddleware>)) as Microsoft.Extensions.Logging.ILogger;
+            string sanitizedPath = StringSanitizer.SanitizeForLog(context.Request.Path);
+            // Allow anonymous access to some public endpoints (health, root, ping, swagger, registration)
+            var path = sanitizedPath.ToString().ToLowerInvariant();
 
-            logger?.LogDebug("[BasicAuth] Incoming request: {Method} {Path}", context.Request.Method, context.Request.Path);
+            logger?.LogDebug("[BasicAuth] Incoming request: {Method} {Path}", context.Request.Method, path);
 
             if (context.Request.Headers.ContainsKey(AUTH_HEADER))
             {
@@ -35,8 +38,6 @@ namespace PreOrderApp.Middleware
             {
                 logger?.LogWarning("[BasicAuth] Missing Authorization Header");
             }
-            // Allow anonymous access to some public endpoints (health, root, ping, swagger, registration)
-            var path = context.Request.Path.ToString().ToLowerInvariant();
 
             if (IsBypassedPath(context))
             {
