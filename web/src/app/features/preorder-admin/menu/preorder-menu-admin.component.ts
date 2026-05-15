@@ -39,15 +39,35 @@ export class PreorderMenuAdminComponent implements OnInit {
     productExternalId: null,
     name: '',
     description: '',
-    price: 0,
+    price: 0.00,
     maxPerOrder: null,
     sortOrder: 0,
     isActive: true
   };
 
   ngOnInit(): void {
+    this.setDefaults();
     this.loadHolidayEvents();
     this.loadSellableProducts();
+  }
+
+  setDefaults(): void {
+    this.selectedHolidayEventExternalId = '';
+    this.editingExternalId = null;
+    this.isLoading = false;
+    this.isSaving = false;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.form = {
+      holidayEventExternalId: '',
+      productExternalId: null,
+      name: '',
+      description: '',
+      price: 0.00,
+      maxPerOrder: 1,
+      sortOrder: 1,
+      isActive: true
+    };
   }
 
   loadHolidayEvents(): void {
@@ -114,9 +134,9 @@ export class PreorderMenuAdminComponent implements OnInit {
       productExternalId: null,
       name: '',
       description: '',
-      price: 0,
-      maxPerOrder: null,
-      sortOrder: 0,
+      price: 0.00,
+      maxPerOrder: 1,
+      sortOrder: 1,
       isActive: true
     };
   }

@@ -28,13 +28,20 @@
           <input matInput type="password" formControlName="password" data-testid="password-input" />
         </mat-form-field>
 
-        <button mat-flat-button class="spotify-btn" type="submit" data-testid="login-submit-button">Log in</button>
+        <button mat-flat-button class="spotify-btn events-primary-btn" type="submit" data-testid="login-submit-button">Log in</button>
+
+        <div class="or-divider" aria-hidden="true">
+          <span>Or</span>
+        </div>
+
+        <button mat-stroked-button class="register-btn" type="button" routerLink="/company-register" data-testid="register-button">
+          Register Now!
+        </button>
       </form>
 
       <mat-card-actions class="card-actions">
         <a routerLink="/forgot-password" data-testid="forgot-password-link">Forgot password?</a>
         <a routerLink="/reset-password" data-testid="reset-password-link">Reset with code</a>
-        <a routerLink="/company-register" data-testid="register-link">Register Now</a>
       </mat-card-actions>
     </mat-card>
   </div>

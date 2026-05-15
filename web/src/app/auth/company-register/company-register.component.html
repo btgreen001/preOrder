@@ -4,10 +4,11 @@
     <mat-card class="spotify-card">
       <div class="card-header">
         <h2>Register Your Company</h2>
-        <p class="muted">Create your company account and an admin user</p>
+        <p class="muted">Create your company account and an administrator login</p>
       </div>
 
       <form [formGroup]="companyRegisterForm" (ngSubmit)="onSubmit()" class="register-form">
+       <div class="section-label"><strong>Company Information</strong></div>
         <div class="section"> 
           <mat-form-field appearance="outline" class="full">
             <mat-label>Company Name</mat-label>
@@ -54,7 +55,7 @@
         </div>
 
         <div class="section">
-          <label class="section-label">Admin Account</label>
+          <div class="section-label"><strong>Administrator Account</strong></div>
           <div class="row">
             <mat-form-field appearance="outline" class="half">
               <mat-label>First Name</mat-label>
@@ -88,6 +89,10 @@
         <button mat-flat-button class="spotify-btn" type="submit" [disabled]="companyRegisterForm.invalid || isLoading">
           <span *ngIf="!isLoading">Register Company</span>
         </button>
+
+        <div class="success" *ngIf="successMessage">
+          <span class="success-icon">✓</span> {{ successMessage }}
+        </div>
 
         <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
       </form>

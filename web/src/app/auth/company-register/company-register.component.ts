@@ -44,6 +44,8 @@ export class CompanyRegisterComponent {
   companyRegisterForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
+  redirectCountdown = 8;
   
   licenseTiers: LicenseTier[] = [
     {
@@ -161,8 +163,17 @@ export class CompanyRegisterComponent {
     this.authService.registerCompany(companyRegistration).subscribe({
       next: () => {
         this.isLoading = false;
-        // Navigate to dashboard or confirmation page
-        this.router.navigate(['/admin/events']);
+        this.redirectCountdown = 4;
+        this.successMessage = `Registration successful! Redirecting to login in ${this.redirectCountdown}…`;
+        const interval = setInterval(() => {
+          this.redirectCountdown--;
+          if (this.redirectCountdown > 0) {
+            this.successMessage = `Registration successful! Redirecting to login in ${this.redirectCountdown}…`;
+          } else {
+            clearInterval(interval);
+            this.router.navigate(['/login']);
+          }
+        }, 1000);
       },
       error: (error) => {
         this.isLoading = false;

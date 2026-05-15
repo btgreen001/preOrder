@@ -31,17 +31,25 @@
 
       <label>
         Ordering Opens
-        <input [(ngModel)]="form.opensAt" type="datetime-local" />
+        <input 
+          [(ngModel)]="form.opensAt" 
+          (ngModelChange)="syncClose()" 
+          type="datetime-local" 
+        />
       </label>
 
       <label>
         Ordering Closes
-        <input [(ngModel)]="form.closesAt" type="datetime-local" />
+        <input [(ngModel)]="form.closesAt" 
+          (ngModelChange)="syncPickup()" 
+          type="datetime-local" />
       </label>
 
       <label>
         Pickup Start Date
-        <input [(ngModel)]="form.pickupStartDt" type="date" />
+        <input [(ngModel)]="form.pickupStartDt" 
+        (ngModelChange)="syncPickupEnd()" 
+        type="date" />
       </label>
 
       <label>

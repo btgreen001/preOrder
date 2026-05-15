@@ -492,8 +492,8 @@ public class AuthService : IAuthService
     public async Task<AuthResponse> RegisterUserAsync(RegisterUserRequest request)
     {
         string sanitizedUserName = StringSanitizer.SanitizeForLog(request.UserName);
-        string sanitizedEmail = StringSanitizer.SanitizeForLog(request.Email);
-        string sanitizedCompanyRegistrationCode = StringSanitizer.SanitizeForLog(request.CompanyRegistrationCode);
+        string sanitizedEmail = StringSanitizer.SanitizeForUse(request.Email);
+        string sanitizedCompanyRegistrationCode = StringSanitizer.SanitizeForUse(request.CompanyRegistrationCode);
         // Bad user names don't go any further
         if (sanitizedUserName != request.UserName)
             throw new InvalidOperationException("Username is not valid.");
@@ -588,9 +588,9 @@ public class AuthService : IAuthService
 
     public async Task<CompanyRegistrationResponse> RegisterCompanyAsync(RegisterCompanyRequest request)
     {
-        string sanitizedAdminUserName = StringSanitizer.SanitizeForLog(request.AdminUserName);
-        string sanitizedAdminEmail = StringSanitizer.SanitizeForLog(request.AdminEmail);
-        string sanitizedEmail = StringSanitizer.SanitizeForLog(request.Email);
+        string sanitizedAdminUserName = StringSanitizer.SanitizeForUse(request.AdminUserName);
+        string sanitizedAdminEmail = StringSanitizer.SanitizeForUse(request.AdminEmail);
+        string sanitizedEmail = StringSanitizer.SanitizeForUse(request.Email);
 
         // Bad user names don't go any further
         if (sanitizedAdminUserName != request.AdminUserName)
@@ -613,12 +613,12 @@ public class AuthService : IAuthService
         var registrationToken = Guid.NewGuid().ToString("N");
 
         // Create organization
-        var sanitizedCompanyName = StringSanitizer.SanitizeForLog(request.CompanyName);
-        var sanitizedAddressLine1 = StringSanitizer.SanitizeForLog(request.AddressLine1);
-        var sanitizedAddressLine2 = StringSanitizer.SanitizeForLog(request.AddressLine2);
-        var sanitizedAddressLine3 = StringSanitizer.SanitizeForLog(request.AddressLine3);
-        var sanitizedLocality = StringSanitizer.SanitizeForLog(request.Locality);
-        var sanitizedRegion = StringSanitizer.SanitizeForLog(request.Region);
+        var sanitizedCompanyName = StringSanitizer.SanitizeForUse(request.CompanyName);
+        var sanitizedAddressLine1 = StringSanitizer.SanitizeForUse(request.AddressLine1);
+        var sanitizedAddressLine2 = StringSanitizer.SanitizeForUse(request.AddressLine2);
+        var sanitizedAddressLine3 = StringSanitizer.SanitizeForUse(request.AddressLine3);
+        var sanitizedLocality = StringSanitizer.SanitizeForUse(request.Locality);
+        var sanitizedRegion = StringSanitizer.SanitizeForUse(request.Region);
         var sanitizedPostalCode = StringSanitizer.SanitizeForLog(request.PostalCode);
         var sanitizedCountryCode = StringSanitizer.SanitizeForLog(request.CountryCode);
 

@@ -20,6 +20,32 @@ public static class StringSanitizer
         if (trimmed.Length == 0)
             return "invalid";
 
-        return trimmed.Length > 40 ? trimmed[..40] + "..." : trimmed;
+        return trimmed.Length > 200 ? trimmed[..200] + "..." : trimmed;
     }
+    public static string SanitizeForUse(string? value, int maxLength = 100)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        // Trim whitespace at ends
+        var trimmed = value.Trim();
+
+        // Remove control characters (ASCII < 32 or == 127)
+        trimmed = new string(trimmed.Where(c => !char.IsControl(c)).ToArray());
+
+        // Optionally collapse weird whitespace (tabs, newlines)
+        trimmed = trimmed
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace("\t", "");
+
+        // Enforce a reasonable max length
+        if (trimmed.Length > maxLength)
+            trimmed = trimmed[..maxLength] + "...";
+
+        return trimmed;
+    }
+
+
+
 }

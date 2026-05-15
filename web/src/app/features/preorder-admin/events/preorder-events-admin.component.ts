@@ -41,6 +41,13 @@ export class PreorderEventsAdminComponent implements OnInit {
   loadEvents(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(-4, 0, 0, 0);
+
+    // Format for datetime-local
+    this.form.opensAt = tomorrow.toISOString().slice(0, 16);
+    this.form.closesAt = tomorrow.toISOString().slice(0, 16);
 
     this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
@@ -68,6 +75,33 @@ export class PreorderEventsAdminComponent implements OnInit {
     };
   }
 
+  syncClose() {
+    // If opensAt is empty, do nothing
+    if (!this.form.opensAt) return;
+
+    // Copy the value directly
+    this.form.closesAt = this.form.opensAt;
+    this.form.pickupStartDt = this.form.closesAt?.split('T')[0] ?? '';
+    this.form.pickupEndDt   = this.form.closesAt?.split('T')[0] ?? '';
+
+  }
+  syncPickup() {
+    // If closesAt is empty, do nothing
+    if (!this.form.closesAt) return;
+
+    // Copy the value directly
+    this.form.pickupStartDt = this.form.closesAt?.split('T')[0] ?? '';
+    this.form.pickupEndDt   = this.form.closesAt?.split('T')[0] ?? '';
+
+  }
+  syncPickupEnd() {
+    // If pickupStartDt is empty, do nothing
+    if (!this.form.pickupStartDt) return;
+
+    // Copy the value directly
+    this.form.pickupEndDt   = this.form.pickupStartDt;
+
+  }
   startEdit(event: AdminHolidayEvent): void {
     this.editingExternalId = event.externalId;
     this.successMessage = '';

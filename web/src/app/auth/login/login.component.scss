@@ -102,16 +102,81 @@ mat-label {
 
 .spotify-btn {
   width: 100%;
-  background: var(--bakery-accent);
-  color: var(--bakery-text-emph);
+  color: #fff;
   margin-top: 12px;
   font-weight: 700;
-  border: 1px solid var(--bakery-text-muted);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  min-height: 44px;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+}
+
+.events-primary-btn {
+  background: var(--bakery-primary);
+  border-color: var(--bakery-primary);
+}
+
+.events-primary-btn.mat-mdc-unelevated-button:not(:disabled):hover {
+  background: var(--bakery-primary-subtle) !important;
+  border-color: var(--bakery-primary-subtle) !important;
+  box-shadow: 0 4px 12px rgba(200, 112, 58, 0.35);
+}
+
+.events-primary-btn.mat-mdc-unelevated-button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.or-divider {
+  position: relative;
+  margin: 2px 0;
+  text-align: center;
+}
+
+.or-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid var(--bakery-primary);
+  opacity: 0.35;
+}
+
+.or-divider span {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0 12px;
+  background: var(--bakery-surface);
+  color: var(--bakery-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.register-btn {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 8px;
+  border-color: var(--bakery-border);
+  color: var(--bakery-primary);
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.register-btn.mat-mdc-outlined-button:not(:disabled):hover {
+  background: var(--bakery-primary-light) !important;
+  border-color: var(--bakery-primary) !important;
+  color: var(--bakery-primary-subtle) !important;
+  box-shadow: 0 4px 12px rgba(200, 112, 58, 0.18);
 }
 
 .card-actions {
   display: flex;
   justify-content: center;
+  gap: 18px;
   margin-top: 12px;
 }
 
