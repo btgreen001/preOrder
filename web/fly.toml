@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for preorder-web on 2026-05-08T11:53:33Z
+# fly.toml app configuration file generated for preorder-web on 2026-05-24T20:16:18Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -17,10 +17,11 @@ primary_region = 'iad'
   min_machines_running = 1
 
 [[vm]]
-  memory = '256mb'
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 256
+  memory_mb = 512
+  size = 'shared-cpu-1x'
 
 [processes]
   app = []
