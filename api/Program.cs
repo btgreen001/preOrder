@@ -326,14 +326,19 @@ var applyMigrations = string.Equals(
     "true",
     StringComparison.OrdinalIgnoreCase);
 
-applyMigrations = true;
-
 if (applyMigrations)
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
-    db.Database.Migrate();
-    Console.WriteLine("INFO: Automatic EF migrations applied (set APPLY_MIGRATIONS_ON_STARTUP=true to enable).");
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
+        db.Database.Migrate();
+        Console.WriteLine("INFO: Automatic EF migrations applied.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"WARNING: Automatic EF migrations failed: {ex.Message}");
+    }
 }
 else
 {
@@ -407,125 +412,130 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PreOrderApp.Data.AppDbContext>();
-    bool hasUsers = false;
-    try { hasUsers = db.SystemUsers.Any(); }
-    catch (Exception ex)
+    if (!db.Database.CanConnect())
     {
-        Console.WriteLine($"WARNING: Could not check for existing users (schema may not be initialized): {ex.Message}");
-        Console.WriteLine("INFO: Skipping admin seed. Apply schema_ddl.sql to the database first.");
+        Console.WriteLine($"WARNING: Skipping admin seed because database is unavailable at {dbHost}:{dbPort}/{dbName}.");
     }
-    if (!hasUsers)
+    else
     {
-        // Seed a default organization
-        var orgId = Guid.NewGuid();
-        var org = new PreOrderApp.Models.Organization
+        bool hasUsers = false;
+        try { hasUsers = db.SystemUsers.Any(); }
+        catch (Exception ex)
         {
-            OrganizationId = orgId,
-            OrganizationName = "Default Organization",
-            PrimaryEmail = "gandssoftware@gmail.com",
-            AddressLine1 = "123 Main St",
-            Locality = "City",
-            Region = "Region",
-            PostalCode = "00000",
-            CountryCode = "US",
-            RegistrationToken = Guid.NewGuid().ToString(),
-            IsEnabled = true,
-            CreatedOn = DateTime.UtcNow,
-            ModifiedOn = DateTime.UtcNow
-        };
-        db.Organizations.Add(org);
-        db.SaveChanges();
-
-        // Seed the admin user with the org's OrganizationId
-        var adminUser = new PreOrderApp.Models.SystemUser
-        {
-            UserId = Guid.NewGuid(),
-            UserName = "admin",
-            EmailAddress = "gandssoftware@gmail.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-            FirstName = "System",
-            LastName = "Administrator",
-            OrganizationId = orgId,
-            UserRole = "SystemAdmin",
-            IsEnabled = true,
-            CreatedOn = DateTime.UtcNow
-        };
-        db.SystemUsers.Add(adminUser);
-        db.SaveChanges();
-    }
-
-    // Developer helper: if a SQL script to recreate test users exists, run it to ensure simple test accounts are present.
-    try
-    {
-        var scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", "Scripts", "recreate-test-users-postgres.sql");
-        if (!File.Exists(scriptPath))
-        {
-            // fallback: script next to project folder in repo
-            scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "Database", "Scripts", "recreate-test-users-postgres.sql");
+            Console.WriteLine($"WARNING: Could not check for existing users (schema may not be initialized): {ex.Message}");
+            Console.WriteLine("INFO: Skipping admin seed. Apply schema_ddl.sql to the database first.");
         }
-
-        if (File.Exists(scriptPath))
+        if (!hasUsers)
         {
-            var sql = File.ReadAllText(scriptPath);
-            var parts = sql.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var part in parts)
+            // Seed a default organization
+            var orgId = Guid.NewGuid();
+            var org = new PreOrderApp.Models.Organization
             {
-                var stmt = part.Trim();
-                if (string.IsNullOrWhiteSpace(stmt)) continue;
-                try
-                {
-                    db.Database.ExecuteSqlRaw(stmt + ";");
-                }
-                catch (Exception ex)
-                {
-                    // Log and continue
-                    var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
-                    logger?.LogWarning(ex, "Failed to execute SQL statement from recreate-test-users.sql: {Statement}", stmt.Length > 200 ? stmt.Substring(0, 200) + "..." : stmt);
-                }
-            }
+                OrganizationId = orgId,
+                OrganizationName = "Default Organization",
+                PrimaryEmail = "gandssoftware@gmail.com",
+                AddressLine1 = "123 Main St",
+                Locality = "City",
+                Region = "Region",
+                PostalCode = "00000",
+                CountryCode = "US",
+                RegistrationToken = Guid.NewGuid().ToString(),
+                IsEnabled = true,
+                CreatedOn = DateTime.UtcNow,
+                ModifiedOn = DateTime.UtcNow
+            };
+            db.Organizations.Add(org);
+            db.SaveChanges();
+
+            // Seed the admin user with the org's OrganizationId
+            var adminUser = new PreOrderApp.Models.SystemUser
+            {
+                UserId = Guid.NewGuid(),
+                UserName = "admin",
+                EmailAddress = "gandssoftware@gmail.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
+                FirstName = "System",
+                LastName = "Administrator",
+                OrganizationId = orgId,
+                UserRole = "SystemAdmin",
+                IsEnabled = true,
+                CreatedOn = DateTime.UtcNow
+            };
+            db.SystemUsers.Add(adminUser);
             db.SaveChanges();
         }
-    }
-    catch (Exception ex)
-    {
-        var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
-        logger?.LogWarning(ex, "Error running recreate-test-users.sql (dev helper)");
-    }
 
-    // Primary-path bootstrap for TODO-1032 (Unit Conversion):
-    // Ensure the unit_conversion table + global seed rows exist on startup.
-    // Script is idempotent (CREATE IF NOT EXISTS + upsert-style seed).
-    try
-    {
-        var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
-        var unitSeedFile = "20260227_TODO1032_UnitConversionSeed.sql";
-        var candidateUnitSeedPaths = new[]
+        // Developer helper: if a SQL script to recreate test users exists, run it to ensure simple test accounts are present.
+        try
         {
-            Path.Combine(AppContext.BaseDirectory, "Database", unitSeedFile),
-            Path.Combine(Directory.GetCurrentDirectory(), "Database", unitSeedFile),
-            Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", unitSeedFile)
-        };
+            var scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", "Scripts", "recreate-test-users-postgres.sql");
+            if (!File.Exists(scriptPath))
+            {
+                // fallback: script next to project folder in repo
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "Database", "Scripts", "recreate-test-users-postgres.sql");
+            }
 
-        var unitSeedPath = candidateUnitSeedPaths.FirstOrDefault(File.Exists);
-
-        if (!string.IsNullOrWhiteSpace(unitSeedPath))
-        {
-            var sql = File.ReadAllText(unitSeedPath);
-            db.Database.ExecuteSqlRaw(sql);
-            logger?.LogInformation("Applied unit conversion bootstrap SQL from {Path}", unitSeedPath);
+            if (File.Exists(scriptPath))
+            {
+                var sql = File.ReadAllText(scriptPath);
+                var parts = sql.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var part in parts)
+                {
+                    var stmt = part.Trim();
+                    if (string.IsNullOrWhiteSpace(stmt)) continue;
+                    try
+                    {
+                        db.Database.ExecuteSqlRaw(stmt + ";");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log and continue
+                        var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
+                        logger?.LogWarning(ex, "Failed to execute SQL statement from recreate-test-users.sql: {Statement}", stmt.Length > 200 ? stmt.Substring(0, 200) + "..." : stmt);
+                    }
+                }
+                db.SaveChanges();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            logger?.LogWarning("Unit conversion bootstrap SQL not found. Checked paths: {Paths}", string.Join(" | ", candidateUnitSeedPaths));
+            var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
+            logger?.LogWarning(ex, "Error running recreate-test-users.sql (dev helper)");
+        }
+
+        // Primary-path bootstrap for TODO-1032 (Unit Conversion):
+        // Ensure the unit_conversion table + global seed rows exist on startup.
+        // Script is idempotent (CREATE IF NOT EXISTS + upsert-style seed).
+        try
+        {
+            var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
+            var unitSeedFile = "20260227_TODO1032_UnitConversionSeed.sql";
+            var candidateUnitSeedPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "Database", unitSeedFile),
+                Path.Combine(Directory.GetCurrentDirectory(), "Database", unitSeedFile),
+                Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", unitSeedFile)
+            };
+
+            var unitSeedPath = candidateUnitSeedPaths.FirstOrDefault(File.Exists);
+
+            if (!string.IsNullOrWhiteSpace(unitSeedPath))
+            {
+                var sql = File.ReadAllText(unitSeedPath);
+                db.Database.ExecuteSqlRaw(sql);
+                logger?.LogInformation("Applied unit conversion bootstrap SQL from {Path}", unitSeedPath);
+            }
+            else
+            {
+                logger?.LogWarning("Unit conversion bootstrap SQL not found. Checked paths: {Paths}", string.Join(" | ", candidateUnitSeedPaths));
+            }
+        }
+        catch (Exception ex)
+        {
+            var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
+            logger?.LogWarning(ex, "Error applying unit conversion bootstrap SQL");
         }
     }
-    catch (Exception ex)
-    {
-        var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILogger<Program>)) as Microsoft.Extensions.Logging.ILogger;
-        logger?.LogWarning(ex, "Error applying unit conversion bootstrap SQL");
-    }
-
-    
 }
 
 // Configure middleware

@@ -164,6 +164,22 @@ export interface CreateRegistrationCodeRequest {
   expiryDays: number;
 }
 
+export interface AdminOrganizationMember {
+  userId: string;
+  userName: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  userRole: string;
+  isEnabled: boolean;
+  createdOn: string;
+  lastLoginOn?: string | null;
+}
+
+export interface PasswordConfirmRequest {
+  password: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -258,5 +274,17 @@ export class PreorderAdminService {
 
   resendRegistrationCode(orgId: string, codeId: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.organizationsUrl}/${orgId}/registration-codes/${codeId}/resend`, {});
+  }
+
+  getOrganizationMembers(orgId: string): Observable<AdminOrganizationMember[]> {
+    return this.http.get<AdminOrganizationMember[]>(`${this.organizationsUrl}/${orgId}/members`);
+  }
+
+  deactivateOrganizationMember(orgId: string, userId: string, request: PasswordConfirmRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.organizationsUrl}/${orgId}/members/${userId}/deactivate`, request);
+  }
+
+  reactivateOrganizationMember(orgId: string, userId: string, request: PasswordConfirmRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.organizationsUrl}/${orgId}/members/${userId}/reactivate`, request);
   }
 }

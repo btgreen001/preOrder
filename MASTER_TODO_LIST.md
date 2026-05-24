@@ -19,6 +19,20 @@
   - Expired/no-session requests still correctly surface `401` and require login.
   - Invite create/resend with unreachable SMTP should fail fast instead of producing `504` after long wait.
 
+- Invite/member administration enhancements completed:
+  - Added organization member admin endpoints for company/system admins:
+    - `GET /api/organization/{orgId}/members`
+    - `POST /api/organization/{orgId}/members/{memberUserId}/deactivate`
+    - `POST /api/organization/{orgId}/members/{memberUserId}/reactivate`
+  - Deactivate/reactivate now requires admin password confirmation and logs audit entries.
+  - Updated `/admin/invites` to include members table with remove/restore access actions.
+  - Sensitive actions on invites page now use password confirmation prompt.
+
+- Registration-code status wiring fix completed:
+  - Root cause: registration code in `RegisterUserAsync` was queried with `AsNoTracking`, so `IsUsed/UsedOn` updates were not persisted.
+  - Fix: removed `AsNoTracking` from registration code lookup in `AuthService`.
+  - Result: invite `Status` and `Used On` now update correctly once a code is consumed.
+
 ## Recommended Starting Point
 Start with a focused carve-out phase, not with payments or polished UI.
 

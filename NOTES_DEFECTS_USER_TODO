@@ -20,6 +20,22 @@ Node.js 20 will be deprecated in the future.
 	- `api/appsettings.Development.json`
 	- `api/appsettings.Production.json`
 
+## 2026-05-24 Invite Status + Member Admin Update
+
+- Fixed issue where invite `Status` and `Used On` did not update after staff registration.
+	- Root cause: `RegisterUserAsync` loaded `RegistrationCode` with `AsNoTracking()`, so `IsUsed/UsedOn` changes were not tracked.
+	- Fix applied in `api/Services/AuthService.cs` by removing `AsNoTracking()` from code lookup.
+
+- Expanded `/admin/invites` into invite + member administration screen:
+	- Added organization member list and access controls (deactivate/reactivate).
+	- Added password confirmation modal for sensitive actions.
+	- Added periodic refresh so invite status/used-on data stays current while page is open.
+
+- Backend org-member endpoints added:
+	- `GET /api/organization/{orgId}/members`
+	- `POST /api/organization/{orgId}/members/{memberUserId}/deactivate`
+	- `POST /api/organization/{orgId}/members/{memberUserId}/reactivate`
+
 Then in container web server config (Nginx or similar): /api -> http://preorder-api:5124
 
 

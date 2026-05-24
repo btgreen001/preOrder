@@ -500,7 +500,6 @@ public class AuthService : IAuthService
 
         // Validate registration code
         var registrationCode = await _context.RegistrationCodes
-            .AsNoTracking()
             .Include(rc => rc.Organization)
             .FirstOrDefaultAsync(rc => rc.Code == sanitizedCompanyRegistrationCode && !rc.IsUsed);
 

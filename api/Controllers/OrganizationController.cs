@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PreOrderApp.Services;
 using PreOrderApp.Models;
+using BCrypt.Net;
 namespace PreOrderApp.Controllers
 {
     [ApiController]
@@ -14,17 +15,20 @@ namespace PreOrderApp.Controllers
         private readonly PreOrderApp.Data.AppDbContext _context;
         private readonly IOrganizationContextService _orgContext;
         private readonly IEmailService _emailService;
+        private readonly IAuthService _authService;
 
         public OrganizationController(
             IOrganizationService organizationService,
             PreOrderApp.Data.AppDbContext context,
             IOrganizationContextService orgContext,
-            IEmailService emailService)
+            IEmailService emailService,
+            IAuthService authService)
         {
             _organizationService = organizationService;
             _context = context;
             _orgContext = orgContext;
             _emailService = emailService;
+            _authService = authService;
         }
 
         [HttpGet("{id}")]
@@ -303,6 +307,174 @@ namespace PreOrderApp.Controllers
             return Ok(codes);
         }
 
+        [HttpGet("{orgId}/members")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<ActionResult<IEnumerable<OrganizationMemberResponse>>> GetOrganizationMembers(Guid orgId)
+        {
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(_orgContext.GetCurrentUserId(), orgId))
+                return Forbid();
+
+            var members = await _context.SystemUsers
+                .AsNoTracking()
+                .Where(u => u.OrganizationId == orgId)
+                .OrderByDescending(u => u.IsEnabled)
+                .ThenBy(u => u.LastName)
+                .ThenBy(u => u.FirstName)
+                .ThenBy(u => u.UserName)
+                .Select(u => new OrganizationMemberResponse
+                {
+                    UserId = u.UserId,
+                    UserName = u.UserName,
+                    Email = u.EmailAddress,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    UserRole = u.UserRole,
+                    IsEnabled = u.IsEnabled,
+                    CreatedOn = u.CreatedOn,
+                    LastLoginOn = u.LastLoginOn
+                })
+                .ToListAsync();
+
+            return Ok(members);
+        }
+
+        [HttpPost("{orgId}/members/{memberUserId}/deactivate")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> DeactivateOrganizationMember(Guid orgId, Guid memberUserId, [FromBody] AdminPasswordConfirmRequest request)
+        {
+            var actorUserId = _orgContext.GetCurrentUserId();
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(actorUserId, orgId))
+                return Forbid();
+
+            var isSelfDeactivation = memberUserId == actorUserId;
+
+            var actorUser = await _context.SystemUsers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == actorUserId && u.OrganizationId == orgId);
+
+            if (actorUser == null || string.IsNullOrWhiteSpace(actorUser.PasswordHash))
+            {
+                return Unauthorized("Admin account could not be verified.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password) || !BCrypt.Net.BCrypt.Verify(request.Password, actorUser.PasswordHash))
+            {
+                return BadRequest("Password confirmation failed.");
+            }
+
+            var member = await _context.SystemUsers
+                .FirstOrDefaultAsync(u => u.UserId == memberUserId && u.OrganizationId == orgId);
+
+            if (member == null)
+            {
+                return NotFound("Member not found.");
+            }
+
+            if (!member.IsEnabled)
+            {
+                return Ok(new { message = "Member already deactivated." });
+            }
+
+            var isLastActiveCompanyAdminSelfDeactivation = false;
+            if (isSelfDeactivation && member.UserRole == UserRoles.CompanyAdmin)
+            {
+                var activeCompanyAdminCount = await _context.SystemUsers
+                    .AsNoTracking()
+                    .CountAsync(u => u.OrganizationId == orgId && u.IsEnabled && u.UserRole == UserRoles.CompanyAdmin);
+
+                isLastActiveCompanyAdminSelfDeactivation = activeCompanyAdminCount <= 1;
+            }
+
+            member.IsEnabled = false;
+
+            List<Guid> orgUserIds = new();
+            if (isLastActiveCompanyAdminSelfDeactivation)
+            {
+                var organization = await _context.Organizations.FirstOrDefaultAsync(o => o.OrganizationId == orgId);
+                if (organization == null)
+                {
+                    return NotFound("Organization not found.");
+                }
+
+                if (organization.IsEnabled)
+                {
+                    organization.IsEnabled = false;
+                    organization.ModifiedOn = DateTime.UtcNow;
+                }
+
+                orgUserIds = await _context.SystemUsers
+                    .AsNoTracking()
+                    .Where(u => u.OrganizationId == orgId)
+                    .Select(u => u.UserId)
+                    .ToListAsync();
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (isLastActiveCompanyAdminSelfDeactivation)
+            {
+                foreach (var userId in orgUserIds)
+                {
+                    await _authService.RevokeAllUserTokensAsync(userId, releaseBindings: true);
+                }
+
+                await LogInviteAuditAsync("ORG_LAST_ADMIN_SELF_DEACTIVATED", actorUserId, orgId, member.UserId, $"Last active CompanyAdmin {member.UserName} self-deactivated; organization deactivated.");
+                return Ok(new { message = "Member deactivated. Organization deactivated because this was the last active CompanyAdmin." });
+            }
+
+            await _authService.RevokeAllUserTokensAsync(member.UserId, releaseBindings: true);
+            await LogInviteAuditAsync("ORG_MEMBER_DEACTIVATED", actorUserId, orgId, member.UserId, $"Member {member.UserName} deactivated.");
+
+            if (isSelfDeactivation)
+            {
+                return Ok(new { message = "Your account has been deactivated." });
+            }
+
+            return Ok(new { message = "Member deactivated." });
+        }
+
+        [HttpPost("{orgId}/members/{memberUserId}/reactivate")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> ReactivateOrganizationMember(Guid orgId, Guid memberUserId, [FromBody] AdminPasswordConfirmRequest request)
+        {
+            var actorUserId = _orgContext.GetCurrentUserId();
+            if (!await _orgContext.ValidateUserOrganizationAccessAsync(actorUserId, orgId))
+                return Forbid();
+
+            var actorUser = await _context.SystemUsers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == actorUserId && u.OrganizationId == orgId);
+
+            if (actorUser == null || string.IsNullOrWhiteSpace(actorUser.PasswordHash))
+            {
+                return Unauthorized("Admin account could not be verified.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password) || !BCrypt.Net.BCrypt.Verify(request.Password, actorUser.PasswordHash))
+            {
+                return BadRequest("Password confirmation failed.");
+            }
+
+            var member = await _context.SystemUsers
+                .FirstOrDefaultAsync(u => u.UserId == memberUserId && u.OrganizationId == orgId);
+
+            if (member == null)
+            {
+                return NotFound("Member not found.");
+            }
+
+            if (member.IsEnabled)
+            {
+                return Ok(new { message = "Member already active." });
+            }
+
+            member.IsEnabled = true;
+            await _context.SaveChangesAsync();
+            await LogInviteAuditAsync("ORG_MEMBER_REACTIVATED", actorUserId, orgId, member.UserId, $"Member {member.UserName} reactivated.");
+
+            return Ok(new { message = "Member reactivated." });
+        }
+
         // COMPANY ADMIN: Create a new invite code for their org
         [HttpPost("{orgId}/registration-codes")]
         [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
@@ -457,6 +629,24 @@ namespace PreOrderApp.Controllers
     {
         public string? Email { get; set; }
         public int ExpiryDays { get; set; } = 7;
+    }
+
+    public class AdminPasswordConfirmRequest
+    {
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class OrganizationMemberResponse
+    {
+        public Guid UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string UserRole { get; set; } = string.Empty;
+        public bool IsEnabled { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public DateTime? LastLoginOn { get; set; }
     }
 
     public class RegistrationCodeResponse

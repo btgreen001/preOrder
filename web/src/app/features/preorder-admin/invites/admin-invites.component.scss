@@ -59,6 +59,14 @@
   }
 }
 
+.members-section {
+  margin-top: 2rem;
+
+  h3 {
+    margin-bottom: 0.3rem;
+  }
+}
+
 .codes-table {
   width: 100%;
   border-collapse: collapse;
@@ -126,6 +134,98 @@
   color: #888;
   font-style: italic;
   padding: 1rem 0;
+}
+
+.password-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.password-confirm-modal {
+  width: min(480px, calc(100vw - 2rem));
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .prompt-text {
+    margin-top: 0;
+    color: #444;
+    font-size: 0.9rem;
+  }
+
+  .prompt-warning {
+    margin: 0 0 0.8rem;
+    padding: 0.6rem 0.7rem;
+    border-left: 4px solid #b42318;
+    border-radius: 4px;
+    background: #fef3f2;
+    color: #7a271a;
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+
+  .prompt-warning-title {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  .company-confirmation {
+    margin: 0 0 0.8rem;
+
+    label {
+      font-size: 0.8rem;
+      color: #7a271a;
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  .company-name-value {
+    margin: 0 0 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid #f3b6ac;
+    background: #fff3f0;
+    color: #7a271a;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    font-size: 0.9rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 0.25rem;
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 0.8rem;
+  }
+}
+
+.password-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 
 .alert {

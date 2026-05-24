@@ -1,6 +1,6 @@
 <div class="invites-admin">
   <h2>Staff Invite Codes</h2>
-  <p class="subtitle">Generate one-time invite codes to let new staff register. Each code expires after the set number of days.</p>
+  <p class="subtitle">Generate one-time invite codes, track usage status, and manage organization members from one screen.</p>
 
   <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
   <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
@@ -54,7 +54,7 @@
             </span>
           </td>
           <td>{{ code.expiresOn | date:'MMM d, y' }}</td>
-          <td>{{ code.usedOn ? (code.usedOn | date:'MMM d, y') : '—' }}</td>
+          <td>{{ code.usedOn ? (code.usedOn | date:'MMM d, y, h:mm a') : '—' }}</td>
           <td>{{ code.createdOn | date:'MMM d, y' }}</td>
           <td>
             <button *ngIf="canResend(code)" class="btn btn-secondary btn-sm" (click)="resendCode(code)" [disabled]="isResending">
@@ -70,6 +70,94 @@
 
     <div *ngIf="!isLoading && codes.length === 0" class="empty-state">
       No invite codes yet. Generate one above to invite your first staff member.
+    </div>
+  </div>
+
+  <div class="members-section">
+    <h3>Organization Members</h3>
+    <p class="subtitle">Deactivate or reactivate staff access when people leave or return.</p>
+
+    <div *ngIf="isMembersLoading" class="loading">Loading members...</div>
+
+    <table *ngIf="!isMembersLoading && members.length > 0" class="codes-table members-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let member of members" [class.used]="!member.isEnabled">
+          <td>{{ member.firstName }} {{ member.lastName }}</td>
+          <td>{{ member.userName }}</td>
+          <td>{{ member.email }}</td>
+          <td>{{ member.userRole }}</td>
+          <td>
+            <span class="status-badge" [class.active]="member.isEnabled" [class.expired]="!member.isEnabled">
+              {{ memberStatus(member) }}
+            </span>
+          </td>
+          <td>{{ member.lastLoginOn ? (member.lastLoginOn | date:'MMM d, y, h:mm a') : 'Never' }}</td>
+          <td>
+            <button
+              *ngIf="member.isEnabled"
+              class="btn btn-danger btn-sm"
+              (click)="deactivateMember(member)">
+              Remove Access
+            </button>
+            <button
+              *ngIf="!member.isEnabled"
+              class="btn btn-secondary btn-sm"
+              (click)="reactivateMember(member)">
+              Restore Access
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!isMembersLoading && members.length === 0" class="empty-state">
+      No members found for this organization.
+    </div>
+  </div>
+
+  <div *ngIf="passwordPromptOpen" class="password-confirm-overlay">
+    <div class="password-confirm-modal">
+      <h3>Confirm Password</h3>
+      <p class="prompt-text">{{ pendingActionMainText }}</p>
+      <div *ngIf="pendingActionWarningText" class="prompt-warning" role="alert" aria-live="assertive">
+        <div class="prompt-warning-title">Warning</div>
+        <div>{{ pendingActionWarningText }}</div>
+      </div>
+      <div *ngIf="requiresCompanyNameConfirmation" class="company-confirmation">
+        <label for="confirmCompanyName">To proceed you must enter your company name exactly as shown</label>
+        <div class="company-name-value">{{ requiredCompanyName }}</div>
+        <input
+          id="confirmCompanyName"
+          type="text"
+          [(ngModel)]="confirmCompanyName"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Enter company name exactly" />
+      </div>
+      <label for="confirmPassword">Your password</label>
+      <input
+        id="confirmPassword"
+        type="password"
+        [(ngModel)]="confirmPassword"
+        autocomplete="current-password"
+        placeholder="Enter your password" />
+      <div class="password-confirm-actions">
+        <button class="btn btn-secondary" (click)="cancelPasswordPrompt()" [disabled]="isConfirmingAction">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmSensitiveAction()" [disabled]="isConfirmingAction || !confirmPassword || !isCompanyNameConfirmationValid">
+          {{ isConfirmingAction ? 'Processing...' : 'Confirm' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
