@@ -41,6 +41,7 @@ public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<EmailService> _logger;
+    private const int DefaultSmtpTimeoutMs = 10000;
 
     public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
     {
@@ -87,7 +88,7 @@ public class EmailService : IEmailService
         try
         {
             _logger.LogInformation("Sending invite email to {Email}", toEmailFingerprint);
-            await SendViaMailKitAsync(host, port, username, password, message);
+            await SendViaMailKitAsync(host, port, username, password, message, GetSmtpTimeout());
             _logger.LogInformation("Invite email sent successfully to {Email}", toEmailFingerprint);
         }
         catch (Exception ex)
@@ -133,7 +134,7 @@ public class EmailService : IEmailService
         try
         {
             _logger.LogInformation("Sending password reset code email to {toEmailFingerprint}", toEmailFingerprint);
-            await SendViaMailKitAsync(host, port, username, password, message);
+            await SendViaMailKitAsync(host, port, username, password, message, GetSmtpTimeout());
             _logger.LogInformation("Password reset code email sent successfully to {toEmailFingerprint}", toEmailFingerprint);
         }
         catch (Exception ex)
@@ -220,7 +221,7 @@ public class EmailService : IEmailService
         try
         {
             _logger.LogInformation("Sending order email to recipient {EmailFingerprint}", toEmailFingerprint);
-            await SendViaMailKitAsync(host, port, username, password, message);
+            await SendViaMailKitAsync(host, port, username, password, message, GetSmtpTimeout());
             _logger.LogInformation("Order email sent successfully to recipient {EmailFingerprint}", toEmailFingerprint);
         }
         catch (Exception ex)
@@ -243,15 +244,34 @@ public class EmailService : IEmailService
     }
 
     private static async Task SendViaMailKitAsync(
-        string host, int port, string? username, string? password, MimeMessage message)
+        string host,
+        int port,
+        string? username,
+        string? password,
+        MimeMessage message,
+        TimeSpan timeout)
     {
         using var client = new MailKit.Net.Smtp.SmtpClient();
+        client.Timeout = (int)timeout.TotalMilliseconds;
+        using var cts = new CancellationTokenSource(timeout);
+
         // Auto picks STARTTLS on port 587, SMTPS on 465, plain on 25
-        await client.ConnectAsync(host, port, SecureSocketOptions.Auto);
+        await client.ConnectAsync(host, port, SecureSocketOptions.Auto, cts.Token);
         if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-            await client.AuthenticateAsync(username, password);
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+            await client.AuthenticateAsync(username, password, cts.Token);
+        await client.SendAsync(message, cts.Token);
+        await client.DisconnectAsync(true, cts.Token);
+    }
+
+    private TimeSpan GetSmtpTimeout()
+    {
+        var timeoutMs = _configuration.GetValue<int?>("Emails:Smtp:TimeoutMs") ?? DefaultSmtpTimeoutMs;
+        if (timeoutMs < 1000)
+        {
+            timeoutMs = 1000;
+        }
+
+        return TimeSpan.FromMilliseconds(timeoutMs);
     }
 
     private static string BuildOrderLink(string orderBaseUrl, string externalId)

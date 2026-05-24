@@ -5,6 +5,20 @@
 - Goal: ship the smallest sellable MVP first, then expand into adjacent bakery modules later.
 - Constraint: current repo is still a BakeBoard-derived baseline, so the first work slice must reduce inherited complexity before adding too many new features.
 
+## Latest Progress (2026-05-24)
+
+- Invite creation timeout hardening completed for SMTP-backed sends:
+  - Added SMTP operation timeout control (`Emails:Smtp:TimeoutMs`, default 10000ms) to prevent long request stalls.
+  - `EmailService` now applies cancellation/timeout across connect/auth/send/disconnect.
+  - `OrganizationController` resend endpoint now catches email failures and returns a clear `502` response instead of hanging until proxy timeout.
+- Added `TimeoutMs` in:
+  - `api/appsettings.json`
+  - `api/appsettings.Development.json`
+  - `api/appsettings.Production.json`
+- Expected behavior change:
+  - Expired/no-session requests still correctly surface `401` and require login.
+  - Invite create/resend with unreachable SMTP should fail fast instead of producing `504` after long wait.
+
 ## Recommended Starting Point
 Start with a focused carve-out phase, not with payments or polished UI.
 

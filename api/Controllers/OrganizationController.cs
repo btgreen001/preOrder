@@ -390,8 +390,16 @@ namespace PreOrderApp.Controllers
             var org = await _context.Organizations.FindAsync(orgId);
             if (org == null) return NotFound("Organization not found");
 
-            await _emailService.SendEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
-            await LogInviteAuditAsync("INVITE_RESEND", userId, orgId, code.CodeId, $"Invite email resent to {code.Email}");
+            try
+            {
+                await _emailService.SendEmailAsync(code.Email, org.OrganizationName, code.Code, code.ExpiresOn);
+                await LogInviteAuditAsync("INVITE_RESEND", userId, orgId, code.CodeId, $"Invite email resent to {code.Email}");
+            }
+            catch (Exception ex)
+            {
+                await LogInviteAuditAsync("INVITE_RESEND_FAILED", userId, orgId, code.CodeId, $"Invite resend failed for {code.Email}: {ex.Message}");
+                return StatusCode(StatusCodes.Status502BadGateway, "Unable to send invite email right now. Please try again.");
+            }
 
             return Ok(new { message = "Invite email resent." });
         }

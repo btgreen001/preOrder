@@ -1,6 +1,25 @@
 Deploy work
 Node.js 20 will be deprecated in the future.
 
+## 2026-05-24 Invite Flow Error Follow-up
+
+- Observed in browser logs while inviting staff:
+	- `401` on `/api/auth/refresh-token` followed by local session clear and login route.
+	- `504` on `POST /api/organization/{orgId}/registration-codes`.
+- Interpretation:
+	- `401` refresh-token means no valid refresh session cookie (user needs to sign in again).
+	- `504` on invite create was consistent with SMTP call blocking request until proxy timeout.
+- Implemented fix:
+	- Added SMTP timeout support (`Emails:Smtp:TimeoutMs`, default 10000ms).
+	- Email send now uses cancellation token for connect/auth/send/disconnect in `EmailService`.
+	- Resend endpoint now returns `502` with clear message when email provider is unavailable and logs audit event `INVITE_RESEND_FAILED`.
+- Files updated:
+	- `api/Services/EmailService.cs`
+	- `api/Controllers/OrganizationController.cs`
+	- `api/appsettings.json`
+	- `api/appsettings.Development.json`
+	- `api/appsettings.Production.json`
+
 Then in container web server config (Nginx or similar): /api -> http://preorder-api:5124
 
 
