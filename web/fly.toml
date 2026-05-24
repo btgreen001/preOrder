@@ -24,7 +24,7 @@ primary_region = 'iad'
   size = 'shared-cpu-1x'
 
 [processes]
-  app = []
+  app = "npm start"
 
 [deploy]
   strategy = "rolling"
