@@ -23,6 +23,9 @@ primary_region = 'iad'
   memory_mb = 512
   size = 'shared-cpu-1x'
 
+[processes]
+  app = []
+
 [deploy]
   strategy = "rolling"
 
