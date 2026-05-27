@@ -523,7 +523,7 @@ public class AuthService : IAuthService
 
         // Check if userName is already in use
         if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == sanitizedUserName))
-            throw new InvalidOperationException("Username is already in use");
+            throw new InvalidOperationException("Username is too similiar to another");
 
         // Get active license subscription
         var subscription = await _context.LicenseSubscriptions
@@ -589,11 +589,12 @@ public class AuthService : IAuthService
     public async Task<CompanyRegistrationResponse> RegisterCompanyAsync(RegisterCompanyRequest request)
     {
         string sanitizedAdminUserName = StringSanitizer.SanitizeForUse(request.AdminUserName);
+        sanitizedAdminUserName = sanitizedAdminUserName.ToLowerInvariant();
         string sanitizedAdminEmail = StringSanitizer.SanitizeForUse(request.AdminEmail);
         string sanitizedEmail = StringSanitizer.SanitizeForUse(request.Email);
 
         // Bad user names don't go any further
-        if (sanitizedAdminUserName != request.AdminUserName)
+        if (sanitizedAdminUserName != request.AdminUserName.ToLowerInvariant())
             throw new InvalidOperationException("Username is not valid.");
 
 
@@ -607,7 +608,7 @@ public class AuthService : IAuthService
 
         // Check if admin userName is already in use
         if (await _context.SystemUsers.AsNoTracking().AnyAsync(u => u.UserName == sanitizedAdminUserName))
-            throw new InvalidOperationException("Username is already in use");
+            throw new InvalidOperationException("Username is too similiar to another");
 
         // Create a unique registration token
         var registrationToken = Guid.NewGuid().ToString("N");
