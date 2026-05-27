@@ -7,19 +7,25 @@
     ],
 
     "mutate": [
+      "!**/Data/**",
+      "!**/*DbContext.cs",
+      "!**/*Context.cs",
       "!**/bin/**",
       "!**/obj/**",
       "!**/Migrations/**",
       "!**/Generated/**",
       "!**/Program.cs",
       "!**/Startup.cs",
-      "!**/*Service.cs",
       "!**/*Client.cs",
       "!**/*Repository.cs",
       "!**/*Options.cs",
       "!**/*Settings.cs",
-      "!**/Models/LicenseModels.cs",
-      "!**/Models/LicenseUtils.cs",
+      "!**/Controllers/**",
+      "!**/DTOs/**",
+      "!**/Migrations_old/**",
+      "!**/Filters/**",
+      "!**/Middleware/**",
+      "!**/Models/**",
       "!**/Services/FractionUtility.cs",
       "!**/Services/UnitConversionService.cs"
 

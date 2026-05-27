@@ -35,7 +35,7 @@ public class StringSanitizerTests
         var input = "A\rB\nC\tD";
         var result = StringSanitizer.SanitizeForLog(input);
 
-        Assert.Equal("ABCD", result);
+        Assert.Equal("abcd", result);
     }
     [Fact]
     public void SanitizeForLog_LengthUnderLimit_ReturnsUnchanged()

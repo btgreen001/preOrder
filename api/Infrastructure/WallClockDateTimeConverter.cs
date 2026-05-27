@@ -51,8 +51,10 @@ public class WallClockDateTimeConverter : JsonConverter<DateTime>
             return DateTime.SpecifyKind(result, DateTimeKind.Unspecified);
         }
 
-        // Fallback to flexible parsing for other ISO/standard formats
-        if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out var flexResult))
+        // Fallback to flexible parsing only for textual date strings (e.g., "May 27, 2026 09:30 PM").
+        // This avoids accepting ambiguous numeric inputs like "05/10/2024".
+        if (dateString.Any(char.IsLetter) &&
+            DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out var flexResult))
         {
             return DateTime.SpecifyKind(flexResult, DateTimeKind.Unspecified);
         }

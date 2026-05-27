@@ -135,11 +135,11 @@ namespace PreOrderApp.Controllers
         [ValidateTenantAccess]
         public async Task<IActionResult> UpdateOrderStatus(Guid externalId, [FromBody] UpdateOrderStatusRequest request)
         {
-            var sanitizedNewStatus = StringSanitizer.SanitizeForLog(request?.NewStatus);
+            if (string.IsNullOrWhiteSpace(request?.NewStatus))
+                return BadRequest(new { error = "newStatus is required" });
+            var sanitizedNewStatus = StringSanitizer.SanitizeForLog(request.NewStatus);
             try
             {
-                if (string.IsNullOrWhiteSpace(sanitizedNewStatus))
-                    return BadRequest(new { error = "newStatus is required" });
 
                 _logger.LogInformation($"Updating order {externalId} status to {sanitizedNewStatus}");
                 

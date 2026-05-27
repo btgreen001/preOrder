@@ -22,7 +22,7 @@ public static class StringSanitizer
 
         return trimmed.Length > 200 ? trimmed[..200] + "..." : trimmed;
     }
-    public static string SanitizeForUse(string? value, int maxLength = 100)
+    public static string SanitizeForUse(string? value, int maxLength = 200)
     {
         if (string.IsNullOrWhiteSpace(value))
             return "";

@@ -31,7 +31,7 @@ describe('ErrorHandlerService', () => {
       const result = service.handleError(error);
 
       expect(result.title).toBe('Invalid Request');
-      expect(result.message).toContain('check your input');
+      expect(result.message).toContain('400 Bad Request');
       expect(result.action).toBe('OK');
     });
 

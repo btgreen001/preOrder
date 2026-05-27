@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { TerminalContextService } from './terminal-context.service';
 import { AuthResponse, LoginRequest, RegisterUserRequest, RegisterCompanyRequest } from '../models/auth.model';
 import { environment } from '../../../environments/environment';
 
@@ -9,6 +10,13 @@ describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
   let routerSpy: jasmine.SpyObj<Router>;
+  let terminalContextSpy: jasmine.SpyObj<TerminalContextService>;
+
+  function createJwt(expirationUnixSeconds: number): string {
+    const header = btoa(JSON.stringify({ typ: 'JWT', alg: 'HS256' }));
+    const payload = btoa(JSON.stringify({ userId: '1', exp: expirationUnixSeconds, org_id: 'org1' }));
+    return `${header}.${payload}.signature`;
+  }
 
   const mockAuthResponse: AuthResponse = {
     userId: '1',
@@ -21,7 +29,7 @@ describe('AuthService', () => {
     organizationName: 'Test Org',
     licenseTier: 'premium',
     registrationToken: 'token123',
-    accessToken: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxIiwiZXhwIjoxNjQ5OTUyMDAwfQ',
+    accessToken: createJwt(Math.floor(Date.now() / 1000) + 3600),
     refreshToken: 'refresh123'
   };
 
@@ -31,12 +39,17 @@ describe('AuthService', () => {
   };
 
   beforeEach(() => {
+    spyOn(AuthService.prototype, 'enforceHttps').and.stub();
+
     const routerSpyObj = jasmine.createSpyObj('Router', ['navigate']);
+    const terminalSpyObj = jasmine.createSpyObj('TerminalContextService', ['getTerminalId', 'setTerminalContext']);
+    terminalSpyObj.getTerminalId.and.returnValue(null);
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         AuthService,
+        { provide: TerminalContextService, useValue: terminalSpyObj },
         { provide: Router, useValue: routerSpyObj }
       ]
     });
@@ -44,6 +57,7 @@ describe('AuthService', () => {
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
     routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    terminalContextSpy = TestBed.inject(TerminalContextService) as jasmine.SpyObj<TerminalContextService>;
 
     // Prevent real timers from being set during tests
     spyOn(service as any, 'scheduleTokenRefresh').and.callFake(() => {
@@ -52,9 +66,10 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
+    httpMock.match(req => req.url === `${environment.apiUrl}/auth/logout` || req.url === `${environment.apiUrl}/auth/logout-all`)
+      .forEach(req => req.flush({}));
+    service.clearLocalState();
     httpMock.verify();
-    // Clear any timers
-    service.logout();
   });
 
   describe('initialization', () => {
@@ -76,16 +91,17 @@ describe('AuthService', () => {
     it('should login successfully and store tokens in memory', (done) => {
       service.login(mockLoginRequest).subscribe(response => {
         expect(response).toEqual(mockAuthResponse);
-      expect(service.getAccessToken()).toBe(mockAuthResponse.accessToken || null);
-      expect(service.getRefreshToken()).toBe(mockAuthResponse.refreshToken || null);
-        expect(service.getBasicAuthHeader()).toBe('Basic ' + btoa('testuser:password123'));
+        expect(service.getAccessToken()).toBe(mockAuthResponse.accessToken || null);
+        expect(service.getRefreshToken()).toBeNull();
+        expect(service.getBasicAuthHeader()).toBeNull();
         expect(service.isAuthenticated()).toBeTruthy();
         done();
       });
 
       const req = httpMock.expectOne(`${environment.apiUrl}/auth/login`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.headers.get('Authorization')).toBe('Basic ' + btoa('testuser:password123'));
+      expect(req.request.withCredentials).toBeTrue();
+      expect(req.request.body).toEqual(jasmine.objectContaining(mockLoginRequest));
       req.flush(mockAuthResponse);
     });
 
@@ -127,7 +143,8 @@ describe('AuthService', () => {
     it('should register user successfully', (done) => {
       service.registerUser(mockRegisterUserRequest).subscribe(response => {
         expect(response).toEqual(mockAuthResponse);
-        expect(service.getBasicAuthHeader()).toBe('Basic ' + btoa('newuser:pass123'));
+        expect(service.getAccessToken()).toBe(mockAuthResponse.accessToken || null);
+        expect(service.getBasicAuthHeader()).toBeNull();
         expect(service.isAuthenticated()).toBeTruthy();
         done();
       });
@@ -166,7 +183,8 @@ describe('AuthService', () => {
 
       service.registerCompany(mockRegisterCompanyRequest).subscribe(response => {
         expect(response).toEqual(mockCompanyResponse);
-        expect(service.getBasicAuthHeader()).toBe('Basic ' + btoa('admin:adminpass'));
+        expect(service.getAccessToken()).toBe(mockAuthResponse.accessToken || null);
+        expect(service.currentUserValue?.registrationToken).toBe('regtoken123');
         done();
       });
 
@@ -220,9 +238,10 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/auth/refresh`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/auth/refresh-token`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ refreshToken: 'refresh123' });
+      expect(req.request.body).toEqual({});
+      expect(req.request.withCredentials).toBeTrue();
       req.flush(newTokens);
     });
 
@@ -236,14 +255,11 @@ describe('AuthService', () => {
         }
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/auth/refresh`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/auth/refresh-token`);
       req.flush('Refresh failed', { status: 401, statusText: 'Unauthorized' });
     });
 
     it('should prevent concurrent refresh attempts', (done) => {
-      // Set up refresh token first
-      (service as any).refreshToken = 'refresh123';
-
       // Make two concurrent calls and subscribe to them
       let completed = 0;
       service.refreshAccessToken().subscribe(() => {
@@ -256,7 +272,7 @@ describe('AuthService', () => {
       });
 
       // Should only have one HTTP request despite two method calls
-      const reqs = httpMock.match(`${environment.apiUrl}/auth/refresh`);
+      const reqs = httpMock.match(`${environment.apiUrl}/auth/refresh-token`);
       expect(reqs.length).toBe(1);
 
       // Complete the request
@@ -279,10 +295,11 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/auth/revoke`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/auth/revoke-token`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ refreshToken: 'refresh123' });
-      req.flush(true);
+      expect(req.request.body).toEqual({});
+      expect(req.request.withCredentials).toBeTrue();
+      req.flush({});
     });
 
     it('should handle revocation failure but still logout', (done) => {
@@ -294,15 +311,14 @@ describe('AuthService', () => {
         }
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/auth/revoke`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/auth/revoke-token`);
       req.flush('Revoke failed', { status: 500, statusText: 'Internal Server Error' });
     });
   });
 
   describe('token expiration checking', () => {
     it('should decode token correctly', () => {
-      // Use Base64 encoded JSON (not JWT format)
-      const token = btoa(JSON.stringify({ userId: '1', exp: 1649952000 }));
+      const token = createJwt(1649952000);
       const decoded = (service as any).decodeToken(token);
       expect(decoded.userId).toBe('1');
       expect(decoded.exp).toBe(1649952000);
@@ -310,7 +326,7 @@ describe('AuthService', () => {
 
     it('should check if token is expired', () => {
       // Set an expired token (past date)
-      const expiredToken = btoa(JSON.stringify({ userId: '1', exp: Math.floor(Date.now() / 1000) - 3600 })); // 1 hour ago
+      const expiredToken = createJwt(Math.floor(Date.now() / 1000) - 3600); // 1 hour ago
       (service as any).accessToken = expiredToken;
 
       expect(service.isTokenExpired()).toBeTruthy();
@@ -318,7 +334,7 @@ describe('AuthService', () => {
 
     it('should return false for valid token', () => {
       // Set a future token (expires in 1 hour)
-      const futureToken = btoa(JSON.stringify({ userId: '1', exp: Math.floor(Date.now() / 1000) + 3600 }));
+      const futureToken = createJwt(Math.floor(Date.now() / 1000) + 3600);
       (service as any).accessToken = futureToken;
 
       expect(service.isTokenExpired()).toBeFalsy();
@@ -349,7 +365,7 @@ describe('AuthService', () => {
 
       // Login with token that expires in 5 minutes
       const futureExp = Math.floor((Date.now() + 300000) / 1000);
-      const expiringSoonToken = btoa(JSON.stringify({"userId":"1","exp":futureExp}));
+      const expiringSoonToken = createJwt(futureExp);
       (service as any).accessToken = expiringSoonToken;
 
       (service as any).scheduleTokenRefresh();
@@ -382,17 +398,13 @@ describe('AuthService', () => {
   });
 
   describe('HTTPS enforcement', () => {
-  describe('HTTPS enforcement', () => {
     it('should redirect to HTTPS when enforced and on HTTP', () => {
-      // Skip this test as window.location.href is not easily mockable in tests
-      expect(true).toBeTruthy(); // Placeholder test
+      expect((service as any).enforceHttps).toHaveBeenCalled();
     });
 
     it('should not redirect when already on HTTPS', () => {
-      // Skip this test as window.location.href is not easily mockable in tests
-      expect(true).toBeTruthy(); // Placeholder test
+      expect((service as any).enforceHttps).toHaveBeenCalled();
     });
-  });
   });
 
   describe('username availability check', () => {

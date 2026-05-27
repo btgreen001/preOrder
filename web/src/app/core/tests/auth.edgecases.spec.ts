@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { TerminalContextService } from '../services/terminal-context.service';
 import { AuthInterceptor } from '../interceptors/auth.interceptor';
 
 describe('Auth edge cases', () => {
@@ -12,13 +13,25 @@ describe('Auth edge cases', () => {
   let authService: AuthService;
   let routerSpy: jasmine.SpyObj<Router>;
 
+  function createJwt(expirationUnixSeconds: number): string {
+    const header = btoa(JSON.stringify({ typ: 'JWT', alg: 'HS256' }));
+    const payload = btoa(JSON.stringify({ userId: '1', exp: expirationUnixSeconds }));
+    return `${header}.${payload}.signature`;
+  }
+
   beforeEach(() => {
+    spyOn(AuthService.prototype, 'enforceHttps').and.stub();
+
     const routerSpyObj = jasmine.createSpyObj('Router', ['navigate']);
+    const terminalSpyObj = jasmine.createSpyObj('TerminalContextService', ['getTerminalId', 'hasTerminalContext', 'setTerminalContext']);
+    terminalSpyObj.getTerminalId.and.returnValue(null);
+    terminalSpyObj.hasTerminalContext.and.returnValue(false);
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         AuthService,
+        { provide: TerminalContextService, useValue: terminalSpyObj },
         { provide: Router, useValue: routerSpyObj },
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
       ]
@@ -31,8 +44,10 @@ describe('Auth edge cases', () => {
   });
 
   afterEach(() => {
+    httpMock.match(req => req.url.endsWith('/auth/logout') || req.url.endsWith('/auth/logout-all'))
+      .forEach(req => req.flush({}));
+    authService.clearLocalState();
     httpMock.verify();
-    authService.logout();
   });
 
   it('should handle malformed token during decode gracefully', () => {
@@ -43,12 +58,13 @@ describe('Auth edge cases', () => {
   });
 
   it('should handle refresh called with no refresh token and not crash', () => {
-    (authService as any).refreshToken = null;
     let thrown = false;
     try {
       authService.refreshAccessToken().subscribe({
         error: () => {}
       });
+      const req = httpMock.expectOne((req) => req.url.includes('/auth/refresh-token'));
+      req.flush('Refresh failed', { status: 401, statusText: 'Unauthorized' });
     } catch (e) {
       thrown = true;
     }
@@ -56,7 +72,6 @@ describe('Auth edge cases', () => {
   });
 
   it('should handle network failure during refresh and logout', (done) => {
-    (authService as any).refreshToken = 'refresh123';
     spyOn(authService as any, 'logout').and.callThrough();
 
     authService.refreshAccessToken().subscribe({
@@ -67,20 +82,30 @@ describe('Auth edge cases', () => {
       }
     });
 
-    const req = httpMock.expectOne((req) => req.url.includes('/auth/refresh'));
+    const req = httpMock.expectOne((req) => req.url.includes('/auth/refresh-token'));
     req.error(new ErrorEvent('Network error'));
   });
 
   it('interceptor should retry after refresh and preserve original headers', (done) => {
-    // Arrange: set basic auth and refresh token
-    (authService as any).basicAuthHeader = 'Basic abc123';
-    (authService as any).refreshToken = 'refresh123';
+    (authService as any).accessToken = createJwt(Math.floor(Date.now() / 1000) + 3600);
 
-    // Spy refresh to simulate returning new tokens
-    spyOn(authService, 'refreshAccessToken').and.returnValue(of({
-      userId: '1', username: 'u', email: '', firstName: '', lastName: '', role: 'user', organizationId: '', organizationName: '',
-      licenseTier: 'basic', registrationToken: '', accessToken: 'new', refreshToken: 'newrefresh'
-    } as any));
+    // Spy refresh to simulate cookie-backed refresh and set new in-memory access token.
+    spyOn(authService, 'refreshAccessToken').and.callFake(() => {
+      (authService as any).accessToken = 'newtoken';
+      return of({
+        userId: '1',
+        username: 'u',
+        email: '',
+        firstName: '',
+        lastName: '',
+        role: 'user',
+        organizationId: '',
+        organizationName: '',
+        licenseTier: 'basic',
+        registrationToken: '',
+        accessToken: 'newtoken'
+      } as any);
+    });
 
     httpClient.get('/api/protected').subscribe({
       next: (resp) => {
@@ -91,20 +116,16 @@ describe('Auth edge cases', () => {
 
     // First request returns 401
     const first = httpMock.expectOne('/api/protected');
+    expect(first.request.headers.get('Authorization')).toContain('Bearer');
     first.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-
-    // Refresh endpoint should be hit
-    const refresh = httpMock.expectOne('https://localhost:5124/api/auth/refresh');
-    refresh.flush({ accessToken: 'newtoken', refreshToken: 'newrefresh' });
 
     // Retried original request
     const retry = httpMock.expectOne('/api/protected');
-    expect(retry.request.headers.get('Authorization')).toBe('Basic abc123');
+    expect(retry.request.headers.get('Authorization')).toBe('Bearer newtoken');
     retry.flush({ ok: true });
   });
 
   it('revokeRefreshToken should logout even on server error', (done) => {
-    (authService as any).refreshToken = 'refresh123';
     spyOn(authService, 'logout').and.callThrough();
 
     authService.revokeRefreshToken().subscribe({
@@ -115,7 +136,8 @@ describe('Auth edge cases', () => {
       }
     });
 
-    const req = httpMock.expectOne('https://localhost:5124/api/auth/revoke');
+    const req = httpMock.expectOne('/api/auth/revoke-token');
+    expect(req.request.withCredentials).toBeTrue();
     req.flush('err', { status: 500, statusText: 'Server Error' });
   });
 });

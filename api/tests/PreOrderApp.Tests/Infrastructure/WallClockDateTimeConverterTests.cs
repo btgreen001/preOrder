@@ -28,6 +28,42 @@ public class WallClockDateTimeConverterTests
         Assert.Equal(DateTimeKind.Unspecified, result.Kind);
     }
 
+    [Fact]
+    public void Converter_ParsesIsoWithMilliseconds()
+    {
+        var json = "\"2024-05-10T14:30:15.123\"";
+        var result = JsonSerializer.Deserialize<DateTime>(json, SerializerOptions);
+
+        Assert.Equal(new DateTime(2024, 5, 10, 14, 30, 15, 123), result);
+    }
+
+    [Fact]
+    public void Converter_ParsesIsoWithoutMilliseconds()
+    {
+        var json = "\"2024-05-10T14:30:15\"";
+        var result = JsonSerializer.Deserialize<DateTime>(json, SerializerOptions);
+
+        Assert.Equal(new DateTime(2024, 5, 10, 14, 30, 15), result);
+    }
+    [Fact]
+    public void Converter_ParsesDateOnly()
+    {
+        var json = "\"2024-05-10\"";
+        var result = JsonSerializer.Deserialize<DateTime>(json, SerializerOptions);
+
+        Assert.Equal(new DateTime(2024, 5, 10), result);
+    }
+    [Fact]
+    public void Converter_RejectsUnsupportedFormat()
+    {
+        var json = "\"05/10/2024\""; // US format, not supported
+
+        Assert.Throws<JsonException>(() =>
+            JsonSerializer.Deserialize<DateTime>(json, SerializerOptions));
+    }
+
+
+
     [Theory]
     [InlineData("\"\"")]
     [InlineData("\"   \"")]
@@ -65,4 +101,47 @@ public class WallClockDateTimeConverterTests
 
         Assert.Equal("\"2026-05-27T09:30:45.1230000\"", json);
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("\t")]
+    [InlineData("\r")]
+    [InlineData("\n")]
+    [InlineData(" \t\r\n ")]
+    public void Converter_ThrowsForEmptyOrWhitespace(string? input)
+    {
+        var json = input is null ? "null" : $"\"{input}\"";
+
+        Assert.Throws<JsonException>(() =>
+            JsonSerializer.Deserialize<DateTime>(json, SerializerOptions));
+    }
+    [Fact]
+    public void Converter_DoesNotThrowForValidDate()
+    {
+        var json = "\"2024-05-10\"";
+
+        var result = JsonSerializer.Deserialize<DateTime>(json, SerializerOptions);
+
+        Assert.Equal(new DateTime(2024, 5, 10), result);
+    }
+
+    [Theory]
+    [InlineData("\"05/10/2024\"")]     // US format
+    [InlineData("\"2024/05/10\"")]     // wrong separator
+    [InlineData("\"2024-13-40\"")]     // invalid date
+    [InlineData("\"2024-05-10 12:00\"")] // missing 'T'
+    [InlineData("\"not-a-date\"")]     // garbage
+    public void Converter_ThrowsForInvalidFormats(string json)
+    {
+        var ex = Assert.Throws<JsonException>(() =>
+            JsonSerializer.Deserialize<DateTime>(json, SerializerOptions));
+
+        Assert.Contains("Unable to convert", ex.Message);
+        Assert.Contains("Expected formats", ex.Message);
+        Assert.Contains(json.Trim('"'), ex.Message);
+
+    }
+
 }

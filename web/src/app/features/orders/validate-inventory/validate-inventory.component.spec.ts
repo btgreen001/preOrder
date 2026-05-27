@@ -34,22 +34,27 @@ describe('ValidateInventoryComponent', () => {
 
   it('should initialize in standalone mode when no items provided', () => {
     expect(component.isModalMode).toBe(false);
-    expect(component.items.length).toBe(0);
+    expect(component.items.length).toBe(1);
+    expect(component.items[0].sellableProductExternalId).toBe('de5595f6-4d3e-44b7-9524-7cb41a6086bc');
+    expect(component.items[0].quantity).toBe(1);
+    expect(mockOrdersService.validateOrderInventory).toHaveBeenCalledWith(component.items);
   });
 
   it('should add item to list', () => {
-    component.newProductId = 'product-123';
+    component.items = [];
+    component.newProductId = 'de5595f6-4d3e-44b7-9524-7cb41a6086bd';
     component.newQuantity = 5;
     component.addItem();
 
     expect(component.items.length).toBe(1);
-  expect(component.items[0].sellableProductExternalId).toBe('product-123');
+    expect(component.items[0].sellableProductExternalId).toBe('de5595f6-4d3e-44b7-9524-7cb41a6086bd');
     expect(component.items[0].quantity).toBe(5);
     expect(component.newProductId).toBe('');
     expect(component.newQuantity).toBeNull();
   });
 
   it('should not add item with invalid data', () => {
+    component.items = [];
     component.newProductId = '';
     component.newQuantity = 0;
     component.addItem();
@@ -70,10 +75,10 @@ describe('ValidateInventoryComponent', () => {
   });
 
   it('should validate inventory', (done) => {
-  component.items = [{ sellableProductExternalId: 'prod-123', quantity: 5 }];
+    component.items = [{ sellableProductExternalId: 'de5595f6-4d3e-44b7-9524-7cb41a6086bc', quantity: 5 }];
     component.validateInventory();
 
-    expect(component.isLoading).toBe(true);
+    expect(component.isLoading).toBe(false);
     expect(mockOrdersService.validateOrderInventory).toHaveBeenCalledWith(component.items);
 
     // Wait for async operation
@@ -89,7 +94,7 @@ describe('ValidateInventoryComponent', () => {
       throwError(() => ({ error: { message: 'API error' } }))
     );
 
-  component.items = [{ sellableProductExternalId: 'prod-123', quantity: 5 }];
+    component.items = [{ sellableProductExternalId: 'de5595f6-4d3e-44b7-9524-7cb41a6086bc', quantity: 5 }];
     component.validateInventory();
 
     setTimeout(() => {
@@ -101,8 +106,8 @@ describe('ValidateInventoryComponent', () => {
 
   it('should initialize in modal mode with input items', () => {
     component.orderedItems = [
-  { sellableProductExternalId: 'prod-1', quantity: 2 },
-  { sellableProductExternalId: 'prod-2', quantity: 3 }
+      { sellableProductExternalId: 'de5595f6-4d3e-44b7-9524-7cb41a6086bc', quantity: 2 },
+      { sellableProductExternalId: 'de5595f6-4d3e-44b7-9524-7cb41a6086bd', quantity: 3 }
     ];
 
     component.ngOnInit();

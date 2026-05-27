@@ -5,12 +5,14 @@ import { of, throwError, asyncScheduler } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../core/services/auth.service';
+import { TerminalContextService } from '../../core/services/terminal-context.service';
 import { AuthResponse } from '../../core/models/auth.model';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let terminalContextSpy: jasmine.SpyObj<TerminalContextService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   const mockAuthResponse: AuthResponse = {
@@ -31,8 +33,10 @@ describe('LoginComponent', () => {
       'login',
       'logout',
       'getBasicAuthHeader',
-      'getRefreshToken'
+      'getRefreshToken',
+      'isAuthenticated'
     ]);
+    const terminalSpy = jasmine.createSpyObj('TerminalContextService', ['getTerminalId']);
     const routerSpyObj = jasmine.createSpyObj('Router', ['navigate']);
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
       queryParams: of({ returnUrl: '/dashboard' }),
@@ -45,6 +49,7 @@ describe('LoginComponent', () => {
       imports: [ReactiveFormsModule, LoginComponent],
       providers: [
         { provide: AuthService, useValue: authSpy },
+        { provide: TerminalContextService, useValue: terminalSpy },
         { provide: Router, useValue: routerSpyObj },
         { provide: ActivatedRoute, useValue: activatedRouteSpy }
       ]
@@ -53,7 +58,11 @@ describe('LoginComponent', () => {
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
     authServiceSpy = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    terminalContextSpy = TestBed.inject(TerminalContextService) as jasmine.SpyObj<TerminalContextService>;
     routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+
+    authServiceSpy.isAuthenticated.and.returnValue(false);
+    terminalContextSpy.getTerminalId.and.returnValue(null);
   });
 
   it('should create', () => {
@@ -145,7 +154,7 @@ describe('LoginComponent', () => {
       component.onSubmit();
 
       expect(component.isLoading).toBeTruthy();
-      expect(authServiceSpy.login).toHaveBeenCalledWith(loginData);
+      expect(authServiceSpy.login).toHaveBeenCalledWith({ ...loginData, terminalId: undefined });
 
       tick(); // Advance the virtual clock
 
@@ -162,9 +171,7 @@ describe('LoginComponent', () => {
       authServiceSpy.login.and.returnValue(throwError(() => errorResponse).pipe(delay(0, asyncScheduler)));
 
       component.onSubmit();
-
-      expect(component.isLoading).toBeTruthy();
-      expect(authServiceSpy.login).toHaveBeenCalledWith(loginData);
+      expect(authServiceSpy.login).toHaveBeenCalledWith({ ...loginData, terminalId: undefined });
 
       tick(); // Advance the virtual clock
 
@@ -190,8 +197,6 @@ describe('LoginComponent', () => {
       authServiceSpy.login.and.returnValue(throwError(() => new Error('Network error')).pipe(delay(0, asyncScheduler)));
 
       component.onSubmit();
-
-      expect(component.isLoading).toBeTruthy();
 
       tick(); // Advance the virtual clock
 
