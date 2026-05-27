@@ -1547,7 +1547,7 @@ public class RecipeService : IRecipeService
             {
                 ExternalId = s.ExternalId,
                 StepNumber = s.StepNumber,
-                StepInstructionText = s.StepInstructionText,
+                StepInstructionText = s.StepInstructionText ?? string.Empty,
             }).ToList() ?? new List<RecipeStepDto>()
         };
     }
