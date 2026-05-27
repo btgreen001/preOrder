@@ -91,11 +91,31 @@ namespace PreOrderApp.Controllers
                 return BadRequest(new { message = "Organization name and primary email are required." });
             }
 
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+            {
+                return BadRequest(new { message = "Current password is required to save company profile changes." });
+            }
+
+            var actorUserId = _orgContext.GetCurrentUserId();
             var organizationId = _orgContext.GetCurrentOrganizationId();
             var org = await _context.Organizations.FirstOrDefaultAsync(o => o.OrganizationId == organizationId);
             if (org == null)
             {
                 return NotFound(new { message = "Organization not found." });
+            }
+
+            var actorUser = await _context.SystemUsers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == actorUserId && u.OrganizationId == organizationId && u.IsEnabled);
+
+            if (actorUser == null || string.IsNullOrWhiteSpace(actorUser.PasswordHash))
+            {
+                return Unauthorized(new { message = "Admin account could not be verified." });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, actorUser.PasswordHash))
+            {
+                return BadRequest(new { message = "Current password is incorrect." });
             }
 
             var normalizedEmail = request.PrimaryEmail.Trim();
@@ -359,7 +379,7 @@ namespace PreOrderApp.Controllers
 
             if (string.IsNullOrWhiteSpace(request.Password) || !BCrypt.Net.BCrypt.Verify(request.Password, actorUser.PasswordHash))
             {
-                return BadRequest("Password confirmation failed.");
+                return BadRequest("Current password is incorrect.");
             }
 
             var member = await _context.SystemUsers
@@ -452,7 +472,7 @@ namespace PreOrderApp.Controllers
 
             if (string.IsNullOrWhiteSpace(request.Password) || !BCrypt.Net.BCrypt.Verify(request.Password, actorUser.PasswordHash))
             {
-                return BadRequest("Password confirmation failed.");
+                return BadRequest("Current password is incorrect.");
             }
 
             var member = await _context.SystemUsers

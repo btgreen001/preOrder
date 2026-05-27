@@ -76,6 +76,9 @@ export interface UpdateMyProfileRequest {
   email: string;
   firstName: string;
   lastName: string;
+  currentPassword: string;
+  newPassword?: string;
+  reenterNewPassword?: string;
 }
 
 export interface MyProfileResponse {
@@ -105,6 +108,7 @@ export interface CompanyProfile {
 export interface UpdateCompanyProfileRequest {
   organizationName: string;
   primaryEmail: string;
+  currentPassword: string;
   contactPhone?: string;
   addressLine1?: string;
   addressLine2?: string;

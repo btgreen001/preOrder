@@ -68,6 +68,16 @@ input[readonly] {
   flex: 1;
 }
 
+.field-hint {
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.error-hint {
+  color: var(--bakery-error);
+}
+
 .actions {
   margin-top: 0.5rem;
 }

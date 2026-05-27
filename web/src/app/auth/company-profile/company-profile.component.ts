@@ -27,6 +27,7 @@ export class CompanyProfileComponent implements OnInit {
   form = this.fb.group({
     organizationName: ['', Validators.required],
     primaryEmail: ['', [Validators.required, Validators.email]],
+    currentPassword: ['', Validators.required],
     contactPhone: [''],
     addressLine1: [''],
     addressLine2: [''],
@@ -46,7 +47,10 @@ export class CompanyProfileComponent implements OnInit {
     this.errorMessage = '';
     this.authService.getMyCompanyProfile().subscribe({
       next: data => {
-        this.form.patchValue(data);
+        this.form.patchValue({
+          ...data,
+          currentPassword: ''
+        });
         this.isLoading = false;
       },
       error: err => {
@@ -70,6 +74,7 @@ export class CompanyProfileComponent implements OnInit {
     this.authService.updateMyCompanyProfile(this.form.getRawValue() as UpdateCompanyProfileRequest).subscribe({
       next: res => {
         this.successMessage = res.message || 'Company profile updated.';
+        this.form.patchValue({ currentPassword: '' });
         this.isSaving = false;
         this.snackBar.open(this.successMessage, 'Close', { duration: 5000, panelClass: ['success-snackbar']  });
       },

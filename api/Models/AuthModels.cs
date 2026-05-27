@@ -153,12 +153,16 @@ public class UpdateMyProfileRequest
     public string Email { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string? NewPassword { get; set; }
+    public string? ReenterNewPassword { get; set; }
 }
 
 public class UpdateOrganizationProfileRequest
 {
     public string OrganizationName { get; set; } = string.Empty;
     public string PrimaryEmail { get; set; } = string.Empty;
+    public string CurrentPassword { get; set; } = string.Empty;
     public string? ContactPhone { get; set; }
     public string? AddressLine1 { get; set; }
     public string? AddressLine2 { get; set; }

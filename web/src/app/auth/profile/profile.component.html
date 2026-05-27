@@ -30,6 +30,23 @@
         </label>
       </div>
 
+      <label>
+        Current Password (required to save)
+        <input type="password" formControlName="currentPassword" autocomplete="current-password" />
+      </label>
+
+      <div class="row">
+        <label class="half">
+          New Password (optional)
+          <input type="password" formControlName="newPassword" autocomplete="new-password" />
+        </label>
+
+        <label class="half">
+          Re-enter New Password          
+          <input type="password" formControlName="reenterNewPassword" autocomplete="new-password" />
+<small class="field-hint error-hint" *ngIf="showPasswordMismatchHint">New and Reentered passwords do not match.</small>        </label>
+      </div>
+
       <div class="actions">
         <button type="submit" class="btn-primary" [disabled]="isSaving">
           {{ isSaving ? 'Saving...' : 'Save Profile' }}

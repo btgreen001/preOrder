@@ -30,7 +30,10 @@ export class ProfileComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
-    userName: [{ value: '', disabled: true }]
+    userName: [{ value: '', disabled: true }],
+    currentPassword: ['', Validators.required],
+    newPassword: [''],
+    reenterNewPassword: ['']
   });
 
   ngOnInit(): void {
@@ -46,7 +49,10 @@ export class ProfileComponent implements OnInit {
           email: profile.email,
           firstName: profile.firstName,
           lastName: profile.lastName,
-          userName: profile.userName
+          userName: profile.userName,
+          currentPassword: '',
+          newPassword: '',
+          reenterNewPassword: ''
         });
         this.isLoading = false;
       },
@@ -64,6 +70,14 @@ export class ProfileComponent implements OnInit {
       return;
     }
 
+    const newPassword = this.profileForm.value.newPassword || '';
+    const reenterNewPassword = this.profileForm.value.reenterNewPassword || '';
+    const wantsPasswordChange = !!newPassword || !!reenterNewPassword;
+    if (wantsPasswordChange && newPassword !== reenterNewPassword) {
+      this.errorMessage = 'New password and re-entered password must match.';
+      return;
+    }
+
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -71,10 +85,18 @@ export class ProfileComponent implements OnInit {
     this.authService.updateMyProfile({
       email: this.profileForm.value.email || '',
       firstName: this.profileForm.value.firstName || '',
-      lastName: this.profileForm.value.lastName || ''
+      lastName: this.profileForm.value.lastName || '',
+      currentPassword: this.profileForm.value.currentPassword || '',
+      newPassword: wantsPasswordChange ? newPassword : undefined,
+      reenterNewPassword: wantsPasswordChange ? reenterNewPassword : undefined
     }).subscribe({
       next: res => {
         this.successMessage = res.message || 'Profile updated.';
+        this.profileForm.patchValue({
+          currentPassword: '',
+          newPassword: '',
+          reenterNewPassword: ''
+        });
         this.isSaving = false;
         this.snackBar.open(this.successMessage, 'Close', { duration: 5000, panelClass: ['success-snackbar']  });
       },
@@ -84,5 +106,11 @@ export class ProfileComponent implements OnInit {
         this.snackBar.open(this.errorMessage, 'Close', { duration: 5000, panelClass: ['error-snackbar']  });
       }
     });
+  }
+
+  get showPasswordMismatchHint(): boolean {
+    const newPassword = this.profileForm.value.newPassword || '';
+    const reenterNewPassword = this.profileForm.value.reenterNewPassword || '';
+    return !!newPassword && !!reenterNewPassword && newPassword !== reenterNewPassword;
   }
 }

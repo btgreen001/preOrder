@@ -148,11 +148,35 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email, first name, and last name are required." });
         }
 
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+        {
+            return BadRequest(new { message = "Current password is required to save profile changes." });
+        }
+
         var userId = _orgContext.GetCurrentUserId();
         var user = await _context.SystemUsers.FirstOrDefaultAsync(u => u.UserId == userId && u.IsEnabled);
         if (user == null)
         {
             return NotFound(new { message = "User not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            return BadRequest(new { message = "Current password is incorrect." });
+        }
+
+        var wantsPasswordChange = !string.IsNullOrWhiteSpace(request.NewPassword) || !string.IsNullOrWhiteSpace(request.ReenterNewPassword);
+        if (wantsPasswordChange)
+        {
+            if (string.IsNullOrWhiteSpace(request.NewPassword) || string.IsNullOrWhiteSpace(request.ReenterNewPassword))
+            {
+                return BadRequest(new { message = "Enter and re-enter the new password to change it." });
+            }
+
+            if (!string.Equals(request.NewPassword, request.ReenterNewPassword, StringComparison.Ordinal))
+            {
+                return BadRequest(new { message = "New password and re-entered password do not match." });
+            }
         }
 
         var normalizedEmail = request.Email.Trim();
@@ -168,6 +192,12 @@ public class AuthController : ControllerBase
         user.EmailAddress = normalizedEmail;
         user.FirstName = request.FirstName.Trim();
         user.LastName = request.LastName.Trim();
+
+        if (wantsPasswordChange)
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword!);
+        }
+
         await _context.SaveChangesAsync();
 
         return Ok(new
