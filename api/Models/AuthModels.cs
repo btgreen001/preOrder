@@ -178,6 +178,11 @@ public class ForgotPasswordCodeRequest
     public string Email { get; set; } = string.Empty;
 }
 
+public class ForgotUsernameRequest
+{
+    public string Email { get; set; } = string.Empty;
+}
+
 public class ResetPasswordWithCodeRequest
 {
     public string Email { get; set; } = string.Empty;

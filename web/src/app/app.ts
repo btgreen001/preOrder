@@ -143,11 +143,14 @@ export class App implements OnInit, OnDestroy {
       normalizedUrl === '/register' ||
       normalizedUrl === '/company-register' ||
       normalizedUrl === '/forgot-password' ||
+      normalizedUrl === '/forgot-username' ||
       normalizedUrl === '/reset-password' ||
       normalizedUrl.startsWith('/company-register?') ||
       normalizedUrl.startsWith('/company-register/') ||
       normalizedUrl.startsWith('/forgot-password?') ||
       normalizedUrl.startsWith('/forgot-password/') ||
+      normalizedUrl.startsWith('/forgot-username?') ||
+      normalizedUrl.startsWith('/forgot-username/') ||
       normalizedUrl.startsWith('/reset-password?') ||
       normalizedUrl.startsWith('/reset-password/') ||
       normalizedUrl.startsWith('/register?') ||

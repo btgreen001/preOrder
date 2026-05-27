@@ -332,6 +332,19 @@ public class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
+    [HttpPost("forgot-username")]
+    public async Task<IActionResult> RequestUsernameReminder([FromBody] ForgotUsernameRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest(new { message = "Email is required." });
+        }
+
+        await _authService.RequestUsernameReminderAsync(request.Email);
+        return Ok(new { message = "If that email exists in our system, your username has been sent." });
+    }
+
+    [AllowAnonymous]
     [HttpPost("forgot-password/reset")]
     public async Task<IActionResult> ResetPasswordWithCode([FromBody] ResetPasswordWithCodeRequest request)
     {

@@ -29,6 +29,7 @@ public interface IAuthService
     /// </summary>
     Task<bool> LogoutAllAsync(Guid? userId = null, string? refreshToken = null, string? reason = null);
     Task RequestPasswordResetCodeAsync(string email);
+    Task RequestUsernameReminderAsync(string email);
     Task ResetPasswordWithCodeAsync(string email, string code, string newPassword);
 }
 
@@ -737,6 +738,43 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync();
         await _emailService.SendPasswordResetCodeEmailAsync(user.EmailAddress, user.FirstName, code, expiresOnUtc);
+    }
+
+    public async Task RequestUsernameReminderAsync(string email)
+    {
+        var normalizedEmail = (email ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            return;
+        }
+
+        var users = await _context.SystemUsers
+            .AsNoTracking()
+            .Where(u => u.EmailAddress == normalizedEmail && u.IsEnabled)
+            .OrderBy(u => u.CreatedOn)
+            .ToListAsync();
+
+        // Always return success shape at controller level to prevent account enumeration.
+        if (users.Count == 0)
+        {
+            return;
+        }
+
+        var userNames = users
+            .Select(u => u.UserName)
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (userNames.Count == 0)
+        {
+            return;
+        }
+
+        var firstName = users.FirstOrDefault(u => !string.IsNullOrWhiteSpace(u.FirstName))?.FirstName
+            ?? "there";
+
+        await _emailService.SendUsernameReminderEmailAsync(normalizedEmail, firstName, userNames);
     }
 
     public async Task ResetPasswordWithCodeAsync(string email, string code, string newPassword)

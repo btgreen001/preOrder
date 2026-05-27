@@ -11,6 +11,7 @@ import {
   CompanyRegistrationResponse,
   CompanyProfile,
   ForgotPasswordCodeRequest,
+  ForgotUsernameRequest,
   MyProfileResponse,
   ResetPasswordWithCodeRequest,
   UpdateCompanyProfileRequest,
@@ -196,6 +197,10 @@ export class AuthService {
 
   requestPasswordResetCode(request: ForgotPasswordCodeRequest): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password/code`, request);
+  }
+
+  requestUsernameReminder(request: ForgotUsernameRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-username`, request);
   }
 
   resetPasswordWithCode(request: ResetPasswordWithCodeRequest): Observable<{ message: string }> {

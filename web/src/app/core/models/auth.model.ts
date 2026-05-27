@@ -123,6 +123,10 @@ export interface ForgotPasswordCodeRequest {
   email: string;
 }
 
+export interface ForgotUsernameRequest {
+  email: string;
+}
+
 export interface ResetPasswordWithCodeRequest {
   email: string;
   code: string;

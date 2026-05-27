@@ -20,6 +20,7 @@ public interface IEmailService
 {
     Task SendEmailAsync(string toEmail, string organizationName, string inviteCode, DateTime expiresOnUtc);
     Task SendPasswordResetCodeEmailAsync(string toEmail, string firstName, string code, DateTime expiresOnUtc);
+    Task SendUsernameReminderEmailAsync(string toEmail, string firstName, IReadOnlyCollection<string> userNames);
     Task SendOrderEmailAsync(
         string toEmail,
         string organizationName,
@@ -140,6 +141,52 @@ public class EmailService : IEmailService
         catch (Exception ex)
         {
             _logger.LogError(ex, "SMTP error sending password reset code to {toEmailFingerprint}", toEmailFingerprint);
+            throw;
+        }
+    }
+
+    public async Task SendUsernameReminderEmailAsync(string toEmail, string firstName, IReadOnlyCollection<string> userNames)
+    {
+        var enabled = _configuration.GetValue<bool>("Emails:Enabled", true);
+        if (!enabled)
+        {
+            _logger.LogWarning("Email sending is disabled by configuration.");
+            toEmail = _configuration["Emails:AdminEmail"] ?? "";
+        }
+        var toEmailFingerprint = GetEmailFingerprint(toEmail);
+
+        var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
+        var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
+        var username = _configuration["Emails:Smtp:Username"];
+        var password = _configuration["Emails:Smtp:Password"];
+        var fromEmail = _configuration["Emails:FromEmail"] ?? username ?? "no-reply@example.com";
+        var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}",
+                !string.IsNullOrWhiteSpace(password));
+            throw new InvalidOperationException("Username reminder SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password.");
+        }
+
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.To.Add(MailboxAddress.Parse(toEmail));
+        message.Subject = "Your BakeAhead username";
+        message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
+        {
+            Text = BuildUsernameReminderHtmlBody(firstName, userNames)
+        };
+
+        try
+        {
+            _logger.LogInformation("Sending username reminder email to {toEmailFingerprint}", toEmailFingerprint);
+            await SendViaMailKitAsync(host, port, username, password, message, GetSmtpTimeout());
+            _logger.LogInformation("Username reminder email sent successfully to {toEmailFingerprint}", toEmailFingerprint);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "SMTP error sending username reminder to {toEmailFingerprint}", toEmailFingerprint);
             throw;
         }
     }
@@ -455,6 +502,35 @@ private static string BuildPasswordResetHtmlBody(string firstName, string code, 
             <p style=""font-size: 22px; font-weight: 700; letter-spacing: 2px; margin: 16px 0;"">{safeCode}</p>
             <p>This code expires at <strong>{expiresOnUtc:yyyy-MM-dd HH:mm} UTC</strong>.</p>
             <p>If you did not request a password reset, you can ignore this email.</p>
+        </td>
+    </tr>
+</table>";
+}
+
+private static string BuildUsernameReminderHtmlBody(string firstName, IReadOnlyCollection<string> userNames)
+{
+    var safeFirstName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(firstName) ? "there" : firstName);
+    var safeUserNames = userNames
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Select(WebUtility.HtmlEncode)
+        .ToList();
+
+    var listHtml = string.Join(string.Empty, safeUserNames.Select(name => $"<li><strong>{name}</strong></li>"));
+    if (string.IsNullOrWhiteSpace(listHtml))
+    {
+        listHtml = "<li><strong>(no username found)</strong></li>";
+    }
+
+    return $@"
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-family: Arial, sans-serif; font-size: 14px; color: #333;"">
+    <tr>
+        <td>
+            <p>Hi {safeFirstName},</p>
+            <p>Here is the username associated with this email address:</p>
+            <ul>
+                {listHtml}
+            </ul>
+            <p>If you did not request this reminder, you can ignore this email.</p>
         </td>
     </tr>
 </table>";

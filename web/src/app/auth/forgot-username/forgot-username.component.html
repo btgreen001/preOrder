@@ -1,7 +1,7 @@
 <div class="auth-page">
   <div class="auth-card">
-    <h2>Forgot Password</h2>
-    <p class="muted">Enter your account email and we will send a reset code.</p>
+    <h2>Forgot Username</h2>
+    <p class="muted">Enter your account email and we will send your login username.</p>
 
     <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
     <div class="success" *ngIf="successMessage">{{ successMessage }}</div>
@@ -14,14 +14,13 @@
 
       <div class="actions">
         <button type="submit" class="btn-primary" [disabled]="isSubmitting">
-          {{ isSubmitting ? 'Sending...' : 'Send Reset Code' }}
+          {{ isSubmitting ? 'Sending...' : 'Send Username' }}
         </button>
       </div>
     </form>
 
     <div class="links">
-      <a routerLink="/reset-password">I already have a code</a>
-      <a routerLink="/forgot-username" data-testid="forgot-username-link">Forgot username?</a>
+      <a routerLink="/forgot-password">Forgot password instead?</a>
       <a routerLink="/login">Back to login</a>
     </div>
   </div>
