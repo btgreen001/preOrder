@@ -29,6 +29,47 @@ public class StringSanitizerTests
 
         Assert.Equal("invalid", result);
     }
+    [Fact]
+    public void SanitizeForLog_RemovesAllControlCharacters()
+    {
+        var input = "A\rB\nC\tD";
+        var result = StringSanitizer.SanitizeForLog(input);
+
+        Assert.Equal("ABCD", result);
+    }
+    [Fact]
+    public void SanitizeForLog_LengthUnderLimit_ReturnsUnchanged()
+    {
+        var input = new string('a', 199);
+        var result = StringSanitizer.SanitizeForLog(input);
+
+        Assert.Equal(input, result);
+    }
+    [Fact]
+    public void SanitizeForLog_LengthAtLimit_ReturnsUnchanged()
+    {
+        var input = new string('a', 200);
+        var result = StringSanitizer.SanitizeForLog(input);
+
+        Assert.Equal(input, result);
+    }
+    [Fact]
+    public void SanitizeForLog_LengthOverLimit_TruncatesAndAppendsEllipsis()
+    {
+        var input = new string('a', 201);
+        var result = StringSanitizer.SanitizeForLog(input);
+
+        Assert.Equal(new string('a', 200) + "...", result);
+    }
+    
+    [Fact]
+    public void SanitizeForLog_DoesNotAddEllipsisWhenNotTruncated()
+    {
+        var input = "hello";
+        var result = StringSanitizer.SanitizeForLog(input);
+
+        Assert.DoesNotContain("...", result);
+    }
 
     [Fact]
     public void SanitizeForUse_TrimsAndRemovesControlCharacters()
@@ -47,6 +88,47 @@ public class StringSanitizerTests
 
         Assert.Equal("aaaaaaaaaa...", result);
     }
+    [Fact]
+    public void SanitizeForUse_RemovesAllControlCharacters()
+    {
+        var input = "A\rB\nC\tD";
+        var result = StringSanitizer.SanitizeForUse(input);
+
+        Assert.Equal("ABCD", result);
+    }
+    [Fact]
+    public void SanitizeForUse_LengthUnderLimit_ReturnsUnchanged()
+    {
+        var input = new string('a', 199);
+        var result = StringSanitizer.SanitizeForUse(input);
+
+        Assert.Equal(input, result);
+    }
+    [Fact]
+    public void SanitizeForUse_LengthAtLimit_ReturnsUnchanged()
+    {
+        var input = new string('a', 200);
+        var result = StringSanitizer.SanitizeForUse(input);
+
+        Assert.Equal(input, result);
+    }
+    [Fact]
+    public void SanitizeForUse_LengthOverLimit_TruncatesAndAppendsEllipsis()
+    {
+        var input = new string('a', 201);
+        var result = StringSanitizer.SanitizeForUse(input);
+
+        Assert.Equal(new string('a', 200) + "...", result);
+    }
+    [Fact]
+    public void SanitizeForUse_DoesNotAddEllipsisWhenNotTruncated()
+    {
+        var input = "hello";
+        var result = StringSanitizer.SanitizeForUse(input);
+
+        Assert.DoesNotContain("...", result);
+    }
+
 
     [Theory]
     [InlineData("   ")]
@@ -57,4 +139,7 @@ public class StringSanitizerTests
 
         Assert.Equal(string.Empty, result);
     }
+
+
+    
 }
