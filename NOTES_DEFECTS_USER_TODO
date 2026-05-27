@@ -1,3 +1,12 @@
+Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
+and always keeping MASTER_TODO_LIST.md updated on progress, 
+
+
+Need to add ability to count bad password attempts and lock them out after X requiring password reset.
+Need to improve the event create/edit.  When dates / times changes then all downstream dates/times change (preorder window, pickup start / end).  
+	The problem occurs after initial values have been populating and a user wants to merely change just one value like a preorder end datetime.  Today it updates pickup start/end.  Need to consider what is the right thing to do in order to obfuscate an unintentional change which is not obvious to the user.
+
+
 Deploy work
 Node.js 20 will be deprecated in the future.
 
@@ -95,11 +104,6 @@ docker compose yaml has       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:420
 
 
 
-Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
-and always keeping MASTER_TODO_LIST.md updated on progress, 
-
-
-Need to add ability to count bad password attempts and lock them out after X requiring password reset.
 
 
 

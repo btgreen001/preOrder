@@ -39,4 +39,10 @@ public class LicenseModelsTests
         var bytes = Convert.FromBase64String(salt);
         Assert.Equal(32, bytes.Length);
     }
+
+    [Fact]
+    public void GetFeaturesForTier_InvalidTier_ThrowsArgumentOutOfRange()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => LicenseFeatures.GetFeaturesForTier((LicenseTier)999));
+    }
 }

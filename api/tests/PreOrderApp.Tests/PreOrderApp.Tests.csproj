@@ -11,7 +11,7 @@
     <Threshold>85</Threshold>
     <ThresholdType>line</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
-    <Include>[PreOrderApp]PreOrderApp.Infrastructure.StringSanitizer,[PreOrderApp]PreOrderApp.Infrastructure.WallClockDateTimeConverter,[PreOrderApp]PreOrderApp.Models.LicenseFeatures,[PreOrderApp]PreOrderApp.Models.LicenseUtils,[PreOrderApp]PreOrderApp.Services.FractionUtility</Include>
+    <Include>[PreOrderApp]PreOrderApp.Infrastructure.StringSanitizer,[PreOrderApp]PreOrderApp.Infrastructure.WallClockDateTimeConverter,[PreOrderApp]PreOrderApp.Models.LicenseFeatures,[PreOrderApp]PreOrderApp.Models.LicenseUtils</Include>
   </PropertyGroup>
 
   <ItemGroup>

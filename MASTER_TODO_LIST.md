@@ -35,6 +35,14 @@
 
 ## Latest Progress (2026-05-27)
 
+- ✅ **Backend scoped coverage update completed**:
+  - Removed `FractionUtility` from backend coverage include scope because it is out-of-scope for the Holiday Pre-Order mini-app.
+  - Added focused backend tests for remaining in-scope utilities/models:
+    - `StringSanitizer`
+    - `WallClockDateTimeConverter`
+    - `LicenseFeatures` invalid-tier guard
+  - Local backend regression run now passes with **37/37 tests** and **100% line coverage** on the scoped include set.
+
 - ✅ **Regression command scope clarified for mini-app**:
   - Documented authoritative automated test command set in `REGRESSION_TEST_PLAN.md`.
   - Added explicit guardrail to avoid broad solution-wide test runs for MVP sign-off.

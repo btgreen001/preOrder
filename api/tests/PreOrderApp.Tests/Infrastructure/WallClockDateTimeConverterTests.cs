@@ -38,6 +38,25 @@ public class WallClockDateTimeConverterTests
     }
 
     [Fact]
+    public void Read_NonStringToken_ThrowsJsonException()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<DateTime>("123", SerializerOptions));
+    }
+
+    [Fact]
+    public void Read_FlexibleDateFormat_UsesFallbackParser()
+    {
+        var result = JsonSerializer.Deserialize<DateTime>("\"May 27, 2026 09:30 PM\"", SerializerOptions);
+
+        Assert.Equal(2026, result.Year);
+        Assert.Equal(5, result.Month);
+        Assert.Equal(27, result.Day);
+        Assert.Equal(21, result.Hour);
+        Assert.Equal(30, result.Minute);
+        Assert.Equal(DateTimeKind.Unspecified, result.Kind);
+    }
+
+    [Fact]
     public void Write_SerializesWithoutTimezoneSuffix()
     {
         var value = DateTime.SpecifyKind(new DateTime(2026, 5, 27, 9, 30, 45, 123), DateTimeKind.Unspecified);
