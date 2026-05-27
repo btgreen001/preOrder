@@ -90,7 +90,7 @@
           <td>{{ event.pickupStartDt | date: 'MM-dd-yyyy' }} -> {{ event.pickupEndDt | date: 'MM-dd-yyyy' }}</td>
           <td>{{ event.isActive ? 'Active' : 'Inactive' }}</td>
           <td>
-            <button *ngIf="!event.isActive" type="button" (click)="startEdit(event)">Edit</button>
+            <button *ngIf="canEditEvent(event)" type="button" (click)="startEdit(event)">Edit</button>
             <button type="button" (click)="activateToggleEvent(event)" class="delete-btn" [disabled]="isSaving">
               {{ event.isActive ? 'Deactivate' : 'Activate' }}
             </button>

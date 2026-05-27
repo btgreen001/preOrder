@@ -102,6 +102,20 @@ export class PreorderEventsAdminComponent implements OnInit {
     this.form.pickupEndDt   = this.form.pickupStartDt;
 
   }
+
+  canEditEvent(event: AdminHolidayEvent): boolean {
+    if (!event.opensAt) {
+      return false;
+    }
+
+    const opensAt = new Date(event.opensAt);
+    if (Number.isNaN(opensAt.getTime())) {
+      return false;
+    }
+
+    return opensAt.getTime() > Date.now();
+  }
+
   startEdit(event: AdminHolidayEvent): void {
     this.editingExternalId = event.externalId;
     this.successMessage = '';
