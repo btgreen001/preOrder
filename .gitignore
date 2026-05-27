@@ -63,6 +63,8 @@ yarn-debug.log*
 # Test coverage
 coverage/
 .nyc_output/
+TestResults/
+api/tests/**/TestResults/
 
 
 # Dependency directories

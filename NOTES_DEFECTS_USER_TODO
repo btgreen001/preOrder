@@ -1,6 +1,32 @@
 Deploy work
 Node.js 20 will be deprecated in the future.
 
+## 2026-05-27 Automated Regression + Coverage Gate Update
+
+- Implemented CI-enforced automated coverage checks:
+	- Backend coverage gate integrated into `.github/workflows/ci.yml` via `dotnet test` on `api/tests/PreOrderApp.Tests`.
+	- Frontend coverage gate integrated into `.github/workflows/ci.yml` via `npm run test:ci:coverage` + `npm run coverage:check:frontend`.
+
+- Added backend automated test project:
+	- `api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj`
+	- xUnit + coverlet with backend line coverage threshold set to **85%**.
+	- Added tests for license hashing/features, fraction parsing/formatting, wall-clock datetime converter, and string sanitizer.
+	- Local run result: **31 passed**, backend scoped line coverage **94.17%**.
+
+- Added frontend automated guard regression tests:
+	- `web/src/core/auth.guard.spec.ts`
+	- Tests cover auth route allow-list, unauthenticated redirects (`/login` vs `/pin-signin`), and admin/staff role guards.
+	- Local run result: **8 passed**, auth guard line coverage **84.61%** (passes **80%** gate).
+
+- Added frontend coverage checker utility:
+	- `web/scripts/check-lcov.mjs` (supports HTML and LCOV parsing for gate enforcement).
+
+- Follow-up expansion work:
+	- Increase automated coverage scope from current guard/utility slice to full MVP-critical modules:
+		- Public preorder wizard flow services/components.
+		- Admin preorder CRUD + status transitions + CSV.
+		- Invite create/resend/member admin flow.
+
 ## 2026-05-24 Invite Flow Error Follow-up
 
 - Observed in browser logs while inviting staff:

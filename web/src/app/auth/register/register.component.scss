@@ -49,7 +49,7 @@
 }
 
 .card-header h2 {
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .card-header p {
@@ -58,7 +58,8 @@
 
 .muted {
   color: var(--muted);
-  margin: 0 0 18px 0;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
 }
 
 .full {
@@ -68,13 +69,28 @@
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+}
+
+.register-form .section {
+  margin-bottom: 10px;
 }
 
 mat-form-field {
   background: var(--bakery-accent-2);
   border-radius: 8px;
   color: var(--bakery-text-emph);
+}
+
+.section-label {
+  display: block;
+  font-weight: 500;
+  color: var(--bakery-text-emph);
+  margin-bottom: 10px;
+  margin-top: 2px;
+}
+.top-spacer {
+  margin-top: 16px;
 }
 
 input[matInput] {
@@ -154,4 +170,6 @@ a {
   .spotify-card {
     width: 100%;
   }
+
+
 }

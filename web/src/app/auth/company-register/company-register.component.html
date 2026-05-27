@@ -87,7 +87,7 @@
         </div>
 
         <button mat-flat-button class="spotify-btn" type="submit" [disabled]="companyRegisterForm.invalid || isLoading">
-          <span *ngIf="!isLoading">Register Company</span>
+          <span *ngIf="!isLoading">Register</span>
         </button>
 
         <div class="success" *ngIf="successMessage">
@@ -98,8 +98,8 @@
       </form>
 
       <mat-card-actions class="card-actions">
-        <a routerLink="/login">Already registered? Login</a>
-        <a routerLink="/register">Have a registration code?</a>
+        <a routerLink="/register">Have an invite code?</a>
+        <a routerLink="/login">Back to login</a>
       </mat-card-actions>
     </mat-card>
   </div>

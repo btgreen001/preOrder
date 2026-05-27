@@ -10,6 +10,8 @@
     "build:prod": "dotenv -e ../.env -e ../.env.local -- ng build --configuration=production",
     "watch": "ng build --watch --configuration=development",
     "test": "ng test",
+    "test:ci:coverage": "ng test --watch=false --browsers=ChromeHeadless --code-coverage --include src/core/auth.guard.spec.ts",
+    "coverage:check:frontend": "node scripts/check-lcov.mjs coverage/angular-client-new/core/auth.guard.ts.html 80 frontend",
     "lint": "ng lint",
     "e2e": "cypress run --browser electron",
     "e2e:open": "cypress open"

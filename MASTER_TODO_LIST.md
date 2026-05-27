@@ -33,6 +33,43 @@
   - Fix: removed `AsNoTracking` from registration code lookup in `AuthService`.
   - Result: invite `Status` and `Used On` now update correctly once a code is consumed.
 
+## Latest Progress (2026-05-27)
+
+- ✅ **Regression command scope clarified for mini-app**:
+  - Documented authoritative automated test command set in `REGRESSION_TEST_PLAN.md`.
+  - Added explicit guardrail to avoid broad solution-wide test runs for MVP sign-off.
+  - Confirmed mini-app regression scope excludes legacy BakeBoard areas (including terminal management).
+
+- ✅ **Coverage gates wired into CI** (`.github/workflows/ci.yml`):
+  - Backend: `dotnet test` now runs in CI with enforced minimum line coverage threshold.
+  - Frontend: unit-test coverage job now runs before build and fails if threshold check fails.
+
+- ✅ **Backend automated test project created** (`api/tests/PreOrderApp.Tests`):
+  - Added xUnit + coverlet-based test suite with enforced **85%** line coverage minimum.
+  - Added tests for:
+    - `LicenseFeatures` / `LicenseUtils`
+    - `FractionUtility`
+    - `StringSanitizer`
+    - `WallClockDateTimeConverter`
+  - Local validation: backend suite passed with **94.17% line coverage** on current scoped include set.
+
+- ✅ **Frontend automated regression unit tests expanded**:
+  - Added `web/src/core/auth.guard.spec.ts` for `AuthGuard`, `StaffGuard`, and `AdminGuard` route-protection behavior.
+  - Added deterministic frontend coverage gate script at `web/scripts/check-lcov.mjs`.
+  - Local validation: guard coverage report passed the **80%** gate (84.61% line coverage).
+
+- ℹ️ **Current coverage gate scope**:
+  - Backend threshold currently applies to the newly automated MVP utility slice included in the backend coverage filter.
+  - Frontend threshold currently applies to the automated auth-guard regression slice.
+  - Next slice should expand both include scopes toward full MVP-critical modules/endpoints.
+
+## Coverage Targets (Updated 2026-05-27)
+
+- Backend automated test coverage target: **85%** minimum.
+- Frontend automated test coverage target: **80%** minimum.
+- MVP regression sign-off requires both coverage targets to pass in CI along with critical-path regression tests.
+- Note: these higher thresholds materially improve release confidence, but do not mathematically guarantee near-100% defect prevention.
+
 ## Recommended Starting Point
 Start with a focused carve-out phase, not with payments or polished UI.
 

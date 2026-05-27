@@ -7,6 +7,35 @@ Verify critical end-to-end flows after recent feature implementations:
 - Admin soft-delete with dependency checks
 - Public order flow with capacity guards
 
+## Coverage Gates (Updated 2026-05-27)
+
+- Backend automated coverage must be **>= 85%**.
+- Frontend automated coverage must be **>= 80%**.
+- CI should fail if either threshold is not met.
+- Passing all regression scenarios below plus coverage gates is required for MVP test sign-off.
+
+## Automated Test Commands (Authoritative Scope)
+
+Use this command set for the Holiday Pre-Order mini-app regression baseline:
+
+1. Backend scoped tests + coverage gate:
+	- `dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-build`
+2. Frontend scoped tests + coverage gate:
+	- `npm run test:ci:coverage` (from `web/`)
+	- `npm run coverage:check:frontend` (from `web/`)
+3. Optional build verification (not a regression test):
+	- `dotnet build api/PreOrderApp.sln --configuration Release --no-restore`
+	- `npm run build` (from `web/`)
+
+Out-of-scope for this mini-app regression pass:
+- Solution-wide or broad inherited checks not tied to Holiday Pre-Order MVP behavior.
+- Any legacy BakeBoard domains (inventory, production, recipes, waste, terminal management, PIN admin).
+- FractionUtility
+
+Guardrail:
+- Do not use broad commands like `dotnet test api/PreOrderApp.sln` for MVP regression sign-off.
+- Always use the explicitly scoped test project and frontend scripts listed above.
+
 ---
 
 ## PUBLIC PREORDER FLOW (High Priority)
