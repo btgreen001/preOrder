@@ -281,11 +281,16 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request, Guid? terminalId = null)
     {
-        string sanitizedUser = StringSanitizer.SanitizeForLog(request?.UserName);
+        string sanitizedUser = StringSanitizer.SanitizeUsername(request?.UserName);
+
         if (request == null)
         {
             _logger.LogWarning("[LoginAsync] Request payload was null.");
             return null;
+        }
+        if (sanitizedUser != request.UserName)
+        {
+            throw new ArgumentException($"Username may only contain letters, numbers, and periods.");
         }
 
         if (string.IsNullOrWhiteSpace(sanitizedUser) || string.IsNullOrWhiteSpace(request.Password))
@@ -492,12 +497,14 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> RegisterUserAsync(RegisterUserRequest request)
     {
-        string sanitizedUserName = StringSanitizer.SanitizeForLog(request.UserName);
+        string sanitizedUserName = StringSanitizer.SanitizeUsername(request.UserName);
         string sanitizedEmail = StringSanitizer.SanitizeForUse(request.Email);
         string sanitizedCompanyRegistrationCode = StringSanitizer.SanitizeForUse(request.CompanyRegistrationCode);
         // Bad user names don't go any further
         if (sanitizedUserName != request.UserName)
-            throw new InvalidOperationException("Username is not valid.");
+        {
+            throw new ArgumentException($"Username may only contain letters, numbers, and periods.");
+        }
 
         // Validate registration code
         var registrationCode = await _context.RegistrationCodes
@@ -588,7 +595,7 @@ public class AuthService : IAuthService
 
     public async Task<CompanyRegistrationResponse> RegisterCompanyAsync(RegisterCompanyRequest request)
     {
-        string sanitizedAdminUserName = StringSanitizer.SanitizeForUse(request.AdminUserName);
+        string sanitizedAdminUserName = StringSanitizer.SanitizeUsername(request.AdminUserName);
         sanitizedAdminUserName = sanitizedAdminUserName.ToLowerInvariant();
         string sanitizedAdminEmail = StringSanitizer.SanitizeForUse(request.AdminEmail);
         string sanitizedEmail = StringSanitizer.SanitizeForUse(request.Email);

@@ -19,7 +19,7 @@ describe('Authentication Flow', () => {
     cy.get('mat-form-field').should('have.length.at.least', 2);
     
     // Get all inputs and fill them
-    cy.get('input').eq(0).clear().type('ba');
+    cy.get('input').eq(0).clear().type('demo-pre-order');
     cy.get('input').eq(1).clear().type('password');
     
     // Click the submit button
@@ -48,7 +48,7 @@ describe('Authentication Flow', () => {
   it('should logout successfully', () => {
     // Login first
     cy.visit('/login', { timeout: 10000 });
-    cy.get('input').eq(0).clear().type('ba');
+    cy.get('input').eq(0).clear().type('demo-pre-order');
     cy.get('input').eq(1).clear().type('password');
     cy.get('[data-testid="login-submit-button"]').click();
     

@@ -471,6 +471,8 @@ public class AuthServiceTests : IDisposable
     public async Task RegisterUserAsync_ValidRequest_CreatesUserAndMarksCodeUsed()
     {
         var (org, admin, sub) = await SeedOrgWithAdminAsync("-register");
+        sub.Tier = LicenseTier.Standard;
+        await _context.SaveChangesAsync();
         var code = await SeedRegistrationCodeAsync(org, admin);
 
         var request = new RegisterUserRequest

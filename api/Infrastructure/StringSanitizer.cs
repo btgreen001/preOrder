@@ -22,6 +22,27 @@ public static class StringSanitizer
 
         return trimmed.Length > 200 ? trimmed[..200] + "..." : trimmed;
     }
+
+    public static string SanitizeUsername(string? value, int maxLength = 50)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        // Allowed: letters, numbers, period
+        var sanitized = new string(
+            value.Where(c =>
+                char.IsLetterOrDigit(c) ||
+                c == '.'
+            ).ToArray()
+        );
+
+        // Trim to max length
+        if (sanitized.Length > maxLength)
+            sanitized = sanitized[..maxLength];
+
+        return sanitized;
+    }
+
     public static string SanitizeForUse(string? value, int maxLength = 200)
     {
         if (string.IsNullOrWhiteSpace(value))
