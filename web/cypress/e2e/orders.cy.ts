@@ -1,9 +1,12 @@
 describe('Orders Flow', () => {
   beforeEach(() => {
-    cy.visit('/login');
-    cy.get('[data-testid="username-input"]').clear().type('demo-pre-order');
-    cy.get('[data-testid="password-input"]').clear().type('password');
+    cy.visit('/login', { timeout: 10000 });
+    cy.get('form').should('exist');
+    cy.get('mat-form-field').should('have.length.at.least', 2);
+    cy.get('input').eq(0).clear().type('demo-pre-order');
+    cy.get('input').eq(1).clear().type('password');
     cy.get('[data-testid="login-submit-button"]').click();
+    cy.wait(5000);
     cy.url({ timeout: 15000 }).should('not.include', '/login');
 
     cy.get('aside.sidebar a[routerlink="/admin/orders"], aside.sidebar a[href="/admin/orders"]').first().click();

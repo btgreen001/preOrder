@@ -41,6 +41,11 @@ export class AuthService {
   private refreshInProgress: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private isRefreshing = false;
 
+  private isGuid(value: string | null | undefined): value is string {
+    return !!value
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
+
   constructor() {
     // Initialize with null - no persistence across browser sessions
     this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
@@ -74,10 +79,13 @@ export class AuthService {
 
   // JWT Bearer token login with HttpOnly cookie for refresh token
   login(credentials: LoginRequest): Observable<AuthResponse> {
+    const requestedTerminalId = credentials.terminalId || this.terminalContext.getTerminalId();
+    const terminalId = this.isGuid(requestedTerminalId) ? requestedTerminalId : undefined;
+
     // Add terminalId from context if available
     const loginRequest: LoginRequest = {
       ...credentials,
-      terminalId: credentials.terminalId || this.terminalContext.getTerminalId() || undefined
+      terminalId
     };
 
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, loginRequest, {

@@ -8,6 +8,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { extractErrorMessage } from '../../shared/utils/error-extractor';
 
 @Component({
   selector: 'app-login',
@@ -77,18 +78,16 @@ export class LoginComponent implements OnInit {
         },
         error: error => {
           this.isLoading = false;
-          
-          // Extract error message from various response structures
-          const errorMsg = error.error?.message || error.error || error.message || '';
+
+          const errorMsg = extractErrorMessage(error, 'Login failed. Please check your credentials.');
           console.error('[LoginComponent] Login error:', { status: error.status, message: errorMsg });
-          
+
           // Check if error mentions terminal or organization (case-insensitive)
           if (errorMsg.toLowerCase().includes('terminal') || errorMsg.toLowerCase().includes('organization')) {
             // Pass through backend message directly (it's already user-friendly)
             this.errorMessage = errorMsg;
           } else {
-            // Generic credential error
-            this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
+            this.errorMessage = errorMsg;
           }
         }
       });

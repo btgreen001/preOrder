@@ -311,6 +311,11 @@ public class AuthController : ControllerBase
 
             return Ok(response);
         }
+        catch (InvalidOperationException ex)
+        {
+            // Map service-level validation failures to a friendly 400 payload
+            return BadRequest(new { message = ex.Message });
+        }
         catch (UnauthorizedAccessException ex)
         {
             // Return 403 Forbidden with error message for invalid/wrong-org terminal

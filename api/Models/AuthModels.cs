@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using PreOrderApp.Models;
 public class RegistrationCode
 {
@@ -104,14 +105,24 @@ public class LoginRequest
 {
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public Guid? TerminalId { get; set; } // Optional: Terminal ID for organization binding validation
+
+    [JsonPropertyName("terminalId")]
+    public string? TerminalIdRaw { get; set; }
+
+    [JsonIgnore]
+    public Guid? TerminalId => Guid.TryParse(TerminalIdRaw, out var terminalId) ? terminalId : null;
 }
 
 public class PinLoginRequest
 {
     public string UserId { get; set; } = string.Empty;
     public string Pin { get; set; } = string.Empty;
-    public Guid? TerminalId { get; set; } // Optional: Terminal ID for organization binding validation
+
+    [JsonPropertyName("terminalId")]
+    public string? TerminalIdRaw { get; set; }
+
+    [JsonIgnore]
+    public Guid? TerminalId => Guid.TryParse(TerminalIdRaw, out var terminalId) ? terminalId : null;
 }
 
 public class AuthResponse

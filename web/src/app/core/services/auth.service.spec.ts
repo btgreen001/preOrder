@@ -105,6 +105,21 @@ describe('AuthService', () => {
       req.flush(mockAuthResponse);
     });
 
+    it('should omit invalid terminalId values from login request body', () => {
+      terminalContextSpy.getTerminalId.and.returnValue('not-a-guid');
+
+      service.login(mockLoginRequest).subscribe();
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/auth/login`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({
+        username: 'testuser',
+        password: 'password123',
+        terminalId: undefined
+      });
+      req.flush(mockAuthResponse);
+    });
+
     it('should handle login error', (done) => {
       service.login(mockLoginRequest).subscribe({
         next: () => fail('Should have failed'),

@@ -290,7 +290,7 @@ public class AuthService : IAuthService
         }
         if (sanitizedUser != request.UserName)
         {
-            throw new ArgumentException($"Username may only contain letters, numbers, and periods.");
+            throw new InvalidOperationException($"Authentication failed");
         }
 
         if (string.IsNullOrWhiteSpace(sanitizedUser) || string.IsNullOrWhiteSpace(request.Password))
@@ -503,7 +503,7 @@ public class AuthService : IAuthService
         // Bad user names don't go any further
         if (sanitizedUserName != request.UserName)
         {
-            throw new ArgumentException($"Username may only contain letters, numbers, and periods.");
+            throw new InvalidOperationException($"Username may only contain letters, numbers, and special characters ._-");
         }
 
         // Validate registration code
@@ -602,7 +602,7 @@ public class AuthService : IAuthService
 
         // Bad user names don't go any further
         if (sanitizedAdminUserName != request.AdminUserName.ToLowerInvariant())
-            throw new InvalidOperationException("Username is not valid.");
+            throw new InvalidOperationException("Username may only contain letters, numbers, and special characters ._-");
 
 
         // Check if company email is already in use

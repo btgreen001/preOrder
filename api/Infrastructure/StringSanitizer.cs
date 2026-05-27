@@ -32,7 +32,7 @@ public static class StringSanitizer
         var sanitized = new string(
             value.Where(c =>
                 char.IsLetterOrDigit(c) ||
-                c == '.'
+                c == '.' || c=='-' || c=='_'
             ).ToArray()
         );
 
