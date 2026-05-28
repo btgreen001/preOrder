@@ -1,8 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+
+import { Component, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 import {
   PreorderAdminService,
   AdminHolidayEvent,
@@ -21,6 +24,7 @@ import {
 export class PreorderMenuAdminComponent implements OnInit {
   private static readonly UNLINKED_PRODUCT_NAME = 'UNLINKED';
   private readonly preorderAdminService = inject(PreorderAdminService);
+  private readonly snackBar = inject(MatSnackBar);
 
   holidayEvents: AdminHolidayEvent[] = [];
   menuItems: AdminMenuItem[] = [];
@@ -120,7 +124,7 @@ export class PreorderMenuAdminComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Could not load menu items.';
+        this.errorMessage = 'Could not load items.';
         this.isLoading = false;
       }
     });
@@ -185,14 +189,36 @@ export class PreorderMenuAdminComponent implements OnInit {
     this.preorderAdminService.updateMenuItem(item.externalId, deactivateRequest).subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMessage = 'Menu item deactivated.';
+        this.snackBar.open('Item deactivated.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
         this.loadMenuItems();
       },
       error: (error) => {
         this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not deactivate menu item.');
+        this.errorMessage = extractErrorMessage(error, 'Could not deactivate item.');
       }
     });
+  }
+
+    private focusValidationField(inputRef: ElementRef<HTMLInputElement>): void {
+    const input = inputRef?.nativeElement;
+    if (!input) {
+      return;
+    }
+
+    if (this.isMobileViewport()) {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    input.focus();
+  }
+
+    private isMobileViewport(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.matchMedia('(max-width: 768px)').matches;
   }
 
   saveMenuItem(): void {
@@ -200,22 +226,23 @@ export class PreorderMenuAdminComponent implements OnInit {
     this.successMessage = '';
 
     if (!this.form.holidayEventExternalId) {
-      this.errorMessage = 'Select an event first.';
+      this.snackBar.open('Select an event first.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (!this.form.name.trim()) {
-      this.errorMessage = 'Menu item name is required.';
+      this.focusValidationField(this.itemNameInput);
       return;
     }
 
     if (this.form.price < 0) {
-      this.errorMessage = 'Price cannot be negative.';
+      this.snackBar.open('Price cannot be negative.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+
       return;
     }
 
     if (this.form.maxPerOrder !== null && this.form.maxPerOrder !== undefined && this.form.maxPerOrder < 1) {
-      this.errorMessage = 'Max-per-order must be at least 1.';
+      this.snackBar.open('Max-per-order must be at least 1.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
@@ -239,13 +266,13 @@ export class PreorderMenuAdminComponent implements OnInit {
     save$.subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMessage = this.editingExternalId ? 'Menu item updated.' : 'Menu item created.';
+        this.snackBar.open(this.editingExternalId ? 'Item updated.' : 'Item created.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
         this.startCreate();
         this.loadMenuItems();
       },
       error: (error) => {
         this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not save menu item.');
+        this.errorMessage = extractErrorMessage(error, 'Could not save item.');
       }
     });
   }
@@ -262,4 +289,13 @@ export class PreorderMenuAdminComponent implements OnInit {
   get unlinkedMenuItems(): AdminMenuItem[] {
     return this.menuItems.filter(item => this.isUsingUnlinkedProduct(item));
   }
+
+
+@ViewChild('itemNameInput') itemNameInput!: ElementRef<HTMLInputElement>;
+@ViewChild('priceInput') priceInput!: ElementRef<HTMLInputElement>;
+@ViewChild('maxPerOrderInput') maxPerOrderInput!: ElementRef<HTMLInputElement>;
+@ViewChild('sortOrderInput') sortOrderInput!: ElementRef<HTMLInputElement>;
+@ViewChild('isActiveInput') isActiveInput!: ElementRef<HTMLSelectElement>;
+@ViewChild('descriptionInput') descriptionInput!: ElementRef<HTMLTextAreaElement>;
+
 }

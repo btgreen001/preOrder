@@ -1,8 +1,17 @@
 <div class="app-shell">
   <app-loading-overlay></app-loading-overlay>
   <nav class="topnav">
-    <button class="mobile-nav-toggle" *ngIf="showAdminShell" (click)="toggleSidebar()" title="Toggle navigation" aria-label="Toggle navigation">
+    <button
+      class="mobile-nav-toggle"
+      *ngIf="showAdminShell"
+      (click)="toggleSidebar()"
+      title="Toggle navigation"
+      aria-label="Toggle navigation"
+      [attr.aria-expanded]="isSidebarOpen"
+      aria-controls="primary-sidebar"
+    >
       <mat-icon>{{ isSidebarOpen ? 'close' : 'menu' }}</mat-icon>
+      
     </button>
     <mat-icon class="brand-icon">bakery_dining</mat-icon>
     <div class="app-title-wrapper">
@@ -28,7 +37,7 @@
   >
   </div>
   <div class="main-layout">
-  <aside class="sidebar" *ngIf="showAdminShell" [class.mobile-open]="isSidebarOpen">
+  <aside id="primary-sidebar" class="sidebar" *ngIf="showAdminShell" [class.mobile-open]="isSidebarOpen">
   <ul>
     <li *ngFor="let nav of sidebarNav"
         [class.active]="nav.route ? isActive(nav.route) : false"

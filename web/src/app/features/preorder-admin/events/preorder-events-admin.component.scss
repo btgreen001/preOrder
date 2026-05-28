@@ -44,9 +44,107 @@ label {
   gap: 0.35rem;
 }
 
+.field-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.field-head > span:first-child {
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .span-2 {
   grid-column: span 2;
 
+}
+
+.auto-sync-toggle {
+  border: 1px solid var(--bakery-border);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+}
+
+.auto-sync-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+
+.auto-sync-option span {
+  display: inline;
+}
+
+
+.all-day-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  visibility: hidden;
+  height: 0px;
+}
+
+.all-day-option span {
+  display: inline;
+  height: 0px;
+  visibility: hidden;
+}
+
+.auto-sync-toggle input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+
+.auto-sync-toggle > small {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.date-input-actions {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.date-input-actions input {
+  flex: 1 1 auto;
+}
+
+.quick-time-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: #f7f7f7;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  width: 90px;
+  text-align: center;
+}
+
+.auto-sync-toggle small {
+  color: #5f6b73;
+}
+
+.auto-sync-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.auto-sync-actions button {
+  padding: 0.35rem 0.65rem;
+  background: #f7f7f7;
 }
 
 input,
@@ -160,6 +258,12 @@ td {
 
   .span-2 {
     grid-column: auto;
+  }
+
+  .field-head {
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
   }
 }
 

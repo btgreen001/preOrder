@@ -1,11 +1,11 @@
 <section class="preorder-admin">
   <header class="page-head">
     <div>
-      <h1>Pre-Order Events</h1>
-      <p>Manage pre-order event windows and pickup ranges.</p>
+      <h1>Event Management</h1>
+      <p>Manage event windows and pickup ranges.</p>
     </div>
     <nav class="admin-links">
-      <a routerLink="/admin/menu">Menu</a>
+      <a routerLink="/admin/menu">Items</a>
       <a routerLink="/admin/slots">Slots</a>
       <a routerLink="/admin/orders">Orders</a>
     </nav>
@@ -16,7 +16,7 @@
     <div class="grid">
       <label>
         Event Name
-        <input [(ngModel)]="form.name" type="text" />
+        <input #nameInput [(ngModel)]="form.name" type="text" />
       </label>
 
       <select hidden [(ngModel)]="form.isActive">
@@ -29,32 +29,60 @@
         <textarea [(ngModel)]="form.description" rows="2"></textarea>
       </label>
 
+      <div class="span-2 auto-sync-toggle">
+        <label class="auto-sync-option">
+          <input type="checkbox" [(ngModel)]="autoSyncEnabled" (ngModelChange)="onAutoSyncToggle($event)" />
+          <span>Cascade date updates</span>
+        </label>
+        <label class="all-day-option">
+          <input type="checkbox" [(ngModel)]="allDayEnabled" (ngModelChange)="onAllDayToggle($event)" />
+          <span>All-day ordering</span>
+        </label>
+        <small>
+          On in Create; Off in Edit mode to prevent unintended changes.
+        </small>
+        <div class="auto-sync-actions">
+          <button type="button" (click)="syncNow()">Sync now</button>
+        </div>
+      </div>
+
       <label>
-        Ordering Opens
-        <input 
-          [(ngModel)]="form.opensAt" 
-          (ngModelChange)="syncClose()" 
-          type="datetime-local" 
-        />
+        <span class="field-head">
+          <span>Ordering Opens</span>
+          <button type="button" class="quick-time-btn" (click)="setOpensMidnight()">Midnight</button>
+        </span>
+        <div class="date-input-actions">
+          <input 
+            #opensAtInput
+            [(ngModel)]="form.opensAt" 
+            (ngModelChange)="onOpensAtChanged()" 
+            type="datetime-local" 
+          />
+        </div>
       </label>
 
       <label>
-        Ordering Closes
-        <input [(ngModel)]="form.closesAt" 
-          (ngModelChange)="syncPickup()" 
-          type="datetime-local" />
+        <span class="field-head">
+          <span>Ordering Closes</span>
+          <button type="button" class="quick-time-btn" (click)="setClosesEndOfDay()">End of day</button>
+        </span>
+        <div class="date-input-actions">
+          <input #closesAtInput [(ngModel)]="form.closesAt" 
+            (ngModelChange)="onClosesAtChanged()" 
+            type="datetime-local" />
+        </div>
       </label>
 
       <label>
         Pickup Start Date
-        <input [(ngModel)]="form.pickupStartDt" 
-        (ngModelChange)="syncPickupEnd()" 
+        <input #pickupStartDtInput [(ngModel)]="form.pickupStartDt" 
+        (ngModelChange)="onPickupStartChanged()" 
         type="date" />
       </label>
 
       <label>
         Pickup End Date
-        <input [(ngModel)]="form.pickupEndDt" type="date" />
+        <input #pickupEndDtInput [(ngModel)]="form.pickupEndDt" (ngModelChange)="onPickupEndChanged()" type="date" />
       </label>
     </div>
 
@@ -62,7 +90,7 @@
       <button type="button" (click)="saveEvent()" [disabled]="isSaving">
         {{ editingExternalId ? 'Save Changes' : 'Create Event' }}
       </button>
-      <button type="button" (click)="startCreate()" [disabled]="isSaving">Reset</button>
+      <button type="button" (click)="startCreate()" [disabled]="isSaving">Clear</button>
       <button type="button" (click)="loadEvents()" [disabled]="isLoading">Refresh</button>
     </div>
   </section>

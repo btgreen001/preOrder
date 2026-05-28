@@ -69,7 +69,7 @@ export class App implements OnInit, OnDestroy {
   private getAllNavItems(): NavItem[] {
     return [
       { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
-      { label: 'Menu',                  route: '/admin/menu',   isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'restaurant_menu' },
+      { label: 'Items',                 route: '/admin/menu',   isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'view_list' },
       { label: 'Pickup Slots',          route: '/admin/slots',  isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
       { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long'},
       { label: 'My Profile',            route: '/profile',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'person' ,dividerBefore: true },

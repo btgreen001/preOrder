@@ -36,29 +36,49 @@ function normalizeErrorValue(value: unknown): string | null {
   return null;
 }
 
-export function extractErrorMessage(error: any, defaultMessage: string = 'An error occurred'): string {
-  // Try to get main message first
+
+type ErrorValue = unknown;
+type ErrorRecord = Record<string, ErrorValue>;
+
+function isRecord(value: unknown): value is ErrorRecord {
+  return typeof value === "object" && value !== null;
+}
+
+export function extractErrorMessage(
+  error: unknown,
+  defaultMessage = "An error occurred"
+): string {
+  const err = isRecord(error) ? error : {};
+
+  const nestedError = isRecord(err["error"]) ? err["error"] : {};
+
   const message =
-    normalizeErrorValue(error?.error?.message)
-    ?? normalizeErrorValue(error?.error?.error)
-    ?? normalizeErrorValue(error?.error?.title)
-    ?? normalizeErrorValue(error?.message)
-    ?? defaultMessage;
-  
-  // Check for field-level validation errors
-  if (error?.error?.errors && typeof error.error.errors === 'object') {
-    const fieldErrors = Object.entries(error.error.errors)
-      .map(([field, messages]: [string, any]) => {
+    normalizeErrorValue(nestedError["message"]) ??
+    normalizeErrorValue(nestedError["error"]) ??
+    normalizeErrorValue(nestedError["title"]) ??
+    normalizeErrorValue(err["message"]) ??
+    defaultMessage;
+
+  // Field-level validation errors
+  const rawErrors = isRecord(nestedError["errors"])
+    ? nestedError["errors"]
+    : null;
+
+  if (rawErrors) {
+    const fieldErrors = Object.entries(rawErrors)
+      .map(([field, messages]) => {
         const msgs = normalizeErrorValue(messages);
         return msgs ? `${field}: ${msgs}` : null;
       })
-      .filter((entry): entry is string => !!entry)
-      .join(' | ');
-    
+      .filter((entry): entry is string => entry !== null)
+      .join(" | ");
+
     if (fieldErrors) {
       return `${message} — ${fieldErrors}`;
     }
   }
-  
+
   return message;
 }
+
+

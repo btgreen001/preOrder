@@ -318,7 +318,7 @@ public class AuthService : IAuthService
         if (organizationId != Guid.Empty){
             _logger.LogInformation("[LoginAsync] Resolved organizationId from claims context: {organizationId}", organizationId);
         }
-
+        sanitizedUser = sanitizedUser.ToLowerInvariant();
         var query = _context.SystemUsers
             .AsNoTracking()
             .Where(u => u.UserName == sanitizedUser);

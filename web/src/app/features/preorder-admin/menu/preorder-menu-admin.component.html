@@ -1,8 +1,8 @@
 <section class="preorder-admin">
   <header class="page-head">
     <div>
-      <h1>Pre-Order Menu</h1>
-      <p>Create and update menu items for each event.</p>
+      <h1>Event Items</h1>
+      <p>Create and update items for each event.</p>
     </div>
     <nav class="admin-links">
       <a routerLink="/admin/events">Events</a>
@@ -22,14 +22,14 @@
   </section>
 
   <section class="editor">
-    <h2>{{ editingExternalId ? 'Edit Menu Item' : 'Create Menu Item' }}</h2>
+    <h2>{{ editingExternalId ? 'Edit Item' : 'Create Item' }}</h2>
     <!-- <p class="warning-message">
-      Leaving Product Link blank will automatically attach this menu item to the <strong>Unlinked</strong> sellable product.
+      Leaving Product Link blank will automatically attach this item to the <strong>Unlinked</strong> sellable product.
     </p> -->
     <div class="grid">
       <label>
         Item Name
-        <input [(ngModel)]="form.name" type="text" />
+        <input #itemNameInput [(ngModel)]="form.name" type="text" />
       </label>
 
       <!-- <label>
@@ -42,22 +42,22 @@
 
       <label>
         Price
-      <input [(ngModel)]="form.price" type="number" min="0.00" step="0.01" />
+      <input #priceInput [(ngModel)]="form.price" type="number" min="0.00" step="0.01" />
       </label>
 
       <label>
         Max Per Order
-        <input [(ngModel)]="form.maxPerOrder" type="number" min="1" step="1" />
+        <input #maxPerOrderInput [(ngModel)]="form.maxPerOrder" type="number" min="1" step="1" />
       </label>
 
       <label>
         Sort Order
-        <input [(ngModel)]="form.sortOrder" type="number" step="1" />
+        <input #sortOrderInput [(ngModel)]="form.sortOrder" type="number" step="1" />
       </label>
 
       <label>
         Active
-        <select [(ngModel)]="form.isActive">
+        <select #isActiveInput [(ngModel)]="form.isActive">
           <option [ngValue]="true">Active</option>
           <option [ngValue]="false">Inactive</option>
         </select>
@@ -65,7 +65,7 @@
 
       <label class="span-2">
         Description
-        <textarea [(ngModel)]="form.description" rows="2" style="min-height: 50px;"></textarea>
+        <textarea #descriptionInput [(ngModel)]="form.description" rows="2" style="min-height: 50px;"></textarea>
       </label>
     </div>
 
@@ -79,7 +79,7 @@
   <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
   <p *ngIf="successMessage" class="success-message">{{ successMessage }}</p>
   <!-- <p *ngIf="unlinkedMenuItems.length > 0" class="warning-message">
-    {{ unlinkedMenuItems.length }} menu item(s) are still attached to <strong>Unlinked</strong>. Review them before final production/inventory planning.
+    {{ unlinkedMenuItems.length }} item(s) are still attached to <strong>Unlinked</strong>. Review them before final production/inventory planning.
   </p> -->
 
   <section class="table-wrap" *ngIf="!isLoading; else loading">
@@ -114,13 +114,13 @@
           </td>
         </tr>
         <tr *ngIf="menuItems.length === 0">
-          <td colspan="7" class="empty">No menu items found for selected event.</td>
+          <td colspan="7" class="empty">No items found for selected event.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <ng-template #loading>
-    <p class="loading">Loading menu items...</p>
+    <p class="loading">Loading items...</p>
   </ng-template>
 </section>
