@@ -290,13 +290,13 @@ export class PreorderEventsAdminComponent implements OnInit {
     }
 
     if (!this.form.opensAt || this.form.opensAt.trim() === '') {
-      this.snackBar.open('Opens date/time is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      this.snackBar.open('Event Open date/time is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
       this.focusValidationField(this.opensAtInput);
       return;
     }
 
     if (!this.form.closesAt || this.form.closesAt.trim() === '') {
-      this.snackBar.open('Closes date/time is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      this.snackBar.open('Event Close date/time is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
       this.focusValidationField(this.closesAtInput);
       return;
     }
