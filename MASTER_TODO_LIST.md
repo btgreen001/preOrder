@@ -5,6 +5,43 @@
 - Goal: ship the smallest sellable MVP first, then expand into adjacent bakery modules later.
 - Constraint: current repo is still a BakeBoard-derived baseline, so the first work slice must reduce inherited complexity before adding too many new features.
 
+## Validation Snapshot (2026-05-28)
+
+- Backend scoped regression passed: `dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-build`
+  - Result: 179 passed, 0 failed, 100% line coverage on the scoped PreOrderApp.Tests include set.
+- Backend build passed: `dotnet build api/PreOrderApp.sln --configuration Release --no-restore`
+- Frontend scoped regression, coverage gate, and build passed:
+  - `npm run test:ci:coverage`
+  - `npm run coverage:check:frontend`
+  - `npm run build`
+- Still-open product work remains:
+	- bad-password attempt lockout / password reset enforcement (POST go LIVE)
+  - event create/edit downstream date-time UX hardening (POST go LIVE, connected to item 1)
+
+## Go-Live Readiness Recheck (2026-05-28)
+
+- Re-ran scoped backend regression: `dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-build`
+  - Result: 179 passed, 0 failed, 99.31% line, 96.55% branch.
+- Re-ran backend build: `dotnet build api/PreOrderApp.sln --configuration Release --no-restore`
+  - Result: build succeeded, 0 warnings, 0 errors.
+- Re-ran frontend scoped regression + coverage gate + build:
+  - `npm run test:ci:coverage`
+  - `npm run coverage:check:frontend`
+  - `npm run build`
+  - Result: tests passed, coverage gate passed (84.61%), build succeeded with non-blocking bundle/style budget warnings.
+- Decision for current MVP scope: GO.
+- Remaining work classification unchanged: items 1 and 2 stay POST go LIVE hardening track.
+
+## Outstanding Items Recheck (2026-05-28)
+
+- Event date/time unintended cascade risk: mitigated in current UI behavior for edit flow (POST go LIVE, connected to item 1).
+  - Evidence: edit mode starts with cascade disabled and requires explicit opt-in or Sync now action in [web/src/app/features/preorder-admin/events/preorder-events-admin.component.ts](web/src/app/features/preorder-admin/events/preorder-events-admin.component.ts#L215) and [web/src/app/features/preorder-admin/events/preorder-events-admin.component.html](web/src/app/features/preorder-admin/events/preorder-events-admin.component.html#L31).
+  - Classification: post-go-live UX hardening item; keep tied to password lockout rollout as a single safety hardening track.
+- Password bad-attempt lockout for standard username/password sign-in: still open (POST go LIVE).
+  - Evidence: login path validates password but does not increment failed-attempt counters or set account lockout state in [api/Services/AuthService.cs](api/Services/AuthService.cs#L282) and [api/Services/AuthService.cs](api/Services/AuthService.cs#L351).
+  - Note: PIN lockout exists separately (`PinLockedUntil`) and does not satisfy standard password-login lockout objective.
+  - Classification: post-go-live hardening item; not an MVP release blocker for current scope.
+
 ## Latest Progress (2026-05-24)
 
 - Invite creation timeout hardening completed for SMTP-backed sends:

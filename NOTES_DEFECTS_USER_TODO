@@ -1,10 +1,40 @@
 Using the Coding agent and using NOTES_DEFECTS_USER_TODO for quick work referencing, ALWAYS follow instructions at .github/instructions/copilot-instructions.md, 
 and always keeping MASTER_TODO_LIST.md updated on progress, 
 
+## 2026-05-28 Validation Snapshot
 
-Need to add ability to count bad password attempts and lock them out after X requiring password reset.
-Need to improve the event create/edit.  When dates / times changes then all downstream dates/times change (preorder window, pickup start / end).  
-	The problem occurs after initial values have been populating and a user wants to merely change just one value like a preorder end datetime.  Today it updates pickup start/end.  Need to consider what is the right thing to do in order to obfuscate an unintentional change which is not obvious to the user.
+- MVP validation status: the scoped preorder regression path is currently green.
+- Passed today:
+	- backend scoped tests
+	- backend build
+	- frontend scoped coverage gate
+	- frontend build
+- Still-open product work remains:
+	- bad-password attempt lockout / password reset enforcement (POST go LIVE)
+	- event create/edit downstream date-time UX hardening (POST go LIVE, connected to item 1)
+
+## 2026-05-28 Go-Live Recheck
+
+- Recheck result for current MVP scope: GO.
+- Evidence:
+	- backend scoped regression passed (179/179)
+	- backend build passed (0 warnings, 0 errors)
+	- frontend scoped coverage gate passed (84.61%)
+	- frontend build passed (budget warnings only; non-blocking)
+- Post-go-live hardening items remain as-is:
+	- item 1: bad-password lockout/reset enforcement
+	- item 2: event date-time UX hardening (connected to item 1)
+
+## 2026-05-28 Outstanding Items Recheck
+
+
+- Event create/edit date-time cascade concern: now mitigated in edit mode (POST go LIVE, connected to item 1).
+	- Cascade defaults off during edit, with explicit user control to enable sync or run Sync now.
+	- Keep monitoring UX clarity as part of the same post-go-live safety hardening track.
+- Bad-password-attempt lockout for standard login: still open (POST go LIVE hardening item), not a current MVP blocker.
+
+
+
 
 
 Deploy work
