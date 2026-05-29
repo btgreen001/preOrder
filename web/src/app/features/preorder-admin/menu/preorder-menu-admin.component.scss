@@ -16,6 +16,12 @@
   gap: 0.6rem;
 }
 
+.label-hidden, .select-hidden {
+  position: absolute;
+  left: -9999px;
+  visibility: hidden;
+}
+
 .admin-links a {
   color: var(--bakery-primary);
   text-decoration: none;

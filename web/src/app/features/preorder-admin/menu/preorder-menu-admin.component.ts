@@ -164,9 +164,7 @@ export class PreorderMenuAdminComponent implements OnInit {
   }
 
   deleteMenuItem(item: AdminMenuItem): void {
-    const confirmMsg = item.isActive
-      ? `Deactivate "${item.name}"? Customers won't see it in new orders, but existing orders will remain.`
-      : `Permanently deactivated "${item.name}" - reactivate it to sell again.`;
+    const confirmMsg =  `Delete "${item.name}"? Customers won't see it in new orders, but existing orders will remain.`;
 
     if (!confirm(confirmMsg)) {
       return;
@@ -189,12 +187,12 @@ export class PreorderMenuAdminComponent implements OnInit {
     this.preorderAdminService.updateMenuItem(item.externalId, deactivateRequest).subscribe({
       next: () => {
         this.isSaving = false;
-        this.snackBar.open('Item deactivated.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+        this.snackBar.open('Item deleted.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
         this.loadMenuItems();
       },
       error: (error) => {
         this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not deactivate item.');
+        this.errorMessage = extractErrorMessage(error, 'Could not delete item.');
       }
     });
   }

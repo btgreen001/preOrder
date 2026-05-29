@@ -55,9 +55,9 @@
         <input #sortOrderInput [(ngModel)]="form.sortOrder" type="number" step="1" />
       </label>
 
-      <label>
+      <label class="label-hidden">
         Active
-        <select #isActiveInput [(ngModel)]="form.isActive">
+        <select class="select-hidden" #isActiveInput [(ngModel)]="form.isActive">
           <option [ngValue]="true">Active</option>
           <option [ngValue]="false">Inactive</option>
         </select>
@@ -109,7 +109,7 @@
           <td>
             <button type="button" (click)="startEdit(item)">Edit</button>
             <button type="button" (click)="deleteMenuItem(item)" class="delete-btn" [disabled]="isSaving">
-              {{ item.isActive ? 'Deactivate' : 'Delete' }}
+              Delete
             </button>
           </td>
         </tr>
