@@ -24,6 +24,9 @@ dist/
 build/
 .angular/
 node_modules/
+/publish/
+/**/publish/
+/reports/
 
 # SSL certificates and keys (for development only)
 *.pem
