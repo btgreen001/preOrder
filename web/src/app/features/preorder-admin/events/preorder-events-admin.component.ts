@@ -55,10 +55,6 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   private quickTourDebugEnabled = false;
   private readonly quickTourEventHandler = () => {
     this.quickTourDebugEnabled = true;
-    this.snackBar.open('Quick Tour trigger received. Attempting to open tour.', 'Close', {
-      duration: 2200,
-      panelClass: ['info-snackbar']
-    });
     this.scheduleTourLaunch();
   };
 
