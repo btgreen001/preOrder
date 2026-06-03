@@ -8,7 +8,7 @@ RUN npm install -g @angular/cli
 RUN ng build
 
 # Serve with nginx
-FROM nginx:alpine
+FROM nginx:1.31.1-alpine3.23-slim
 COPY --from=build /app/dist/angular-client-new/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
