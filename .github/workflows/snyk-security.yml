@@ -39,12 +39,13 @@ jobs:
   # Install Angular dependencies (if package-lock.json exists)
       - name: Install npm dependencies
         run: npm install
-        working-directory: ./ClientApp # change if your Angular folder is different
+        working-directory: ./web # change if your Angular folder is different
         continue-on-error: true
 
       # Restore .NET dependencies
       - name: Restore .NET dependencies
         run: dotnet restore
+        working-directory: ./api # change if your .NET folder is different
         continue-on-error: true
 
       # Run Snyk dependency scan for ALL projects
