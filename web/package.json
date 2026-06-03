@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "postinstall": "node scripts/patch-rxjs-tsconfig.mjs",
     "start": "dotenv -e ../.env -e ../.env.local -- ng serve --configuration=https",
     "start:http": "dotenv -e ../.env -e ../.env.local -- ng serve",
     "start:https": "dotenv -e ../.env -e ../.env.local -- ng serve --configuration=https",
