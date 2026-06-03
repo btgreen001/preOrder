@@ -50,8 +50,8 @@ jobs:
     - name: Manual build for C#
       if: matrix.language == 'csharp'
       run: |
-        dotnet restore PreOrderApp.sln
-        dotnet build PreOrderApp.sln --configuration Release --no-restore
+        dotnet restore api/PreOrderApp.sln
+        dotnet build api/PreOrderApp.sln --configuration Release --no-restore
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
