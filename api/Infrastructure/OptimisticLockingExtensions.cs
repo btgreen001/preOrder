@@ -68,15 +68,16 @@ public static class OptimisticLockingExtensions
         try
         {
             await context.SaveChangesAsync();
+            var safeEntityIdentifier = sanitizeForLogging(entityIdentifier);
         }
         catch (DbUpdateConcurrencyException ex)
         {
             logger?.LogWarning(ex,
                 "Concurrency conflict during save for {EntityType} {Identifier}",
-                entityName, entityIdentifier);
+                entityName, safeEntityIdentifier);
             
             throw new InvalidOperationException(
-                $"{entityName} '{entityIdentifier}' was modified by another user. Please refresh and try again.");
+                $"{entityName} '{safeEntityIdentifier}' was modified by another user. Please refresh and try again.");
         }
     }
     
@@ -111,7 +112,7 @@ public static class OptimisticLockingExtensions
         
         // Step 3: Apply updates (caller's custom logic)
         updateAction(entity);
-        
+        var safeEntityIdentifier = sanitizeForLogging(entityIdentifier);
         // Step 4: Increment version
         if (versionProperty != null)
         {
@@ -127,16 +128,16 @@ public static class OptimisticLockingExtensions
             var newVersion = (int?)versionProperty?.GetValue(entity) ?? 1;
             logger?.LogInformation(
                 "{EntityType} {Identifier} updated from version {OldVersion} to {NewVersion}",
-                entityName, entityIdentifier, originalVersion, newVersion);
+                entityName, safeEntityIdentifier, originalVersion, newVersion);
         }
         catch (DbUpdateConcurrencyException ex)
         {
             logger?.LogWarning(ex,
                 "Concurrency conflict during save for {EntityType} {Identifier} at version {Version}",
-                entityName, entityIdentifier, originalVersion);
+                entityName, safeEntityIdentifier, originalVersion);
             
             throw new InvalidOperationException(
-                $"{entityName} '{entityIdentifier}' was modified by another user. Please refresh and try again.");
+                $"{entityName} '{safeEntityIdentifier}' was modified by another user. Please refresh and try again.");
         }
     }
 }
