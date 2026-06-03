@@ -24,6 +24,12 @@
   padding: 0.35rem 0.75rem;
 }
 
+.admin-links a.active-nav {
+  background: var(--bakery-primary);
+  border-color: var(--bakery-primary);
+  color: #fff;
+}
+
 .filter-row,
 .editor {
   border: 1px solid var(--bakery-border);

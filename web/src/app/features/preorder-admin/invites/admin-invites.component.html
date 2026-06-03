@@ -23,50 +23,52 @@
   </div>
 
   <div class="codes-table-wrapper">
+    <h3>Invited Members</h3>
+    <p class="subtitle">Resend or revoke activation codes for invited members.</p>
     <div *ngIf="isLoading" class="loading">Loading codes...</div>
 
-    <table *ngIf="!isLoading && codes.length > 0" class="codes-table">
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Email</th>
-          <th>Status</th>
-          <th>Expires</th>
-          <th>Used On</th>
-          <th>Created</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let code of codes" [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
-          <td class="code-cell">
-            <span class="code-value">{{ code.code }}</span>
-            <button class="btn-icon" (click)="copyCode(code)" [title]="copiedCodeId === code.codeId ? 'Copied!' : 'Copy code'">
-              {{ copiedCodeId === code.codeId ? '✓' : '⎘' }}
-            </button>
-          </td>
-          <td>{{ code.email || '—' }}</td>
-          <td>
-            <span class="status-badge" [class.active]="!code.isUsed && !code.isExpired"
-                  [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
-              {{ codeStatus(code) }}
-            </span>
-          </td>
-          <td>{{ code.expiresOn | date:'MMM d, y' }}</td>
-          <td>{{ code.usedOn ? (code.usedOn | date:'MMM d, y, h:mm a') : '—' }}</td>
-          <td>{{ code.createdOn | date:'MMM d, y' }}</td>
-          <td>
-            <button *ngIf="canResend(code)" class="btn btn-secondary btn-sm" (click)="resendCode(code)" [disabled]="isResending">
-              {{ isResending ? 'Sending...' : 'Resend' }}
-            </button>
-        </td>
-        <td>
-            <button *ngIf="!code.isUsed" class="btn btn-danger btn-sm" (click)="deleteCode(code)">Revoke</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="codes-table-scroll" *ngIf="!isLoading && codes.length > 0">
+      <table class="codes-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Created</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let code of codes" [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
+            <td class="code-cell">
+              <span class="code-value">{{ code.code }}</span>
+              <button class="btn-icon" (click)="copyCode(code)" [title]="copiedCodeId === code.codeId ? 'Copied!' : 'Copy code'">
+                {{ copiedCodeId === code.codeId ? '✓' : '⎘' }}
+              </button>
+            </td>
+            <td>{{ code.email || '—' }}</td>
+            <td>
+              <span class="status-badge" [class.active]="!code.isUsed && !code.isExpired"
+                    [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
+                {{ codeStatus(code) === 'Active' ? 'Invited' : codeStatus(code) }}
+              </span>
+            </td>
+            <td>{{ code.expiresOn | date:'MMM d, y' }}</td>
+            <td>{{ code.createdOn | date:'MMM d, y' }}</td>
+            <td>
+              <button *ngIf="canResend(code)" class="btn btn-secondary btn-sm" (click)="resendCode(code)" [disabled]="isResending">
+                {{ isResending ? 'Sending...' : 'Resend' }}
+              </button>
+            </td>
+            <td>
+              <button *ngIf="!code.isUsed" class="btn btn-danger btn-sm" (click)="deleteCode(code)">Revoke</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div *ngIf="!isLoading && codes.length === 0" class="empty-state">
       No invite codes yet. Generate one above to invite your first staff member.
@@ -79,47 +81,49 @@
 
     <div *ngIf="isMembersLoading" class="loading">Loading members...</div>
 
-    <table *ngIf="!isMembersLoading && members.length > 0" class="codes-table members-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Username</th>
-          <th>Email</th>
-          <th>Role</th>
-          <th>Status</th>
-          <th>Last Login</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let member of members" [class.used]="!member.isEnabled">
-          <td>{{ member.firstName }} {{ member.lastName }}</td>
-          <td>{{ member.userName }}</td>
-          <td>{{ member.email }}</td>
-          <td>{{ member.userRole }}</td>
-          <td>
-            <span class="status-badge" [class.active]="member.isEnabled" [class.expired]="!member.isEnabled">
-              {{ memberStatus(member) }}
-            </span>
-          </td>
-          <td>{{ member.lastLoginOn ? (member.lastLoginOn | date:'MMM d, y, h:mm a') : 'Never' }}</td>
-          <td>
-            <button
-              *ngIf="member.isEnabled"
-              class="btn btn-danger btn-sm"
-              (click)="deactivateMember(member)">
-              Remove Access
-            </button>
-            <button
-              *ngIf="!member.isEnabled"
-              class="btn btn-secondary btn-sm"
-              (click)="reactivateMember(member)">
-              Restore Access
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="members-table-wrapper" *ngIf="!isMembersLoading && members.length > 0">
+      <table class="codes-table members-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of members" [class.used]="!member.isEnabled">
+            <td>{{ member.firstName }} {{ member.lastName }}</td>
+            <td>{{ member.userName }}</td>
+            <td>{{ member.email }}</td>
+            <td>{{ member.userRole }}</td>
+            <td>
+              <span class="status-badge" [class.active]="member.isEnabled" [class.expired]="!member.isEnabled">
+                {{ memberStatus(member) }}
+              </span>
+            </td>
+            <td>{{ member.lastLoginOn ? (member.lastLoginOn | date:'MMM d, y, h:mm a') : 'Never' }}</td>
+            <td>
+              <button
+                *ngIf="member.isEnabled"
+                class="btn btn-danger btn-sm"
+                (click)="deactivateMember(member)">
+                Remove Access
+              </button>
+              <button
+                *ngIf="!member.isEnabled"
+                class="btn btn-secondary btn-sm"
+                (click)="reactivateMember(member)">
+                Restore Access
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div *ngIf="!isMembersLoading && members.length === 0" class="empty-state">
       No members found for this organization.

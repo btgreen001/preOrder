@@ -45,6 +45,23 @@ public class OrganizationServiceTests : IDisposable
         };
     }
 
+    private static SystemUser BuildUser(Guid organizationId, string email, string suffix = "")
+    {
+        return new SystemUser
+        {
+            UserId = Guid.NewGuid(),
+            OrganizationId = organizationId,
+            EmailAddress = email,
+            UserName = $"user{suffix}",
+            PasswordHash = "hash",
+            FirstName = "Test",
+            LastName = "User",
+            UserRole = UserRoles.User,
+            IsEnabled = true,
+            CreatedOn = DateTime.UtcNow
+        };
+    }
+
     // ── GetByIdAsync ──────────────────────────────────────────────────────────
 
     [Fact]
@@ -137,6 +154,59 @@ public class OrganizationServiceTests : IDisposable
         var result = await _sut.ValidateRegistrationTokenAsync(org.RegistrationToken);
 
         Assert.False(result);
+    }
+
+    // ── IsRegistrationInviteEmailAvailableAsync ───────────────────────────────
+
+    [Fact]
+    public async Task IsRegistrationInviteEmailAvailableAsync_OutstandingInvite_ReturnsFalse()
+    {
+        var org = BuildOrg("-invite");
+        var creator = BuildUser(org.OrganizationId, "creator@test.com", "-creator");
+        _context.Organizations.Add(org);
+        _context.SystemUsers.Add(creator);
+        _context.RegistrationCodes.Add(new RegistrationCode
+        {
+            CodeId = Guid.NewGuid(),
+            OrganizationId = org.OrganizationId,
+            Code = "INVITECODE001",
+            CreatedByUserId = creator.UserId,
+            Email = "invitee@test.com",
+            UserRole = UserRoles.User,
+            ExpiresOn = DateTime.UtcNow.AddDays(1),
+            IsUsed = false,
+            CreatedOn = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+
+        var result = await _sut.IsRegistrationInviteEmailAvailableAsync(org.OrganizationId, "  INVITEE@test.com ");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task IsRegistrationInviteEmailAvailableAsync_ExistingUserInOrg_ReturnsFalse()
+    {
+        var org = BuildOrg("-member");
+        _context.Organizations.Add(org);
+        _context.SystemUsers.Add(BuildUser(org.OrganizationId, "member@test.com", "-member"));
+        await _context.SaveChangesAsync();
+
+        var result = await _sut.IsRegistrationInviteEmailAvailableAsync(org.OrganizationId, "member@test.com");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task IsRegistrationInviteEmailAvailableAsync_NoUserOrOutstandingInvite_ReturnsTrue()
+    {
+        var org = BuildOrg("-ok");
+        _context.Organizations.Add(org);
+        await _context.SaveChangesAsync();
+
+        var result = await _sut.IsRegistrationInviteEmailAvailableAsync(org.OrganizationId, "newperson@test.com");
+
+        Assert.True(result);
     }
 
     // ── GetAllAsync ───────────────────────────────────────────────────────────

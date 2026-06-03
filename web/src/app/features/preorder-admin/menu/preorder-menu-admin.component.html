@@ -5,23 +5,24 @@
       <p>Create and update items for each event.</p>
     </div>
     <nav class="admin-links">
-      <a routerLink="/admin/events">Events</a>
-      <a routerLink="/admin/slots">Slots</a>
-      <a routerLink="/admin/orders">Orders</a>
+      <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
+      <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
+      <a routerLink="/admin/slots" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Slots</a>
+      <a routerLink="/admin/orders" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Orders</a>
     </nav>
   </header>
 
   <section class="filter-row">
     <label>
       Pre-Order Event
-      <select [(ngModel)]="selectedHolidayEventExternalId" (change)="onEventChange()">
+      <select #selectEvent [(ngModel)]="selectedHolidayEventExternalId" (change)="onEventChange()">
         <option value="" disabled>Select an event</option>
         <option *ngFor="let event of holidayEvents" [value]="event.externalId">{{ event.name }}</option>
       </select>
     </label>
   </section>
 
-  <section class="editor">
+  <section class="editor" #itemHeader>
     <h2>{{ editingExternalId ? 'Edit Item' : 'Create Item' }}</h2>
     <!-- <p class="warning-message">
       Leaving Product Link blank will automatically attach this item to the <strong>Unlinked</strong> sellable product.
@@ -51,8 +52,9 @@
       </label>
 
       <label>
-        Sort Order
+        Display Order
         <input #sortOrderInput [(ngModel)]="form.sortOrder" type="number" step="1" />
+        <small class="field-help">Controls item position on the customer order form. Lower numbers show first (1, 2, 3...).</small>
       </label>
 
       <label class="label-hidden">
@@ -71,6 +73,7 @@
 
     <div class="actions">
       <button type="button" (click)="saveMenuItem()" [disabled]="isSaving">{{ editingExternalId ? 'Save Changes' : 'Create Item' }}</button>
+      <button type="button" (click)="saveMenuItem('/admin/slots')" [disabled]="isSaving">Save & Continue to Slots</button>
       <button type="button" (click)="startCreate()" [disabled]="isSaving">Reset</button>
       <button type="button" (click)="loadMenuItems()" [disabled]="isLoading">Refresh</button>
     </div>
@@ -90,7 +93,7 @@
           <!-- <th>Product</th> -->
           <th>Price</th>
           <th>Max/Order</th>
-          <th>Sort</th>
+          <th>Display Order</th>
           <th>Status</th>
           <th></th>
         </tr>

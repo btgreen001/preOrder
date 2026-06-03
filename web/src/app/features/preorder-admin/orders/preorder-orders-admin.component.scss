@@ -34,6 +34,12 @@
   padding: 0.4rem 0.75rem;
 }
 
+.admin-links a.active-nav {
+  background: var(--bakery-primary);
+  border-color: var(--bakery-primary);
+  color: #fff;
+}
+
 .filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

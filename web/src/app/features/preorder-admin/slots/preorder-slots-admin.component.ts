@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -53,9 +53,14 @@ export class PreorderSlotsAdminComponent implements OnInit {
     this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
         this.holidayEvents = events;
-        if (!this.selectedHolidayEventExternalId && events.length > 0) {
-          this.selectedHolidayEventExternalId = events[0].externalId;
-          this.form.holidayEventExternalId = events[0].externalId;
+        const persistedEventExternalId = this.preorderAdminService.getSelectedHolidayEventExternalId();
+        const candidateExternalId = this.selectedHolidayEventExternalId || persistedEventExternalId || '';
+        const preferredEvent = events.find(event => event.externalId === candidateExternalId) ?? events[0];
+
+        if (preferredEvent) {
+          this.selectedHolidayEventExternalId = preferredEvent.externalId;
+          this.form.holidayEventExternalId = preferredEvent.externalId;
+          this.preorderAdminService.setSelectedHolidayEventExternalId(preferredEvent.externalId);
         }
 
         if (this.selectedHolidayEventExternalId) {
@@ -69,6 +74,7 @@ export class PreorderSlotsAdminComponent implements OnInit {
   }
 
   onEventChange(): void {
+    this.preorderAdminService.setSelectedHolidayEventExternalId(this.selectedHolidayEventExternalId);
     this.form.holidayEventExternalId = this.selectedHolidayEventExternalId;
     this.editingExternalId = null;
     this.loadPickupSlots();
@@ -117,6 +123,8 @@ export class PreorderSlotsAdminComponent implements OnInit {
       capacity: slot.capacity,
       isActive: slot.isActive
     };
+
+    this.scrollToEditorStart();
   }
 
   deletePickupSlot(slot: AdminPickupSlot): void {
@@ -154,6 +162,7 @@ export class PreorderSlotsAdminComponent implements OnInit {
       error: (error) => {
         this.isSaving = false;
         this.errorMessage = extractErrorMessage(error, slot.reservedCount > 0 ? 'Could not deactivate pickup slot.' : 'Could not delete pickup slot.');
+        this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       }
     });
   }
@@ -164,36 +173,43 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
     if (!this.form.holidayEventExternalId) {
       this.errorMessage = 'Select an event first.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (!this.form.slotStartAt || this.form.slotStartAt.trim() === '') {
       this.errorMessage = 'Slot start date/time is required.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (!this.form.slotEndAt || this.form.slotEndAt.trim() === '') {
       this.errorMessage = 'Slot end date/time is required.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (new Date(this.form.slotEndAt) <= new Date(this.form.slotStartAt)) {
       this.errorMessage = 'Slot end must be after slot start.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (!this.isSameDay(this.form.slotStartAt, this.form.slotEndAt)) {
       this.errorMessage = 'Slot start and end must be on the same day.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (!this.isSlotWithinEventPickupWindow(this.form.slotStartAt, this.form.slotEndAt)) {
       this.errorMessage = 'Pickup slot must be fully within the selected event pickup window.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
     if (this.form.capacity < 1) {
       this.errorMessage = 'Capacity must be at least 1.';
+      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
       return;
     }
 
@@ -240,6 +256,46 @@ export class PreorderSlotsAdminComponent implements OnInit {
     return this.toDateTimeInput(isoValue);
   }
 
+  private scrollToEditorStart(): void {
+    const input = this.slotPickupHeader?.nativeElement;
+    if (!input) {
+      return;
+    }
+
+    setTimeout(() => {
+      const scrollContainer = document.querySelector('.content-scroll') as HTMLElement | null;
+
+      if (scrollContainer) {
+        const inputRect = input.getBoundingClientRect();
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const targetTop = scrollContainer.scrollTop + inputRect.top - containerRect.top - 24;
+
+        scrollContainer.scrollTo({
+          top: Math.max(targetTop, 0),
+          behavior: 'smooth'
+        });
+      } else {
+        input.scrollIntoView({
+          behavior: 'smooth',
+          block: this.isMobileViewport() ? 'center' : 'start',
+          inline: 'nearest'
+        });
+      }
+
+      if (!this.isMobileViewport()) {
+        setTimeout(() => input.focus(), 220);
+      }
+    });
+  }
+
+  private isMobileViewport(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+
   private isSameDay(a: string, b: string): boolean {
     const da = new Date(a);
     const db = new Date(b);
@@ -261,4 +317,8 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
     return slotStart >= eventPickupStart && slotEnd <= eventPickupEnd;
   }
+
+  @ViewChild('slotStartAtInput') slotStartAtInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('slotEndAtInput') slotEndAtInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('slotPickupHeader') slotPickupHeader!: ElementRef<HTMLElement>;
 }

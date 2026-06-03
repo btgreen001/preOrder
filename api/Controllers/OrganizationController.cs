@@ -507,13 +507,22 @@ namespace PreOrderApp.Controllers
             var org = await _context.Organizations.FindAsync(orgId);
             if (org == null) return NotFound("Organization not found");
 
+            if (!string.IsNullOrWhiteSpace(request.Email))
+            {
+                var emailAvailable = await _organizationService.IsRegistrationInviteEmailAvailableAsync(orgId, request.Email);
+                if (!emailAvailable)
+                {
+                    return BadRequest(new { message = "A pending invite or existing user already uses this email for this organization." });
+                }
+            }
+
             var code = new RegistrationCode
             {
                 CodeId = Guid.NewGuid(),
                 OrganizationId = orgId,
                 Code = Guid.NewGuid().ToString("N").ToUpper()[..12],
                 CreatedByUserId = userId,
-                Email = request.Email,
+                Email = request.Email?.Trim(),
                 UserRole = UserRoles.User,
                 ExpiresOn = DateTime.UtcNow.AddDays(request.ExpiryDays > 0 ? request.ExpiryDays : 7),
                 IsUsed = false,

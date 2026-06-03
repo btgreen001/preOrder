@@ -188,6 +188,28 @@ export class PreorderAdminService {
   private readonly baseUrl = `${environment.apiUrl}/mvp`;
   private readonly productsUrl = `${environment.apiUrl}/products`;
   private readonly organizationsUrl = `${environment.apiUrl}/organization`;
+  private readonly selectedHolidayEventStorageKey = 'preorder-admin.selectedHolidayEventExternalId';
+
+  setSelectedHolidayEventExternalId(externalId: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!externalId) {
+      sessionStorage.removeItem(this.selectedHolidayEventStorageKey);
+      return;
+    }
+
+    sessionStorage.setItem(this.selectedHolidayEventStorageKey, externalId);
+  }
+
+  getSelectedHolidayEventExternalId(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return sessionStorage.getItem(this.selectedHolidayEventStorageKey);
+  }
 
   getAllHolidayEvents(): Observable<AdminHolidayEvent[]> {
     return this.http.get<AdminHolidayEvent[]>(`${this.baseUrl}/preorder-event/all`);

@@ -18,6 +18,8 @@ export type NavItem =
       route: string;
       roles: UserRole[];
       icon: string;
+      action?: 'quick-tour';
+      nonInteractive?: boolean;
       isChild?: boolean;
       externalUrl?: undefined;
       dividerBefore?: boolean;
@@ -27,6 +29,8 @@ export type NavItem =
       externalUrl: string;
       roles: UserRole[];
       icon: string;
+      action?: 'quick-tour';
+      nonInteractive?: boolean;
       isChild?: boolean;
       route?: undefined;
       dividerBefore?: boolean;
@@ -42,6 +46,9 @@ export type NavItem =
 
 export class App implements OnInit, OnDestroy {
   private static readonly MOBILE_NAV_BREAKPOINT = 960;
+  private static readonly FORCE_TOUR_KEY = 'preorder.forceTour';
+  private static readonly FORCE_TOUR_DEBUG_KEY = 'preorder.forceTourDebug';
+  private static readonly QUICK_TOUR_EVENT = 'preorder:tour:start';
   private router = inject(Router);
   private roleService = inject(RoleService);
   private licenseService = inject(LicenseService);
@@ -66,17 +73,43 @@ export class App implements OnInit, OnDestroy {
     return token ? `/BakeAhead?org=${encodeURIComponent(token)}` : '/login';
   }
 
+  getNavExternalUrl(nav: NavItem): string {
+    if (nav.label === 'Store Preview') {
+      return this.storePreviewUrl;
+    }
+
+    return nav.externalUrl ?? '/login';
+  }
+
+  onExternalNavClick(event: MouseEvent, nav: NavItem): void {
+    if (nav.label !== 'Store Preview') {
+      return;
+    }
+
+    event.preventDefault();
+    const destination = this.getNavExternalUrl(nav);
+    const shouldOpenPreview = window.confirm(
+      'Store Preview will open in a new browser tab.\n\nYou are leaving Pre-Order Management to view your storefront.\n\nSelect OK to continue or Cancel to stay here.'
+    );
+
+    if (shouldOpenPreview) {
+      window.open(destination, '_blank', 'noopener,noreferrer');
+    }
+  }
+
   private getAllNavItems(): NavItem[] {
     return [
-      { label: 'Events',                route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
+      { label: 'PreOrder',              route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'category', nonInteractive: true },
+      { label: 'Events',                route: '/admin/events',   isChild: true,                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'event' },
       { label: 'Items',                 route: '/admin/menu',   isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'view_list' },
       { label: 'Pickup Slots',          route: '/admin/slots',  isChild: true,                roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'schedule' },
-      { label: 'Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long'},
+      { label: 'Customer Orders',                route: '/admin/orders',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'receipt_long'},
       { label: 'My Profile',            route: '/profile',                      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'person' ,dividerBefore: true },
       { label: 'Company Profile',       route: '/admin/company-profile',        roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'business' },
       { label: 'Access Management',     route: '/admin/invites',                roles: ['SystemAdmin', 'CompanyAdmin'] as UserRole[],                     icon: 'person_add' },
 
-      { label: 'Store Preview',         externalUrl: this.storePreviewUrl,      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'preview',dividerBefore: true}
+      { label: 'Store Preview',         externalUrl: this.storePreviewUrl,      roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'preview', dividerBefore: true},
+      { label: 'Quick Tour',            route: '/admin/events',                 roles: ['SystemAdmin', 'CompanyAdmin', 'staff'] as UserRole[],            icon: 'help', dividerBefore: true, action: 'quick-tour' }
     ];
   }
 
@@ -100,6 +133,7 @@ export class App implements OnInit, OnDestroy {
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.syncShellForCurrentRoute();
+      this.resetMainContentScroll();
       this.closeSidebarOnMobile();
     });
 
@@ -171,7 +205,16 @@ export class App implements OnInit, OnDestroy {
     this.isSidebarOpen = false;
   }
 
-  onSidebarNavClick(): void {
+  onSidebarNavClick(nav?: NavItem): void {
+    if (nav?.action === 'quick-tour') {
+      sessionStorage.setItem(App.FORCE_TOUR_KEY, '1');
+      sessionStorage.setItem(App.FORCE_TOUR_DEBUG_KEY, '1');
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(App.QUICK_TOUR_EVENT));
+      }
+    }
+
     this.closeSidebarOnMobile();
   }
 
@@ -179,6 +222,23 @@ export class App implements OnInit, OnDestroy {
     if (typeof window !== 'undefined' && window.innerWidth <= App.MOBILE_NAV_BREAKPOINT) {
       this.isSidebarOpen = false;
     }
+  }
+
+  private resetMainContentScroll(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const activeElement = document.activeElement as HTMLElement | null;
+    activeElement?.blur();
+
+    const scrollContainer = document.querySelector('.content-scroll') as HTMLElement | null;
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'auto' });
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
 

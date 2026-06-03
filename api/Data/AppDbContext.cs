@@ -373,6 +373,9 @@ modelBuilder.Entity<RecipeStep>(entity =>
             entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
             entity.Property(e => e.UserRole).HasColumnName("user_role");
             entity.Property(e => e.IsEnabled).HasColumnName("is_enabled");
+            entity.Property(e => e.HasCompletedOnboarding)
+                  .HasColumnName("has_completed_onboarding")
+                  .HasDefaultValue(false);
             entity.Property(e => e.CreatedOn).HasColumnName("created_on");
             entity.Property(e => e.LastLoginOn).HasColumnName("last_login_on");
             entity.Property(e => e.PinHash).HasColumnName("pin_hash");

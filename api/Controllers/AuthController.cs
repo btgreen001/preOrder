@@ -90,7 +90,8 @@ public class AuthController : ControllerBase
             OrganizationId = user.OrganizationId,
             OrganizationName = org.OrganizationName,
             LicenseTier = licenseTier,
-            RegistrationToken = org.RegistrationToken
+            RegistrationToken = org.RegistrationToken,
+            HasCompletedOnboarding = user.HasCompletedOnboarding
         };
         return Ok(resp);
     }
@@ -135,7 +136,22 @@ public class AuthController : ControllerBase
             OrganizationId = user.OrganizationId,
             OrganizationName = org.OrganizationName,
             LicenseTier = sub?.Tier ?? LicenseTier.Basic,
-            RegistrationToken = org.RegistrationToken
+            RegistrationToken = org.RegistrationToken,
+            HasCompletedOnboarding = user.HasCompletedOnboarding
+        });
+    }
+
+    [HttpPost("me/onboarding-complete")]
+    [Authorize]
+    public async Task<IActionResult> MarkOnboardingComplete()
+    {
+        var userId = _orgContext.GetCurrentUserId();
+        var updated = await _authService.SetOnboardingCompletedAsync(userId);
+
+        return Ok(new
+        {
+            message = updated ? "Onboarding status updated." : "Onboarding was already completed.",
+            hasCompletedOnboarding = true
         });
     }
 

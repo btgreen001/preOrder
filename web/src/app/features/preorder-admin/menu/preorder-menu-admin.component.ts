@@ -2,7 +2,7 @@
 import { Component, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -25,6 +25,7 @@ export class PreorderMenuAdminComponent implements OnInit {
   private static readonly UNLINKED_PRODUCT_NAME = 'UNLINKED';
   private readonly preorderAdminService = inject(PreorderAdminService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
 
   holidayEvents: AdminHolidayEvent[] = [];
   menuItems: AdminMenuItem[] = [];
@@ -78,9 +79,14 @@ export class PreorderMenuAdminComponent implements OnInit {
     this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
         this.holidayEvents = events;
-        if (!this.selectedHolidayEventExternalId && events.length > 0) {
-          this.selectedHolidayEventExternalId = events[0].externalId;
-          this.form.holidayEventExternalId = events[0].externalId;
+        const persistedEventExternalId = this.preorderAdminService.getSelectedHolidayEventExternalId();
+        const candidateExternalId = this.selectedHolidayEventExternalId || persistedEventExternalId || '';
+        const preferredEvent = events.find(event => event.externalId === candidateExternalId) ?? events[0];
+
+        if (preferredEvent) {
+          this.selectedHolidayEventExternalId = preferredEvent.externalId;
+          this.form.holidayEventExternalId = preferredEvent.externalId;
+          this.preorderAdminService.setSelectedHolidayEventExternalId(preferredEvent.externalId);
         }
 
         if (this.selectedHolidayEventExternalId) {
@@ -105,6 +111,7 @@ export class PreorderMenuAdminComponent implements OnInit {
   }
 
   onEventChange(): void {
+    this.preorderAdminService.setSelectedHolidayEventExternalId(this.selectedHolidayEventExternalId);
     this.startCreate();
     this.loadMenuItems();
   }
@@ -161,6 +168,8 @@ export class PreorderMenuAdminComponent implements OnInit {
       sortOrder: item.sortOrder,
       isActive: item.isActive
     };
+
+    this.scrollToEditorStart();
   }
 
   deleteMenuItem(item: AdminMenuItem): void {
@@ -197,7 +206,24 @@ export class PreorderMenuAdminComponent implements OnInit {
     });
   }
 
-    private focusValidationField(inputRef: ElementRef<HTMLInputElement>): void {
+  private scrollToEditorStart(): void {
+    const input = this.itemNameInput?.nativeElement;
+    if (!input) {
+      return;
+    }
+
+    input.scrollIntoView({
+      behavior: 'smooth',
+      block: this.isMobileViewport() ? 'center' : 'start',
+      inline: 'nearest'
+    });
+
+    if (!this.isMobileViewport()) {
+      setTimeout(() => input.focus(), 220);
+    }
+  }
+
+  private focusValidationField(inputRef: ElementRef<HTMLInputElement>): void {
     const input = inputRef?.nativeElement;
     if (!input) {
       return;
@@ -219,7 +245,7 @@ export class PreorderMenuAdminComponent implements OnInit {
     return window.matchMedia('(max-width: 768px)').matches;
   }
 
-  saveMenuItem(): void {
+  saveMenuItem(nextRoute?: string): void {
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -265,6 +291,9 @@ export class PreorderMenuAdminComponent implements OnInit {
       next: () => {
         this.isSaving = false;
         this.snackBar.open(this.editingExternalId ? 'Item updated.' : 'Item created.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+        if (nextRoute) {
+          this.router.navigate([nextRoute]);
+        }
         this.startCreate();
         this.loadMenuItems();
       },
@@ -289,11 +318,15 @@ export class PreorderMenuAdminComponent implements OnInit {
   }
 
 
+@ViewChild('itemHeader') itemHeader!: ElementRef<HTMLElement>;
+@ViewChild('selectEvent') selectEvent!: ElementRef<HTMLSelectElement>;
 @ViewChild('itemNameInput') itemNameInput!: ElementRef<HTMLInputElement>;
 @ViewChild('priceInput') priceInput!: ElementRef<HTMLInputElement>;
 @ViewChild('maxPerOrderInput') maxPerOrderInput!: ElementRef<HTMLInputElement>;
 @ViewChild('sortOrderInput') sortOrderInput!: ElementRef<HTMLInputElement>;
 @ViewChild('isActiveInput') isActiveInput!: ElementRef<HTMLSelectElement>;
 @ViewChild('descriptionInput') descriptionInput!: ElementRef<HTMLTextAreaElement>;
+
+
 
 }

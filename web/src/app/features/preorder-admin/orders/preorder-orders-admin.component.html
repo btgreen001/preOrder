@@ -5,9 +5,10 @@
       <p>Review incoming preorders and export day-of-pickup operations CSV files.</p>
     </div>
     <nav class="admin-links">
-      <a routerLink="/admin/events">Events</a>
-      <a routerLink="/admin/menu">Items</a>
-      <a routerLink="/admin/slots">Slots</a>
+      <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
+      <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
+      <a routerLink="/admin/slots" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Slots</a>
+      <a routerLink="/admin/orders" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Orders</a>
     </nav>
   </header>
 

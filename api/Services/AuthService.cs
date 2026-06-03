@@ -31,6 +31,7 @@ public interface IAuthService
     Task RequestPasswordResetCodeAsync(string email);
     Task RequestUsernameReminderAsync(string email);
     Task ResetPasswordWithCodeAsync(string email, string code, string newPassword);
+    Task<bool> SetOnboardingCompletedAsync(Guid userId);
 }
 
 public class AuthService : IAuthService
@@ -338,7 +339,8 @@ public class AuthService : IAuthService
                 u.FirstName,
                 u.LastName,
                 u.OrganizationId,
-                u.UserRole
+                u.UserRole,
+                u.HasCompletedOnboarding
             })
             .FirstOrDefaultAsync();
 
@@ -489,6 +491,7 @@ public class AuthService : IAuthService
             RegistrationToken = organization.RegistrationToken,
             AccessToken = accessToken,
             RefreshToken = refreshToken,
+            HasCompletedOnboarding = user.HasCompletedOnboarding,
             TerminalId = loginTerminalContext?.TerminalUid,
             TerminalCode = loginTerminalContext?.TerminalCode,
             Location = loginTerminalContext?.Location
@@ -509,10 +512,10 @@ public class AuthService : IAuthService
         // Validate registration code
         var registrationCode = await _context.RegistrationCodes
             .Include(rc => rc.Organization)
-            .FirstOrDefaultAsync(rc => rc.Code == sanitizedCompanyRegistrationCode && !rc.IsUsed);
+            .FirstOrDefaultAsync(rc => rc.Code == sanitizedCompanyRegistrationCode && rc.Email == sanitizedEmail && !rc.IsUsed);
 
         if (registrationCode == null)
-            throw new InvalidOperationException("Invalid registration code");
+            throw new InvalidOperationException("Invalid registration code and/or email address");
 
         // Check if code has expired
         if (registrationCode.ExpiresOn < DateTime.UtcNow)
@@ -589,7 +592,8 @@ public class AuthService : IAuthService
             OrganizationId = user.OrganizationId,
             OrganizationName = organization.OrganizationName,
             LicenseTier = subscription.Tier,
-            RegistrationToken = organization.RegistrationToken
+            RegistrationToken = organization.RegistrationToken,
+            HasCompletedOnboarding = user.HasCompletedOnboarding
         };
     }
 
@@ -711,7 +715,8 @@ public class AuthService : IAuthService
                 Role = adminUser.UserRole,
                 OrganizationId = organization.OrganizationId,
                 OrganizationName = organization.OrganizationName,
-                LicenseTier = subscription.Tier
+                LicenseTier = subscription.Tier,
+                HasCompletedOnboarding = adminUser.HasCompletedOnboarding
             }
         };
     }
@@ -1006,7 +1011,8 @@ public class AuthService : IAuthService
             LicenseTier = licenseTier,
             RegistrationToken = organization.RegistrationToken,
             AccessToken = accessToken,
-            RefreshToken = refreshToken // Return same refresh token
+            RefreshToken = refreshToken, // Return same refresh token
+            HasCompletedOnboarding = user.HasCompletedOnboarding
         }, false); // Not an idle timeout
     }
 
@@ -1131,9 +1137,20 @@ public class AuthService : IAuthService
             RegistrationToken = organization.RegistrationToken,
             AccessToken = accessToken,
             RefreshToken = refreshToken,
+            HasCompletedOnboarding = user.HasCompletedOnboarding,
             TerminalId = pinTerminalContext?.TerminalUid,
             TerminalCode = pinTerminalContext?.TerminalCode,
             Location = pinTerminalContext?.Location
         };
+    }
+
+    public async Task<bool> SetOnboardingCompletedAsync(Guid userId)
+    {
+        var changed = await _context.SystemUsers
+            .Where(u => u.UserId == userId && !u.HasCompletedOnboarding)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.HasCompletedOnboarding, true));
+
+        return changed > 0;
     }
 }

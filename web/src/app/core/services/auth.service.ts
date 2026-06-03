@@ -203,6 +203,22 @@ export class AuthService {
     );
   }
 
+  markOnboardingComplete(): Observable<{ message: string; hasCompletedOnboarding: boolean }> {
+    return this.http.post<{ message: string; hasCompletedOnboarding: boolean }>(`${this.apiUrl}/me/onboarding-complete`, {}).pipe(
+      tap((response) => {
+        const current = this.currentUserValue;
+        if (!current) {
+          return;
+        }
+
+        this.currentUserSubject.next({
+          ...current,
+          hasCompletedOnboarding: response.hasCompletedOnboarding
+        });
+      })
+    );
+  }
+
   requestPasswordResetCode(request: ForgotPasswordCodeRequest): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password/code`, request);
   }

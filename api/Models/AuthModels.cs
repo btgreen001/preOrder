@@ -44,6 +44,7 @@ public class SystemUser
     public Guid OrganizationId { get; set; }
     public string UserRole { get; set; } = string.Empty;
     public bool IsEnabled { get; set; }
+    public bool HasCompletedOnboarding { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime? LastLoginOn { get; set; }
     
@@ -139,6 +140,7 @@ public class AuthResponse
     public string RegistrationToken { get; set; } = string.Empty;
     public string AccessToken { get; set; } = string.Empty;
     public string? RefreshToken { get; set; } = string.Empty; // Nullable - may be in HttpOnly cookie instead
+    public bool HasCompletedOnboarding { get; set; }
     public Guid? TerminalId { get; set; }
     public string? TerminalCode { get; set; }
     public string? Location { get; set; }

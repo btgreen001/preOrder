@@ -75,6 +75,37 @@ public class OrganizationService : IOrganizationService
             .AnyAsync(o => o.RegistrationToken == token && o.IsEnabled);
     }
 
+    public async Task<bool> IsRegistrationInviteEmailAvailableAsync(Guid organizationId, string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return true;
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var utcNow = DateTime.UtcNow;
+
+        var hasOutstandingInvite = await _context.RegistrationCodes
+            .AsNoTracking()
+            .AnyAsync(rc => rc.OrganizationId == organizationId
+                && !rc.IsUsed
+                && rc.ExpiresOn >= utcNow
+                && rc.Email != null
+                && rc.Email.ToLower() == normalizedEmail);
+
+        if (hasOutstandingInvite)
+        {
+            return false;
+        }
+
+        var hasExistingUser = await _context.SystemUsers
+            .AsNoTracking()
+            .AnyAsync(u => u.OrganizationId == organizationId
+                && u.EmailAddress.ToLower() == normalizedEmail);
+
+        return !hasExistingUser;
+    }
+
     public async Task<IEnumerable<Organization>> GetAllAsync()
     {
         return await _context.Organizations

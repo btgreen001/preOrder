@@ -61,6 +61,7 @@ dependency-check \
 	- Cascade defaults off during edit, with explicit user control to enable sync or run Sync now.
 	- Keep monitoring UX clarity as part of the same post-go-live safety hardening track.
 - Bad-password-attempt lockout for standard login: still open (POST go LIVE hardening item), not a current MVP blocker.
+- Post go Live - when an event date ranges change then the current pickup slots may become invalid.  We should consider how we will handle this because the current model allows for them to remain even if they no longer fall within the parent event definition.
 
 
 

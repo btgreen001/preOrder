@@ -71,6 +71,27 @@ public class EmailServiceTests
             sut.SendEmailAsync("r@test.com", "Bakery", "CODE123", DateTime.UtcNow.AddDays(1)));
     }
 
+    [Fact]
+    public async Task SendEmailAsync_UnresolvedPasswordPlaceholder_ThrowsInvalidOperation()
+    {
+        var originalValue = Environment.GetEnvironmentVariable("SMTP_API_KEY");
+        Environment.SetEnvironmentVariable("SMTP_API_KEY", null);
+
+        try
+        {
+            var config = ValidSmtpConfig();
+            config["Emails:Smtp:Password"] = "${SMTP_API_KEY}";
+            var sut = BuildService(config);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                sut.SendEmailAsync("r@test.com", "Bakery", "CODE123", DateTime.UtcNow.AddDays(1)));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("SMTP_API_KEY", originalValue);
+        }
+    }
+
     // ── SendPasswordResetCodeEmailAsync ───────────────────────────────────────
 
     [Fact]

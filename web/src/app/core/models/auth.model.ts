@@ -24,6 +24,7 @@ export interface AuthResponse {
   registrationToken: string;
   accessToken?: string;
   refreshToken?: string;
+  hasCompletedOnboarding?: boolean;
   // Terminal binding context
   terminalId?: string;
   terminalCode?: string;
@@ -89,6 +90,7 @@ export interface MyProfileResponse {
   lastName: string;
   organizationId: string;
   role: string;
+  hasCompletedOnboarding?: boolean;
 }
 
 export interface CompanyProfile {

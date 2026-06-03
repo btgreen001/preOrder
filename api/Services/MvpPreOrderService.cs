@@ -65,6 +65,8 @@ public class MvpPreOrderService : IMvpPreOrderService
         {
             throw new InvalidOperationException("Pickup start date must be on or after the pre-order event open date.");
         }
+        var endOfDay = request.PickupEndDt.Date.AddDays(1).AddTicks(-1);
+        request.PickupEndDt = DateTime.SpecifyKind(endOfDay, DateTimeKind.Local);
 
         var entity = new HolidayEvent
         {
@@ -107,6 +109,8 @@ public class MvpPreOrderService : IMvpPreOrderService
             throw new InvalidOperationException("Pickup start date must be on or after pre-order event open time.");
         }
 
+        var endOfDay = request.PickupEndDt.Date.AddDays(1).AddTicks(-1);
+        request.PickupEndDt = DateTime.SpecifyKind(endOfDay, DateTimeKind.Local);
         var entity = await ResolveHolidayEventAsync(organizationId, holidayEventExternalId);
 
         entity.Name = request.Name;

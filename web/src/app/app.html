@@ -40,15 +40,21 @@
   <aside id="primary-sidebar" class="sidebar" *ngIf="showAdminShell" [class.mobile-open]="isSidebarOpen">
   <ul>
     <li *ngFor="let nav of sidebarNav"
-        [class.active]="nav.route ? isActive(nav.route) : false"
+      [class.active]="nav.route && !nav.nonInteractive && nav.action !== 'quick-tour' ? isActive(nav.route) : false"
         [class.child]="nav.isChild">
 
       <!-- Divider BEFORE this item -->
       <div *ngIf="nav.dividerBefore" class="nav-divider"></div>
 
+      <div *ngIf="nav.nonInteractive" class="section-header" aria-hidden="true">
+        <mat-icon>{{ nav.icon }}</mat-icon>
+        {{ nav.label }}
+      </div>
+
       <!-- External link -->
       <a *ngIf="nav.externalUrl"
-        [href]="nav.label === 'Store Preview' ? storePreviewUrl : nav.externalUrl"
+        [href]="getNavExternalUrl(nav)"
+         (click)="onExternalNavClick($event, nav)"
          target="_blank"
          rel="noopener noreferrer">
         <mat-icon>{{ nav.icon }}</mat-icon>
@@ -56,8 +62,9 @@
       </a>
 
         <!-- Internal route -->
-        <a *ngIf="nav.route && !nav.externalUrl"
-          [routerLink]="nav.route">
+        <a *ngIf="nav.route && !nav.externalUrl && !nav.nonInteractive"
+          [routerLink]="nav.route"
+          (click)="onSidebarNavClick(nav)">
           <mat-icon>{{ nav.icon }}</mat-icon>
           {{ nav.label }}
         </a>

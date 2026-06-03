@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
 using MailKit.Net.Smtp;
@@ -43,6 +44,7 @@ public class EmailService : IEmailService
     private readonly IConfiguration _configuration;
     private readonly ILogger<EmailService> _logger;
     private const int DefaultSmtpTimeoutMs = 10000;
+    private static readonly Regex EnvironmentPlaceholderPattern = new("^\\$\\{(?<name>[A-Z0-9_]+)\\}$", RegexOptions.Compiled);
 
     public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
     {
@@ -59,20 +61,20 @@ public class EmailService : IEmailService
             toEmail = _configuration["Emails:AdminEmail"] ?? "";
         }
 
-        var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
+        var host = GetResolvedConfigValue("Emails:Smtp:Host") ?? "smtp.gmail.com";
         var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
-        var username = _configuration["Emails:Smtp:Username"];
-        var password = _configuration["Emails:Smtp:Password"];
-        var fromEmail = _configuration["Emails:FromEmail"] ?? username ?? "no-reply@example.com";
-        var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
-        var registerBaseUrl = _configuration["Emails:RegisterBaseUrl"] ?? "https://localhost:4200/register";
+        var username = GetResolvedConfigValue("Emails:Smtp:Username", "SMTP_USERNAME");
+        var password = GetResolvedConfigValue("Emails:Smtp:Password", "SMTP_API_KEY", "SMTP_PASSWORD");
+        var fromEmail = GetResolvedConfigValue("Emails:FromEmail") ?? username ?? "no-reply@example.com";
+        var fromName = GetResolvedConfigValue("Emails:FromName") ?? "BakeAhead";
+        var registerBaseUrl = GetResolvedConfigValue("Emails:RegisterBaseUrl") ?? "https://localhost:4200/register";
         var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}", 
                !string.IsNullOrWhiteSpace(password));
-            throw new InvalidOperationException("Invite email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
+                throw new InvalidOperationException("Invite email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password, or provide SMTP_API_KEY/SMTP_PASSWORD as environment variables on Fly.");
         }
 
         var inviteLink = BuildInviteLink(registerBaseUrl, inviteCode, toEmail);
@@ -109,18 +111,18 @@ public class EmailService : IEmailService
         }
         var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
-        var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
+        var host = GetResolvedConfigValue("Emails:Smtp:Host") ?? "smtp.gmail.com";
         var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
-        var username = _configuration["Emails:Smtp:Username"];
-        var password = _configuration["Emails:Smtp:Password"];
-        var fromEmail = _configuration["Emails:FromEmail"] ?? username ?? "no-reply@example.com";
-        var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
+        var username = GetResolvedConfigValue("Emails:Smtp:Username", "SMTP_USERNAME");
+        var password = GetResolvedConfigValue("Emails:Smtp:Password", "SMTP_API_KEY", "SMTP_PASSWORD");
+        var fromEmail = GetResolvedConfigValue("Emails:FromEmail") ?? username ?? "no-reply@example.com";
+        var fromName = GetResolvedConfigValue("Emails:FromName") ?? "BakeAhead";
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}",
                 !string.IsNullOrWhiteSpace(password));
-            throw new InvalidOperationException("Password reset SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
+            throw new InvalidOperationException("Password reset SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password, or provide SMTP_API_KEY/SMTP_PASSWORD as environment variables on Fly.");
         }
 
         var message = new MimeMessage();
@@ -155,18 +157,18 @@ public class EmailService : IEmailService
         }
         var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
-        var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
+        var host = GetResolvedConfigValue("Emails:Smtp:Host") ?? "smtp.gmail.com";
         var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
-        var username = _configuration["Emails:Smtp:Username"];
-        var password = _configuration["Emails:Smtp:Password"];
-        var fromEmail = _configuration["Emails:FromEmail"] ?? username ?? "no-reply@example.com";
-        var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
+        var username = GetResolvedConfigValue("Emails:Smtp:Username", "SMTP_USERNAME");
+        var password = GetResolvedConfigValue("Emails:Smtp:Password", "SMTP_API_KEY", "SMTP_PASSWORD");
+        var fromEmail = GetResolvedConfigValue("Emails:FromEmail") ?? username ?? "no-reply@example.com";
+        var fromName = GetResolvedConfigValue("Emails:FromName") ?? "BakeAhead";
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}",
                 !string.IsNullOrWhiteSpace(password));
-            throw new InvalidOperationException("Username reminder SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password.");
+            throw new InvalidOperationException("Username reminder SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password, or provide SMTP_API_KEY/SMTP_PASSWORD as environment variables on Fly.");
         }
 
         var message = new MimeMessage();
@@ -215,22 +217,22 @@ public class EmailService : IEmailService
         }
         var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
-        var host = _configuration["Emails:Smtp:Host"] ?? "smtp.gmail.com";
+        var host = GetResolvedConfigValue("Emails:Smtp:Host") ?? "smtp.gmail.com";
         var port = _configuration.GetValue<int>("Emails:Smtp:Port", 587);
-        var username = _configuration["Emails:Smtp:Username"];
-        var password = _configuration["Emails:Smtp:Password"];
+        var username = GetResolvedConfigValue("Emails:Smtp:Username", "SMTP_USERNAME");
+        var password = GetResolvedConfigValue("Emails:Smtp:Password", "SMTP_API_KEY", "SMTP_PASSWORD");
         var fromEmail = organizationContactEmail
-            ?? _configuration["Emails:FromEmail"]
+            ?? GetResolvedConfigValue("Emails:FromEmail")
             ?? username
             ?? "no-reply@example.com";
-        var fromName = _configuration["Emails:FromName"] ?? "BakeAhead";
-        var orderBaseUrl = _configuration["Emails:OrderBaseUrl"] ?? "https://localhost:4200/preorders/external";
+        var fromName = GetResolvedConfigValue("Emails:FromName") ?? "BakeAhead";
+        var orderBaseUrl = GetResolvedConfigValue("Emails:OrderBaseUrl") ?? "https://localhost:4200/preorders/external";
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             _logger.LogError("SMTP credentials not configured. Password present: {HasPassword}", 
                 !string.IsNullOrWhiteSpace(password));
-            throw new InvalidOperationException("Order email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password (or SMTP_API_KEY env var).");
+            throw new InvalidOperationException("Order email SMTP credentials are not configured. Please set Emails:Smtp:Username and Emails:Smtp:Password, or provide SMTP_API_KEY/SMTP_PASSWORD as environment variables on Fly.");
         }
         var orderLink = BuildOrderLink(orderBaseUrl, externalId);
         var normalizedLines = (lines ?? Enumerable.Empty<OrderEmailLineItem>())
@@ -319,6 +321,44 @@ public class EmailService : IEmailService
         }
 
         return TimeSpan.FromMilliseconds(timeoutMs);
+    }
+
+    private string? GetResolvedConfigValue(string key, params string[] fallbackEnvironmentVariables)
+    {
+        var configuredValue = ResolveEnvironmentPlaceholder(_configuration[key]);
+        if (!string.IsNullOrWhiteSpace(configuredValue))
+        {
+            return configuredValue;
+        }
+
+        foreach (var environmentVariable in fallbackEnvironmentVariables)
+        {
+            var environmentValue = Environment.GetEnvironmentVariable(environmentVariable);
+            if (!string.IsNullOrWhiteSpace(environmentValue))
+            {
+                return environmentValue;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ResolveEnvironmentPlaceholder(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmedValue = value.Trim();
+        var match = EnvironmentPlaceholderPattern.Match(trimmedValue);
+        if (!match.Success)
+        {
+            return trimmedValue;
+        }
+
+        var environmentVariableName = match.Groups["name"].Value;
+        return Environment.GetEnvironmentVariable(environmentVariableName);
     }
 
     private static string BuildOrderLink(string orderBaseUrl, string externalId)

@@ -5,9 +5,10 @@
       <p>Manage pickup windows and enforce slot capacities.</p>
     </div>
     <nav class="admin-links">
-      <a routerLink="/admin/events">Events</a>
-      <a routerLink="/admin/menu">Items</a>
-      <a routerLink="/admin/orders">Orders</a>
+      <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
+      <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
+      <a routerLink="/admin/slots" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Slots</a>
+      <a routerLink="/admin/orders" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Orders</a>
     </nav>
   </header>
 
@@ -21,7 +22,7 @@
     </label>
   </section>
 
-  <section class="editor">
+  <section #slotPickupHeader class="editor">
     <h2>{{ editingExternalId ? 'Edit Pickup Slot' : 'Create Pickup Slot' }}</h2>
     <p *ngIf="selectedHolidayEvent" class="window-hint">
       Event Pickup Window (local time):
@@ -32,7 +33,7 @@
     <div class="grid">
       <label>
         Slot Start (local time)
-        <input [(ngModel)]="form.slotStartAt" type="datetime-local" />
+        <input #slotStartAtInput [(ngModel)]="form.slotStartAt" type="datetime-local" />
       </label>
 
       <label>

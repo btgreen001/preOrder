@@ -24,6 +24,12 @@
   padding: 0.35rem 0.75rem;
 }
 
+.admin-links a.active-nav {
+  background: var(--bakery-primary);
+  border-color: var(--bakery-primary);
+  color: #fff;
+}
+
 .editor {
   border: 1px solid var(--bakery-border);
   border-radius: 10px;
@@ -186,6 +192,10 @@ td {
   border-bottom: 1px solid var(--bakery-border);
 }
 
+.anchored-row {
+  background: #eef6ff;
+}
+
 .empty,
 .loading,
 .error-message,
@@ -214,6 +224,61 @@ td {
 .delete-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.tour-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(17, 24, 39, 0.45);
+}
+
+.tour-card {
+  position: fixed;
+  z-index: 1004;
+  width: min(320px, calc(100vw - 32px));
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 0.9rem;
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.2);
+}
+
+.tour-step-index {
+  margin: 0;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.tour-card h3 {
+  margin: 0.4rem 0 0.35rem;
+  font-size: 1rem;
+}
+
+.tour-card p {
+  margin: 0;
+  color: #334155;
+}
+
+.tour-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.tour-next {
+  background: var(--bakery-primary);
+  border-color: var(--bakery-primary);
+  color: #fff;
+}
+
+:host ::ng-deep .tour-focus {
+  position: relative;
+  z-index: 1002;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 6px rgba(45, 125, 244, 0.65);
+  border-radius: 10px;
 }
 
 @media (max-width: 900px) {

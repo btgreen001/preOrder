@@ -1,10 +1,12 @@
-import { Component, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 import { PreorderAdminService, AdminHolidayEvent, SaveHolidayEventRequest } from '../services/preorder-admin.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../../core/services/auth.service';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -16,9 +18,17 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   
 })
 
-export class PreorderEventsAdminComponent implements OnInit {
+export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
+  private static readonly FORCE_TOUR_KEY = 'preorder.forceTour';
+  private static readonly FORCE_TOUR_DEBUG_KEY = 'preorder.forceTourDebug';
+  private static readonly QUICK_TOUR_EVENT = 'preorder:tour:start';
+  private static readonly SAVE_CONTINUE_NAV_DELAY_MS = 250;
+
   private readonly preorderAdminService = inject(PreorderAdminService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
   
   events: AdminHolidayEvent[] = [];
   isLoading = false;
@@ -26,12 +36,31 @@ export class PreorderEventsAdminComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   editingExternalId: string | null = null;
+  anchoredEventExternalId: string | null = null;
   autoSyncEnabled = true;
   allDayEnabled = true;
+  showOnboardingTour = false;
+  currentTourStepIndex = 0;
+  tourCardStyle: Record<string, string> = {};
+  tourSteps: readonly { targetSelector: string; title: string; description: string }[] = [];
 
   private closesAtManuallyEdited = false;
   private pickupStartDtManuallyEdited = false;
   private pickupEndDtManuallyEdited = false;
+  private focusedTourTarget: HTMLElement | null = null;
+  private tourEligibilitySubscription?: Subscription;
+  private onboardingLaunchScheduled = false;
+  private pendingTourPositionTimeout: ReturnType<typeof setTimeout> | null = null;
+  private pendingNavigationTimeout: ReturnType<typeof setTimeout> | null = null;
+  private quickTourDebugEnabled = false;
+  private readonly quickTourEventHandler = () => {
+    this.quickTourDebugEnabled = true;
+    this.snackBar.open('Quick Tour trigger received. Attempting to open tour.', 'Close', {
+      duration: 2200,
+      panelClass: ['info-snackbar']
+    });
+    this.scheduleTourLaunch();
+  };
 
   form: SaveHolidayEventRequest = {
     name: '',
@@ -45,16 +74,257 @@ export class PreorderEventsAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.startCreate();
-    this.loadEvents();
+    this.loadEvents(true);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(PreorderEventsAdminComponent.QUICK_TOUR_EVENT, this.quickTourEventHandler);
+    }
+
+    const forceTour = sessionStorage.getItem(PreorderEventsAdminComponent.FORCE_TOUR_KEY) === '1';
+    this.quickTourDebugEnabled = sessionStorage.getItem(PreorderEventsAdminComponent.FORCE_TOUR_DEBUG_KEY) === '1';
+    sessionStorage.removeItem(PreorderEventsAdminComponent.FORCE_TOUR_KEY);
+    sessionStorage.removeItem(PreorderEventsAdminComponent.FORCE_TOUR_DEBUG_KEY);
+
+    const currentUser = this.authService.currentUserValue;
+    this.tourSteps = this.buildTourSteps(currentUser?.role);
+
+    if (forceTour) {
+      this.scheduleTourLaunch();
+    }
+
+    if (currentUser && currentUser.hasCompletedOnboarding !== true) {
+      this.scheduleTourLaunch();
+    }
+
+    this.tourEligibilitySubscription = this.authService.currentUser.subscribe((user) => {
+      if (!user || user.hasCompletedOnboarding === true || this.showOnboardingTour || this.onboardingLaunchScheduled) {
+        return;
+      }
+
+      this.tourSteps = this.buildTourSteps(user.role);
+      this.scheduleTourLaunch();
+    });
+
+    this.authService.getMyProfile().subscribe({
+      next: (profile) => {
+        if (profile.role) {
+          this.tourSteps = this.buildTourSteps(profile.role);
+        }
+
+        if (profile.hasCompletedOnboarding !== true && !this.showOnboardingTour && !this.onboardingLaunchScheduled) {
+          this.scheduleTourLaunch();
+        }
+      },
+      error: () => {
+        if (this.quickTourDebugEnabled) {
+          this.snackBar.open('Quick Tour debug: profile check failed, but trigger still available.', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      }
+    });
   }
 
-  loadEvents(): void {
+  ngOnDestroy(): void {
+    this.tourEligibilitySubscription?.unsubscribe();
+    this.focusedTourTarget?.classList.remove('tour-focus');
+    if (this.pendingTourPositionTimeout) {
+      clearTimeout(this.pendingTourPositionTimeout);
+      this.pendingTourPositionTimeout = null;
+    }
+    if (this.pendingNavigationTimeout) {
+      clearTimeout(this.pendingNavigationTimeout);
+      this.pendingNavigationTimeout = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener(PreorderEventsAdminComponent.QUICK_TOUR_EVENT, this.quickTourEventHandler);
+    }
+  }
+
+  private scheduleTourLaunch(): void {
+    this.onboardingLaunchScheduled = true;
+    setTimeout(() => {
+      this.startOnboardingTour();
+      this.onboardingLaunchScheduled = false;
+    }, 250);
+  }
+
+  private buildTourSteps(role?: string): readonly { targetSelector: string; title: string; description: string }[] {
+    const normalizedRole = (role ?? '').toLowerCase();
+    const isCompanyAdmin = normalizedRole === 'companyadmin' || normalizedRole === 'systemadmin';
+
+    const navDescription = isCompanyAdmin
+      ? 'Use these tabs for Events, Event Items, Pickup Time Slots, and Manage Customer Orders. Your sidebar also includes Profile Management, Store Preview, and Access Management.'
+      : 'Use these tabs for Events, Event Items, Pickup Time Slots, and Manage Customer Orders. Your sidebar includes Profile Management and Store Preview.';
+
+    return [
+      {
+        targetSelector: '[data-tour="events-nav"]',
+        title: 'Step 1: Navigation',
+        description: navDescription
+      },
+      {
+        targetSelector: '[data-tour="event-editor-title"]',
+        title: 'Step 2: Create Your Event',
+        description: 'Create your event and set pickup dates here before opening pre-orders.'
+      },
+      {
+        targetSelector: '[data-tour="continue-button"]',
+        title: 'Step 3: Save and Continue',
+        description: 'Use this action to save and move to items when your event is ready and finally create pickup time slots.'
+      }
+    ] as const;
+  }
+
+  private startOnboardingTour(): void {
+    this.showOnboardingTour = true;
+    this.currentTourStepIndex = 0;
+    this.applyTourStepPositioning();
+
+  }
+
+  private applyTourStepPositioning(skipAutoScroll = false): void {
+    const step = this.tourSteps[this.currentTourStepIndex];
+    if (!step) {
+      return;
+    }
+
+    this.focusedTourTarget?.classList.remove('tour-focus');
+    const target = this.document.querySelector(step.targetSelector) as HTMLElement | null;
+    this.focusedTourTarget = target;
+
+    if (!target) {
+      this.tourCardStyle = { top: '24px', left: '24px' };
+      return;
+    }
+
+    target.classList.add('tour-focus');
+
+    if (!skipAutoScroll && this.ensureStepTargetInView(target)) {
+      if (this.pendingTourPositionTimeout) {
+        clearTimeout(this.pendingTourPositionTimeout);
+      }
+
+      this.pendingTourPositionTimeout = setTimeout(() => {
+        this.pendingTourPositionTimeout = null;
+        this.applyTourStepPositioning(true);
+      }, 420);
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const cardWidth = 320;
+    const estimatedCardHeight = 240;
+    const margin = 16;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const minTop = viewportWidth <= 960 ? 72 : margin;
+    const maxTop = Math.max(minTop, viewportHeight - estimatedCardHeight - margin);
+
+    let left = rect.left;
+    if (left + cardWidth + margin > viewportWidth) {
+      left = viewportWidth - cardWidth - margin;
+    }
+    if (left < margin) {
+      left = margin;
+    }
+
+    let top = rect.bottom + margin;
+    if (top > maxTop) {
+      top = rect.top - estimatedCardHeight - margin;
+    }
+    top = Math.min(maxTop, Math.max(minTop, top));
+
+    this.tourCardStyle = {
+      top: `${Math.round(top)}px`,
+      left: `${Math.round(left)}px`
+    };
+  }
+
+  private ensureStepTargetInView(target: HTMLElement): boolean {
+    const rect = target.getBoundingClientRect();
+    const visibleTop = 72;
+    const visibleBottom = window.innerHeight - 12;
+    const isVisible = rect.top >= visibleTop && rect.bottom <= visibleBottom;
+
+    if (isVisible) {
+      return false;
+    }
+
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest'
+    });
+
+    return true;
+  }
+
+  get activeTourStep() {
+    return this.tourSteps[this.currentTourStepIndex];
+  }
+
+  previousTourStep(): void {
+    if (this.currentTourStepIndex === 0) {
+      return;
+    }
+
+    this.currentTourStepIndex -= 1;
+    this.applyTourStepPositioning();
+  }
+
+  nextTourStep(): void {
+    if (this.currentTourStepIndex >= this.tourSteps.length - 1) {
+      this.completeTour();
+      return;
+    }
+
+    this.currentTourStepIndex += 1;
+    this.applyTourStepPositioning();
+  }
+
+  skipTour(): void {
+    this.completeTour();
+  }
+
+  private completeTour(): void {
+    this.showOnboardingTour = false;
+    this.focusedTourTarget?.classList.remove('tour-focus');
+    this.focusedTourTarget = null;
+
+    this.authService.markOnboardingComplete().subscribe({
+      next: () => {
+        this.snackBar.open('Quick Tour complete. You can reopen Quick Tour later from the sidebar.', 'Close', {
+          duration: 3500,
+          panelClass: ['info-snackbar']
+        });
+      },
+      error: () => {
+        this.snackBar.open('Could not save onboarding status. Quick Tour may appear again next login.', 'Close', {
+          duration: 4000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  loadEvents(restoreAnchor = false): void {
     this.isLoading = true;
     this.errorMessage = '';
 
     this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
         this.events = events;
+        this.anchoredEventExternalId = this.preorderAdminService.getSelectedHolidayEventExternalId();
+
+        if (restoreAnchor && this.anchoredEventExternalId) {
+          const anchoredEvent = events.find(event => event.externalId === this.anchoredEventExternalId);
+          if (anchoredEvent && this.canEditEvent(anchoredEvent)) {
+            this.startEdit(anchoredEvent);
+          }
+        }
+
         this.isLoading = false;
       },
       error: () => {
@@ -228,9 +498,11 @@ export class PreorderEventsAdminComponent implements OnInit {
 
   startEdit(event: AdminHolidayEvent): void {
     this.editingExternalId = event.externalId;
+    this.anchoredEventExternalId = event.externalId;
     this.successMessage = '';
     this.allDayEnabled = false;
     this.resetAutoSyncTracking(false);
+    this.preorderAdminService.setSelectedHolidayEventExternalId(event.externalId);
     this.form = {
       name: event.name,
       description: event.description ?? '',
@@ -240,6 +512,8 @@ export class PreorderEventsAdminComponent implements OnInit {
       pickupEndDt: this.toDateInput(event.pickupEndDt),
       isActive: event.isActive
     };
+
+    this.scrollToEditorStart();
   }
 
   activateToggleEvent(event: AdminHolidayEvent): void {
@@ -278,7 +552,7 @@ export class PreorderEventsAdminComponent implements OnInit {
   }
 
 
-  saveEvent(): void {
+  saveEvent(nextRoute?: string): void {
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -331,11 +605,18 @@ export class PreorderEventsAdminComponent implements OnInit {
       : this.preorderAdminService.createHolidayEvent(request);
 
     save$.subscribe({
-      next: () => {
+      next: savedEvent => {
         this.isSaving = false;
         const successMessage = this.editingExternalId ? 'Event updated.' : 'Event created.';
         this.successMessage = successMessage;
+        this.preorderAdminService.setSelectedHolidayEventExternalId(savedEvent.externalId);
         this.snackBar.open(successMessage, 'Close', { duration: 3000 , panelClass: ['info-snackbar'] });
+
+        if (nextRoute) {
+          this.navigateWithDelay(nextRoute);
+          return;
+        }
+
         this.startCreate();
         this.loadEvents();
       },
@@ -344,6 +625,21 @@ export class PreorderEventsAdminComponent implements OnInit {
         this.errorMessage = extractErrorMessage(error, 'Could not save pre-order event.');
       }
     });
+  }
+
+  saveAndGoToMenu(): void {
+    this.saveEvent('/admin/menu');
+  }
+
+  private navigateWithDelay(route: string): void {
+    if (this.pendingNavigationTimeout) {
+      clearTimeout(this.pendingNavigationTimeout);
+    }
+
+    this.pendingNavigationTimeout = setTimeout(() => {
+      this.pendingNavigationTimeout = null;
+      this.router.navigate([route]);
+    }, PreorderEventsAdminComponent.SAVE_CONTINUE_NAV_DELAY_MS);
   }
 
   private toDateTimeInput(value: string): string {
@@ -438,6 +734,23 @@ export class PreorderEventsAdminComponent implements OnInit {
     }
 
     input.focus();
+  }
+
+  private scrollToEditorStart(): void {
+    const input = this.nameInput?.nativeElement;
+    if (!input) {
+      return;
+    }
+
+    input.scrollIntoView({
+      behavior: 'smooth',
+      block: this.isMobileViewport() ? 'center' : 'start',
+      inline: 'nearest'
+    });
+
+    if (!this.isMobileViewport()) {
+      setTimeout(() => input.focus(), 220);
+    }
   }
 
   private isMobileViewport(): boolean {
