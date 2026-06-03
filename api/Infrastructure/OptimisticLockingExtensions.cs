@@ -65,10 +65,10 @@ public static class OptimisticLockingExtensions
         string entityIdentifier,
         ILogger? logger = null)
     {
+        var safeEntityIdentifier = StringSanitizer.SanitizeForLog(entityIdentifier);
         try
         {
             await context.SaveChangesAsync();
-            var safeEntityIdentifier = sanitizeForLogging(entityIdentifier);
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -112,7 +112,7 @@ public static class OptimisticLockingExtensions
         
         // Step 3: Apply updates (caller's custom logic)
         updateAction(entity);
-        var safeEntityIdentifier = sanitizeForLogging(entityIdentifier);
+        var safeEntityIdentifier = StringSanitizer.SanitizeForLog(entityIdentifier);
         // Step 4: Increment version
         if (versionProperty != null)
         {
