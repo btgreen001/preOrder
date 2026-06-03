@@ -114,13 +114,14 @@ public class AuthServiceTests : IDisposable
         return (org, admin, sub);
     }
 
-    private async Task<RegistrationCode> SeedRegistrationCodeAsync(Organization org, SystemUser createdBy)
+    private async Task<RegistrationCode> SeedRegistrationCodeAsync(Organization org, SystemUser createdBy, string email)
     {
         var code = new RegistrationCode
         {
             CodeId = Guid.NewGuid(),
             OrganizationId = org.OrganizationId,
             Code = "TESTCODE123",
+            Email = email,
             CreatedByUserId = createdBy.UserId,
             ExpiresOn = DateTime.UtcNow.AddDays(7),
             IsUsed = false,
@@ -367,6 +368,7 @@ public class AuthServiceTests : IDisposable
             CodeId = Guid.NewGuid(),
             OrganizationId = org.OrganizationId,
             Code = "EXPIREDCODE",
+            Email = "newuser@test.com",
             CreatedByUserId = admin.UserId,
             ExpiresOn = DateTime.UtcNow.AddDays(-1), // expired
             IsUsed = false,
@@ -423,6 +425,7 @@ public class AuthServiceTests : IDisposable
             CodeId = Guid.NewGuid(),
             OrganizationId = org.OrganizationId,
             Code = "DISORGCODE",
+            Email = "disableduser@test.com",
             CreatedByUserId = admin.UserId,
             ExpiresOn = DateTime.UtcNow.AddDays(7),
             IsUsed = false,
@@ -450,7 +453,7 @@ public class AuthServiceTests : IDisposable
     public async Task RegisterUserAsync_DuplicateEmail_ThrowsInvalidOperation()
     {
         var (org, admin, _) = await SeedOrgWithAdminAsync("-dupemail");
-        var code = await SeedRegistrationCodeAsync(org, admin);
+        var code = await SeedRegistrationCodeAsync(org, admin, admin.EmailAddress);
 
         var request = new RegisterUserRequest
         {
@@ -473,7 +476,7 @@ public class AuthServiceTests : IDisposable
         var (org, admin, sub) = await SeedOrgWithAdminAsync("-register");
         sub.Tier = LicenseTier.Standard;
         await _context.SaveChangesAsync();
-        var code = await SeedRegistrationCodeAsync(org, admin);
+        var code = await SeedRegistrationCodeAsync(org, admin, "brandnew@test.com");
 
         var request = new RegisterUserRequest
         {

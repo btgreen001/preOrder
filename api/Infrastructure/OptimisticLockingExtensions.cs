@@ -38,14 +38,15 @@ public static class OptimisticLockingExtensions
         if (!currentVersion.HasValue)
             throw new InvalidOperationException($"Entity {typeof(TEntity).Name} VersionNbr is null");
         
+        var safeEntityIdentifier = StringSanitizer.SanitizeForLog(entityIdentifier);
         if (expectedVersion.Value != currentVersion.Value)
         {
             logger?.LogWarning(
                 "Concurrency conflict for {EntityType} {Identifier}: expected version {ExpectedVersion}, current version {CurrentVersion}",
-                entityName, entityIdentifier, expectedVersion.Value, currentVersion.Value);
+                entityName, safeEntityIdentifier, expectedVersion.Value, currentVersion.Value);
             
             throw new InvalidOperationException(
-                $"{entityName} '{entityIdentifier}' was modified by another user. Please refresh and try again. " +
+                $"{entityName} '{safeEntityIdentifier}' was modified by another user. Please refresh and try again. " +
                 $"(Expected version {expectedVersion.Value}, current version {currentVersion.Value})");
         }
     }

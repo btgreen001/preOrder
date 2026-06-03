@@ -6,9 +6,10 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <CollectCoverage>true</CollectCoverage>
+    <EnforceCoverageThreshold Condition="'$(EnforceCoverageThreshold)' == ''">false</EnforceCoverageThreshold>
     <CoverletOutput>TestResults/Coverage/</CoverletOutput>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <Threshold>85</Threshold>
+    <Threshold Condition="'$(EnforceCoverageThreshold)' == 'true'">85</Threshold>
     <ThresholdType>line</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
     <Include>[PreOrderApp]PreOrderApp.Infrastructure.StringSanitizer,[PreOrderApp]PreOrderApp.Infrastructure.WallClockDateTimeConverter,[PreOrderApp]PreOrderApp.Models.LicenseFeatures,[PreOrderApp]PreOrderApp.Models.LicenseUtils</Include>

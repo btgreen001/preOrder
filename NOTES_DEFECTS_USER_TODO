@@ -54,6 +54,24 @@ dependency-check \
 	- item 1: bad-password lockout/reset enforcement
 	- item 2: event date-time UX hardening (connected to item 1)
 
+## 2026-06-03 Go-Live Recheck (Latest)
+
+- Recheck result for current MVP scope: GO.
+- Evidence refreshed:
+	- backend build passed: `dotnet build api/PreOrderApp.sln --configuration Release --no-restore`
+	- backend full regression + enforced coverage gate passed:
+		- `dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-restore /p:EnforceCoverageThreshold=true`
+		- result: 183 passed, 0 failed, 99.31% line, 96.55% branch
+	- frontend scoped regression + coverage gate + build passed:
+		- `npm run test:ci:coverage && npm run coverage:check:frontend && npm run build`
+- Test command note:
+	- `--no-build` with coverlet caused module path/instrumentation failures in this repo.
+	- keep using `--no-restore` for coverage test runs.
+- Post-go-live hardening items remain:
+	- bad-password lockout/reset enforcement
+	- event date-time UX hardening
+	- wire optimistic locking into active update flows
+
 ## 2026-05-28 Outstanding Items Recheck
 
 

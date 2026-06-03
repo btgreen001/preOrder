@@ -28,7 +28,7 @@ jobs:
 
     - name: Run backend tests with coverage gate
       run: |
-        dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-build
+        dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-restore /p:EnforceCoverageThreshold=true
 
     - name: Setup Node.js
       uses: actions/setup-node@v4

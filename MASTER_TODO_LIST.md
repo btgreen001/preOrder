@@ -17,6 +17,7 @@
 - Still-open product work remains:
 	- bad-password attempt lockout / password reset enforcement (POST go LIVE)
   - event create/edit downstream date-time UX hardening (POST go LIVE, connected to item 1)
+  - wire optimistic locking into active update flows (POST go LIVE)
 
 ## Go-Live Readiness Recheck (2026-05-28)
 
@@ -30,7 +31,22 @@
   - `npm run build`
   - Result: tests passed, coverage gate passed (84.61%), build succeeded with non-blocking bundle/style budget warnings.
 - Decision for current MVP scope: GO.
-- Remaining work classification unchanged: items 1 and 2 stay POST go LIVE hardening track.
+- Remaining work classification updated: items 1, 2, and 3 stay POST go LIVE hardening track.
+
+## Go-Live Readiness Recheck (2026-06-03)
+
+- Re-ran backend build: `dotnet build api/PreOrderApp.sln --configuration Release --no-restore`
+  - Result: build succeeded, 0 warnings, 0 errors.
+- Re-ran backend full regression + enforced coverage gate:
+  - `dotnet test api/tests/PreOrderApp.Tests/PreOrderApp.Tests.csproj --configuration Release --no-restore /p:EnforceCoverageThreshold=true`
+  - Result: 183 passed, 0 failed, 99.31% line, 96.55% branch.
+- Re-ran frontend scoped regression + coverage gate + build:
+  - `npm run test:ci:coverage`
+  - `npm run coverage:check:frontend`
+  - `npm run build`
+  - Result: tests passed, coverage gate passed, build succeeded.
+- Decision for current MVP scope: GO.
+- Remaining work classification unchanged: items 1, 2, and 3 stay POST go LIVE hardening track.
 
 ## Outstanding Items Recheck (2026-05-28)
 
@@ -41,6 +57,9 @@
   - Evidence: login path validates password but does not increment failed-attempt counters or set account lockout state in [api/Services/AuthService.cs](api/Services/AuthService.cs#L282) and [api/Services/AuthService.cs](api/Services/AuthService.cs#L351).
   - Note: PIN lockout exists separately (`PinLockedUntil`) and does not satisfy standard password-login lockout objective.
   - Classification: post-go-live hardening item; not an MVP release blocker for current scope.
+- Optimistic locking helper methods are not currently used by service/controller update paths: still open (POST go LIVE).
+  - Evidence: extension methods are defined in [api/Infrastructure/OptimisticLockingExtensions.cs](api/Infrastructure/OptimisticLockingExtensions.cs#L23), [api/Infrastructure/OptimisticLockingExtensions.cs](api/Infrastructure/OptimisticLockingExtensions.cs#L63), and [api/Infrastructure/OptimisticLockingExtensions.cs](api/Infrastructure/OptimisticLockingExtensions.cs#L98), with no external call sites.
+  - Classification: post-go-live concurrency hardening item; wire into MVP-critical update endpoints and add conflict-path tests.
 
 ## Latest Progress (2026-05-24)
 
