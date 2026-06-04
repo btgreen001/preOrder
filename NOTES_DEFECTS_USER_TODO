@@ -53,7 +53,7 @@ dependency-check \
 - Post-go-live hardening items remain as-is:
 	- item 1: bad-password lockout/reset enforcement
 	- item 2: event date-time UX hardening (connected to item 1)
-
+	- item 3: when you mouse over Ordering Opens and Closes or the input fields it highlights the Midnight and End of Day buttons as it you are hoving them.  This should only highlight when you are OVER those buttons.
 ## 2026-06-03 Go-Live Recheck (Latest)
 
 - Recheck result for current MVP scope: GO.
