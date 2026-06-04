@@ -1,0 +1,15 @@
+name: OWASP ZAP Baseline Scan
+
+on:
+  workflow_dispatch:
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: "https://preorder-web.fly.dev"
+          cmd_options: "-a"
