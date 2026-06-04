@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: ZAP Baseline Scan
-        uses: zaproxy/action-full-scan@v0.10.0
+        uses: zaproxy/action-baseline@v0.10.0
         continue-on-error: true
         with:
           target: "https://preorder-web.fly.dev"
