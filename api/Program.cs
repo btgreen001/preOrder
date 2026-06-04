@@ -302,6 +302,12 @@ builder.WebHost.ConfigureKestrel(options =>
         ? "✓ HTTPS enabled: Backend listening on HTTPS at port 5124"
         : "✓ HTTP enabled: Backend listening on HTTP at port 5124");
 });
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false; // <--- hides "Server: Kestrel"
+});
+
 // Basic authentication will be handled manually in controllers or middleware.
 var app = builder.Build();
 
@@ -563,8 +569,10 @@ app.Use(async (context, next) =>
     context.Response.Headers["X-Permitted-Cross-Domain-Policies"] = "none";
     context.Response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
     context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
-    context.Response.Headers["Cross-Origin-Resource-Policy"] = "cross-origin";
-    
+    context.Response.Headers["Cross-Origin-Resource-Policy"] = "same-origin";
+    context.Response.Headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+
     // Content Security Policy - HTTPS only
     context.Response.Headers["Content-Security-Policy"] = 
         "default-src 'self'; " +
@@ -573,8 +581,9 @@ app.Use(async (context, next) =>
         "img-src 'self' data: https:; " +
         "font-src 'self'; " +
         "connect-src 'self' https:; " +
+        "object-src 'none';" +
         "frame-ancestors 'none';";
-    
+
     await next();
 });
 
