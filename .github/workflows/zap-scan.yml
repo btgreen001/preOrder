@@ -3,6 +3,9 @@ name: OWASP ZAP Baseline Scan
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   zap_scan:
     runs-on: ubuntu-latest
