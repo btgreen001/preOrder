@@ -141,15 +141,26 @@
 
   <div class="tour-backdrop" *ngIf="showOnboardingTour">
     <div class="tour-card" [ngStyle]="tourCardStyle" role="dialog" aria-modal="true" aria-label="First-time setup tour">
-      <p class="tour-step-index">Step {{ currentTourStepIndex + 1 }} of {{ tourSteps.length }}</p>
+      @if (currentTourStepIndex === 0) {
+        <p class="tour-step-index">Welcome</p>
+      }
+      @else {
+        <p class="tour-step-index">Step {{ currentTourStepIndex }} of {{ tourSteps.length - 1 }}</p>
+      }
+
       <h3>{{ activeTourStep.title }}</h3>
       <p>{{ activeTourStep.description }}</p>
 
       <div class="tour-actions">
         <button type="button" (click)="skipTour()">Skip</button>
-        <button type="button" (click)="previousTourStep()" [disabled]="currentTourStepIndex === 0">Back</button>
+        @if (currentTourStepIndex > 0) {
+          <button type="button" (click)="previousTourStep()">Back</button>
+        }
         <button type="button" class="tour-next" (click)="nextTourStep()">
-          {{ currentTourStepIndex === tourSteps.length - 1 ? 'Finish' : 'Next' }}
+          {{ currentTourStepIndex === 0 
+              ? 'Start Tour' 
+              : (currentTourStepIndex === tourSteps.length - 1 ? 'Finish' : 'Next') 
+          }}
         </button>
       </div>
     </div>

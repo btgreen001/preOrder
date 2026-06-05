@@ -93,7 +93,12 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     }
 
     this.tourEligibilitySubscription = this.authService.currentUser.subscribe((user) => {
-      if (!user || user.hasCompletedOnboarding === true || this.showOnboardingTour || this.onboardingLaunchScheduled) {
+      if (
+        !user ||
+        user.hasCompletedOnboarding === true ||
+        this.showOnboardingTour ||
+        this.onboardingLaunchScheduled
+      ) {
         return;
       }
 
@@ -107,7 +112,11 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
           this.tourSteps = this.buildTourSteps(profile.role);
         }
 
-        if (profile.hasCompletedOnboarding !== true && !this.showOnboardingTour && !this.onboardingLaunchScheduled) {
+        if (
+          profile.hasCompletedOnboarding !== true &&
+          !this.showOnboardingTour &&
+          !this.onboardingLaunchScheduled
+        ) {
           this.scheduleTourLaunch();
         }
       },
@@ -139,6 +148,10 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   }
 
   private scheduleTourLaunch(): void {
+    if (this.showOnboardingTour || this.onboardingLaunchScheduled) {
+      return;
+    }
+
     this.onboardingLaunchScheduled = true;
     setTimeout(() => {
       this.startOnboardingTour();
@@ -151,10 +164,15 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     const isCompanyAdmin = normalizedRole === 'companyadmin' || normalizedRole === 'systemadmin';
 
     const navDescription = isCompanyAdmin
-      ? 'Use these tabs for Events, Event Items, Pickup Time Slots, and Manage Customer Orders. Your sidebar also includes Profile Management, Store Preview, and Access Management.'
-      : 'Use these tabs for Events, Event Items, Pickup Time Slots, and Manage Customer Orders. Your sidebar includes Profile Management and Store Preview.';
+      ? 'Use these tabs for Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar also includes Profile Management, Store Preview, and Access Management.'
+      : 'Use these tabs for Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar includes Profile Management and Store Preview.';
 
     return [
+      {
+        targetSelector: '[data-tour="welcome-step"]',
+        title: 'Welcome to BakeAhead',
+        description: 'We are excited to have you here. In just a few quick steps, you will see how BakeAhead enables you to create delightful experiences for your customers for all of your pre-order events. Let start the short tour together!'
+      },
       {
         targetSelector: '[data-tour="events-nav"]',
         title: 'Step 1: Navigation',
@@ -168,7 +186,7 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
       {
         targetSelector: '[data-tour="continue-button"]',
         title: 'Step 3: Save and Continue',
-        description: 'Use this action to save and move to items when your event is ready and finally create pickup time slots.'
+        description: 'Use this action to save and move to items when your event is ready after which create pickup time slots.'
       }
     ] as const;
   }
@@ -176,8 +194,9 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   private startOnboardingTour(): void {
     this.showOnboardingTour = true;
     this.currentTourStepIndex = 0;
+    this.focusedTourTarget?.classList.remove('tour-focus');
+    this.focusedTourTarget = null;
     this.applyTourStepPositioning();
-
   }
 
   private applyTourStepPositioning(skipAutoScroll = false): void {
@@ -286,12 +305,13 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
 
   private completeTour(): void {
     this.showOnboardingTour = false;
+    this.currentTourStepIndex = 0;
     this.focusedTourTarget?.classList.remove('tour-focus');
     this.focusedTourTarget = null;
 
     this.authService.markOnboardingComplete().subscribe({
       next: () => {
-        this.snackBar.open('Quick Tour complete. You can reopen Quick Tour later from the sidebar.', 'Close', {
+        this.snackBar.open('Thank you!  Quick Tour complete. You can view Quick Tour later from the sidebar.', 'Close', {
           duration: 3500,
           panelClass: ['info-snackbar']
         });
