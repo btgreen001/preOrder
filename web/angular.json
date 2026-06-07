@@ -110,7 +110,7 @@
             "styles": [
               "src/styles.scss"
             ],
-            "browsers": "Chrome"
+            "browsers": "ChromeHeadless"
           },
           "configurations": {
             "ci": {
