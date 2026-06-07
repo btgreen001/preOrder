@@ -1,0 +1,70 @@
+
+import { Component, signal, inject } from '@angular/core';
+import { Router, RouterOutlet, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { RoleService, UserRole } from '../shared-data-services/role.service';
+import { LicenseService } from '../shared-data-services/license.service';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink, CommonModule],
+  templateUrl: './app.html',
+  styleUrl: './app.scss'
+})
+export class App {
+  private router = inject(Router);
+  private roleService = inject(RoleService);
+  private licenseService = inject(LicenseService);
+
+  protected readonly title = signal('BakeAhead Pre-Order Management');
+  currentRole: UserRole;
+  availableRoles: UserRole[];
+  sidebarNav: { label: string, route: string, roles: UserRole[] }[];
+
+  constructor() {
+    // Ensure role is properly initialized
+    this.currentRole = this.roleService.getCurrentRole();
+    this.availableRoles = this.roleService.getAvailableRoles();
+    
+    // Debug logging
+    console.log('App initialized with role:', this.currentRole);
+    console.log('SessionStorage userRole:', sessionStorage.getItem('userRole'));
+    
+    // Define sidebar navigation items and which roles can see them
+    this.sidebarNav = [
+      { label: 'Dashboard', route: '/dashboard', roles: ['admin', 'staff'] as UserRole[] },
+      { label: 'Orders', route: '/orders', roles: ['admin', 'staff', 'customer'] as UserRole[] },
+      { label: 'Order Builder', route: '/order-builder', roles: ['admin', 'staff', 'customer'] as UserRole[] },
+      { label: 'Delivery Dispatch', route: '/delivery', roles: ['admin', 'staff'] as UserRole[] },
+      { label: 'Product Catalog', route: '/products', roles: ['admin', 'staff'] as UserRole[] },
+      { label: 'Calendar', route: '/calendar', roles: ['admin', 'staff', 'delivery'] as UserRole[] },
+      { label: 'Reporting', route: '/reporting', roles: ['admin', 'staff'] as UserRole[] },
+      { label: 'Communication Hub', route: '/communication', roles: ['admin', 'staff', 'delivery'] as UserRole[] },
+      { label: 'Role Management', route: '/roles', roles: ['admin'] as UserRole[] },
+      { label: 'Data Export', route: '/data-export', roles: ['admin'] as UserRole[] },
+      { label: 'Storefront', route: '/storefront', roles: ['customer'] as UserRole[] },
+      { label: 'Order History', route: '/order-history', roles: ['customer'] as UserRole[] },
+      { label: 'Availability', route: '/availability', roles: ['customer'] as UserRole[] }
+    ].filter(nav => nav.roles.includes(this.currentRole));
+  }
+
+  onRoleChange(event: Event) {
+    const newRole = (event.target as HTMLSelectElement).value as UserRole;
+    // Always trigger the role change since the user explicitly selected it
+    console.log(`Switching from ${this.currentRole} to ${newRole}`);
+    this.roleService.setRole(newRole);
+    // setRole will reload the page
+  }
+
+  logout() {
+    // Clear all session data
+    sessionStorage.clear();
+    // Force a full reload to the login page
+    window.location.href = '/login';
+  }
+
+  isActive(route: string): boolean {
+    return this.router.url.startsWith(route);
+  }
+}

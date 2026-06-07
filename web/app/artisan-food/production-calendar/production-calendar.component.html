@@ -1,0 +1,293 @@
+<div class="production-calendar">
+  <h1>Production Calendar / Schedule View</h1>
+  <div class="calendar-controls">
+    <button (click)="prev()">&#8592; Prev</button>
+    <button (click)="resetToday()">Today</button>
+    <button (click)="next()">Next &#8594;</button>
+    <span class="calendar-date-label">
+      @switch (view) {
+        @case ('day') {
+          <span>{{ currentDate | date:'fullDate' }}</span>
+        }
+        @case ('week') {
+          <span>Week of {{ weekDates[0] | date:'MMM d' }} - {{ weekDates[6] | date:'MMM d, y' }}</span>
+        }
+        @case ('month') {
+          <span>{{ currentDate | date:'MMMM y' }}</span>
+        }
+      }
+    </span>
+    <div class="view-toggles">
+      <button [class.active]="view === 'day'" (click)="setView('day')">Day</button>
+      <button [class.active]="view === 'week'" (click)="setView('week')">Week</button>
+      <button [class.active]="view === 'month'" (click)="setView('month')">Month</button>
+    </div>
+    <button class="add-task-btn" (click)="showAddTaskForm = !showAddTaskForm">
+      {{ showAddTaskForm ? 'Cancel' : '+ Add Task' }}
+    </button>
+  </div>
+
+  <!-- Add Task Form -->
+  @if (showAddTaskForm) {
+    <div class="add-task-form">
+      <h3>Add New Production Task</h3>
+      <form (ngSubmit)="addTask()" #taskForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="product">Product *</label>
+            <input type="text" id="product" [(ngModel)]="newTask.product" name="product" required placeholder="e.g., Chocolate Cake">
+          </div>
+          <div class="form-group">
+            <label for="quantity">Quantity *</label>
+            <input type="number" id="quantity" [(ngModel)]="newTask.quantity" name="quantity" required min="1" placeholder="1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="staff">Staff *</label>
+            <select id="staff" [(ngModel)]="newTask.staff" name="staff" required>
+              <option value="">Select Staff</option>
+              <option value="Sarah">Sarah</option>
+              <option value="Mike">Mike</option>
+              <option value="Emma">Emma</option>
+              <option value="Tom">Tom</option>
+              <option value="Lisa">Lisa</option>
+              <option value="Robert">Robert</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="equipment">Equipment *</label>
+            <select id="equipment" [(ngModel)]="newTask.equipment" name="equipment" required>
+              <option value="">Select Equipment</option>
+              <option value="Oven 1">Oven 1</option>
+              <option value="Oven 2">Oven 2</option>
+              <option value="Mixer">Mixer</option>
+              <option value="Stove">Stove</option>
+              <option value="Prep Table">Prep Table</option>
+              <option value="Cooling Rack">Cooling Rack</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate">Start Date & Time *</label>
+            <input type="datetime-local" id="startDate" [(ngModel)]="newTask.startDateTime" name="startDateTime" required>
+          </div>
+          <div class="form-group">
+            <label for="endDate">End Date & Time *</label>
+            <input type="datetime-local" id="endDate" [(ngModel)]="newTask.endDateTime" name="endDateTime" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="orderNo">Order Number</label>
+            <input type="text" id="orderNo" [(ngModel)]="newTask.orderNo" name="orderNo" placeholder="ORD-1001">
+          </div>
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" [(ngModel)]="newTask.category" name="category">
+              <option value="">Select Category</option>
+              <option value="cakes">Cakes</option>
+              <option value="breads">Breads</option>
+              <option value="pastries">Pastries</option>
+              <option value="preserves">Preserves</option>
+              <option value="cookies">Cookies</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" [disabled]="!taskForm.valid" class="btn-primary">Add Task</button>
+          <button type="button" (click)="cancelAddTask()" class="btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Filters and planning toggle -->
+  <div class="calendar-filters">
+    <input type="text" [(ngModel)]="filter.product" placeholder="Filter by product" />
+    <input type="text" [(ngModel)]="filter.staff" placeholder="Filter by staff" />
+    <input type="text" [(ngModel)]="filter.equipment" placeholder="Filter by equipment" />
+    <select [(ngModel)]="filter.status">
+      <option value="">All Statuses</option>
+      @for (s of statuses; track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
+    <label class="planning-toggle">
+      <input type="checkbox" [(ngModel)]="planningMode" /> Planning Mode
+    </label>
+    <button class="print-btn" (click)="printSchedule()">Print</button>
+  </div>
+
+  <!-- Attention Panel -->
+  @if (criticalTasks.late.length || criticalTasks.urgent.length || criticalTasks.conflicts.length) {
+    <div class="attention-panel">
+      <h3>Attention</h3>
+      <div class="attention-list">
+        @if (criticalTasks.late.length) {
+          <div>
+            <strong>Late</strong>
+            <ul>
+              @for (t of criticalTasks.late; track t) {
+                <li>{{ t.product }} ({{ t.quantity }}) — due {{ t.due | date:'short' }}</li>
+              }
+            </ul>
+          </div>
+        }
+        @if (criticalTasks.urgent.length) {
+          <div>
+            <strong>Urgent (due &lt;= 24h)</strong>
+            <ul>
+              @for (t of criticalTasks.urgent; track t) {
+                <li>{{ t.product }} ({{ t.quantity }}) — due {{ t.due | date:'short' }}</li>
+              }
+            </ul>
+          </div>
+        }
+        @if (criticalTasks.conflicts.length) {
+          <div>
+            <strong>Conflicts</strong>
+            <ul>
+              @for (t of criticalTasks.conflicts; track t) {
+                <li>{{ t.product }} — staff/equipment conflict</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Day View -->
+  @if (view === 'day') {
+    <div class="calendar-grid day-view">
+      <h2>{{ currentDate | date:'fullDate' }}</h2>
+      @if (dayTasks.length === 0) {
+        <div class="empty-msg">No production tasks for this day.</div>
+      }
+      <!-- Hourly Grid for Day View -->
+      @if (dayTasks.length > 0) {
+        <div class="hourly-grid">
+          <div class="time-column">
+            @for (hour of hours; track hour) {
+              <div class="time-slot">{{ hour }}:00</div>
+            }
+          </div>
+          <div class="tasks-column">
+            <div class="task-container" style="position: relative; height: 1440px;">
+              @for (task of dayTasks; track task) {
+                <div
+                  class="calendar-task positioned-task"
+                  [class.conflict]="task.conflict"
+                  [class.late]="task.late"
+                  [class.urgent]="task.urgent"
+                  [style.top]="getTaskPosition(task).top"
+                  [style.height]="getTaskPosition(task).height"
+                  draggable="true" (dragstart)="onDragStart(task)">
+                  <strong>{{ task.product }}</strong> ({{ task.quantity }})<br>
+                  <span>Staff: {{ task.staff }}</span> | <span>Equipment: {{ task.equipment }}</span><br>
+                  <span>Status: <span class="status-badge" [ngClass]="task.status.toLowerCase().replace(' ', '-')">{{ task.status }}</span></span><br>
+                  <span>{{ task.start | date:'shortTime' }} - {{ task.end | date:'shortTime' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+      <!-- Fallback list view -->
+      @if (dayTasks.length > 0) {
+        <div class="task-list-fallback">
+          @for (task of dayTasks; track task) {
+            <div class="calendar-task"
+              [class.conflict]="task.conflict"
+              [class.late]="task.late"
+              [class.urgent]="task.urgent"
+              draggable="true" (dragstart)="onDragStart(task)">
+              <strong>{{ task.product }}</strong> ({{ task.quantity }})<br>
+              <span>Staff: {{ task.staff }}</span> | <span>Equipment: {{ task.equipment }}</span><br>
+              <span>Status: <span class="status-badge" [ngClass]="task.status.toLowerCase().replace(' ', '-')">{{ task.status }}</span></span><br>
+              <span>Time: {{ task.start | date:'shortTime' }} - {{ task.end | date:'shortTime' }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Week View -->
+  @if (view === 'week') {
+    <div class="calendar-grid week-view">
+      <div class="week-header">
+        <div class="time-header">Time</div>
+        @for (d of weekDates; track d) {
+          <div class="week-day-label">{{ d | date:'EEE d' }}</div>
+        }
+      </div>
+      <!-- Hourly Week Grid -->
+      <div class="week-hourly-grid">
+        <div class="week-time-column">
+          @for (hour of hours; track hour) {
+            <div class="week-time-slot">{{ hour }}:00</div>
+          }
+        </div>
+        <div class="week-days-grid">
+          @for (d of weekDates; track d) {
+            <div class="week-day-column">
+              <div class="week-day-tasks" style="position: relative; height: 1440px;"
+                (dragover)="allowDrop($event)" (drop)="dropOnDay(d)">
+                @for (task of weekTasks[d.toISOString().slice(0,10)]; track task) {
+                  <div
+                    class="calendar-task positioned-task"
+                    [class.conflict]="task.conflict"
+                    [class.late]="task.late"
+                    [class.urgent]="task.urgent"
+                    [style.top]="getTaskPosition(task).top"
+                    [style.height]="getTaskPosition(task).height"
+                    draggable="true" (dragstart)="onDragStart(task)">
+                    <strong>{{ task.product }}</strong> ({{ task.quantity }})<br>
+                    <small>{{ task.staff }} | {{ task.equipment }}</small><br>
+                    <span class="status-badge" [ngClass]="task.status.toLowerCase().replace(' ', '-')">{{ task.status }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Month View -->
+  @if (view === 'month') {
+    <div class="calendar-grid month-view">
+      <div class="month-header">
+        @for (d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; track d) {
+          <div class="month-day-label">{{ d }}</div>
+        }
+      </div>
+      <div class="month-body">
+        @for (d of monthDates; track d; let i = $index) {
+          <div class="month-day-cell" [class.today]="d.toDateString() === today.toDateString()"
+            (dragover)="allowDrop($event)" (drop)="dropOnDay(d)">
+            <div class="month-day-number">{{ d.getDate() }}</div>
+            @if (monthTasks[d.toISOString().slice(0,10)]?.length === 0) {
+              <div class="empty-msg">&nbsp;</div>
+            }
+            @for (task of monthTasks[d.toISOString().slice(0,10)]; track task) {
+              <div class="calendar-task"
+                [class.conflict]="task.conflict"
+                [class.late]="task.late"
+                [class.urgent]="task.urgent"
+                draggable="true" (dragstart)="onDragStart(task)">
+                <strong>{{ task.product }}</strong> ({{ task.quantity }})<br>
+                <span>Status: <span class="status-badge" [ngClass]="task.status.toLowerCase().replace(' ', '-')">{{ task.status }}</span></span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

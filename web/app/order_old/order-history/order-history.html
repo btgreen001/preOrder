@@ -1,0 +1,14 @@
+<div class="order-history">
+  <h2>Order History</h2>
+  <ul>
+    @for (order of orders; track order) {
+      <li>
+        <span>Order #{{ order.id }}</span>
+        <span>Date: {{ order.date }}</span>
+        <span>Total: ${{ order.total.toFixed(2) }}</span>
+        <span>Status: {{ order.status }}</span>
+        <button (click)="viewOrder(order.id)">View</button>
+      </li>
+    }
+  </ul>
+</div>

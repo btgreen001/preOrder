@@ -1,0 +1,82 @@
+<div class="inventory-dashboard">
+  <header class="hero">
+    <h1>Inventory Dashboard</h1>
+    <p class="subtitle">Real-time overview of stock, alerts, and operations</p>
+  </header>
+
+  @if (loading) {
+    <div class="loading">
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+
+  @if (error) {
+    <div class="error">
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <section class="summary-cards">
+      <div class="card total" (click)="navigateToItems()" style="cursor: pointer;">
+        <div class="label">Total Items</div>
+        <div class="value">{{ summary.totalItems }}</div>
+      </div>
+      <div class="card low" (click)="navigateToLowStock()" style="cursor: pointer;">
+        <div class="label">Low Stock</div>
+        <div class="value">{{ summary.lowStock }}</div>
+      </div>
+      <div class="card expiring" (click)="navigateToExpiring()" style="cursor: pointer;">
+        <div class="label">Expiring Soon</div>
+        <div class="value">{{ summary.expiringSoon }}</div>
+      </div>
+      <div class="card value" (click)="navigateToReports()" style="cursor: pointer;">
+        <div class="label">Total Value</div>
+        <div class="value">${{ summary.totalValue.toLocaleString() }}</div>
+      </div>
+      <div class="card categories" (click)="navigateToCategories()" style="cursor: pointer;">
+        <div class="label">Categories</div>
+        <div class="value">{{ summary.categoriesCount }}</div>
+      </div>
+      <div class="card suppliers" (click)="navigateToSuppliers()" style="cursor: pointer;">
+        <div class="label">Suppliers</div>
+        <div class="value">{{ summary.suppliersCount }}</div>
+      </div>
+      <div class="card value" (click)="navigateToWasteAnalytics()" style="cursor: pointer;">
+        <div class="label">Waste Analytics</div>
+        <div class="value">Open</div>
+      </div>
+    </section>
+  }
+
+  <section class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="actions-grid">
+      @for (action of quickActions; track action) {
+        <a [routerLink]="action.route" class="action-card">
+          <div class="icon">{{ action.icon }}</div>
+          <h3>{{ action.title }}</h3>
+          <p>{{ action.description }}</p>
+        </a>
+      }
+    </div>
+  </section>
+
+  @if (alerts.length > 0) {
+    <section class="recent-alerts">
+      <h2>Recent Alerts</h2>
+      <div class="alerts-list">
+        @for (alert of alerts; track alert) {
+          <div class="alert-item" [class]="getAlertSeverityClass(alert.severity)">
+            <div class="alert-icon">{{ getAlertIcon(alert.type) }}</div>
+            <div class="alert-content">
+              <strong>{{ alert.message }}</strong>
+              <span class="alert-type">{{ alert.type | titlecase }}</span>
+            </div>
+            <div class="alert-timestamp">{{ alert.createdDate | date:'short' }}</div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

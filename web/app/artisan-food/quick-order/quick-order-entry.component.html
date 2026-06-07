@@ -1,0 +1,81 @@
+@if (isStaffOrAdmin) {
+  <div class="quick-order-entry">
+    <h1>Quick Order Entry</h1>
+    <a routerLink="/orders/builder" class="quick-order-link">Switch to Full Order Builder</a>
+    <form (ngSubmit)="submitOrder()" #orderForm="ngForm">
+      <fieldset>
+        <legend>Order Source</legend>
+        <label>
+          Order Source
+          <select [(ngModel)]="order.source" name="orderSource">
+            @for (source of orderSources; track source) {
+              <option [value]="source.value">{{ source.label }}</option>
+            }
+          </select>
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend>Customer Info</legend>
+        <label class="walkin-checkbox">
+          <input type="checkbox" [(ngModel)]="walkIn" name="walkIn" /> Walk-in Customer
+        </label>
+        @if (walkIn) {
+          <div class="walkin-note">
+            <em>This order will be assigned to a generic walk-in customer. No customer details are required.</em>
+          </div>
+        }
+        <label>
+          Name
+          <input type="text" [(ngModel)]="order.customerName" name="customerName" [required]="!walkIn" [disabled]="walkIn" />
+        </label>
+        <label>
+          Phone
+          <input type="tel" [(ngModel)]="order.customerPhone" name="customerPhone" [disabled]="walkIn" />
+        </label>
+        <label>
+          Email
+          <input type="email" [(ngModel)]="order.customerEmail" name="customerEmail" [disabled]="walkIn" />
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend>Products</legend>
+        @for (product of order.products; track product; let i = $index) {
+          <div class="product-row">
+            <input type="text" [(ngModel)]="product.name" name="productName{{i}}" placeholder="Product name" required />
+            <input type="number" [(ngModel)]="product.quantity" name="productQty{{i}}" min="1" required />
+            <input type="text" [(ngModel)]="product.notes" name="productNotes{{i}}" placeholder="Notes (optional)" />
+            <button type="button" (click)="removeProduct(i)" [disabled]="order.products.length === 1">Remove</button>
+          </div>
+        }
+        <button type="button" (click)="addProduct()">Add Product</button>
+      </fieldset>
+      <fieldset>
+        <legend>Pickup/Delivery</legend>
+        <label>
+          <input type="radio" [(ngModel)]="order.pickupOrDelivery" name="pickupOrDelivery" value="pickup" /> Pickup
+        </label>
+        <label>
+          <input type="radio" [(ngModel)]="order.pickupOrDelivery" name="pickupOrDelivery" value="delivery" /> Delivery
+        </label>
+        <label>
+          Date
+          <input type="date" [(ngModel)]="order.date" name="date" required />
+        </label>
+        <label>
+          Time
+          <input type="time" [(ngModel)]="order.time" name="time" />
+        </label>
+      </fieldset>
+      <label>
+        Notes
+        <textarea [(ngModel)]="order.notes" name="notes"></textarea>
+      </label>
+      <button type="submit" [disabled]="!orderForm.form.valid">Submit Order</button>
+    </form>
+  </div>
+} @else {
+  <div class="no-access">
+    <h2>Access Denied</h2>
+    <p>This page is for staff and admin only.</p>
+  </div>
+}

@@ -1,0 +1,28 @@
+<div class="app-shell">
+  <nav class="topnav">
+    <span class="app-title">Order Management</span>
+    <span class="spacer"></span>
+    <div class="nav-controls">
+      <label for="role-switch">Role:</label>
+      <select id="role-switch" (change)="onRoleChange($event)">
+        <option *ngFor="let role of availableRoles" [value]="role" [selected]="role === currentRole">{{ role | titlecase }}</option>
+      </select>
+      <button class="logout-btn" (click)="logout()" title="Logout">
+        <span class="logout-icon">🚪</span>
+        Logout
+      </button>
+    </div>
+  </nav>
+  <div class="main-layout">
+    <aside class="sidebar">
+      <ul>
+        <li *ngFor="let nav of sidebarNav" [class.active]="isActive(nav.route)">
+          <a [routerLink]="nav.route">{{ nav.label }}</a>
+        </li>
+      </ul>
+    </aside>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

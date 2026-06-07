@@ -1,0 +1,150 @@
+<div class="data-export" [class.expired-license]="licenseService.isExpired()">
+  <div class="export-header">
+    <h1>Data Export</h1>
+    <div class="role-info">
+      <span class="role-badge" [class]="currentRole">{{ currentRole | titlecase }}</span>
+      @if (!isSystemAdmin) {
+        <span class="warning">Some exports restricted to System Admin</span>
+      }
+    </div>
+  </div>
+
+  <!-- License Expiry Warning -->
+  @if (licenseService.isExpired()) {
+    <div class="expired-warning">
+      <h3>⚠️ License Expired</h3>
+      <p>Data export is not available with an expired license. Please renew your license to export data.</p>
+    </div>
+  }
+
+  <!-- Export Configuration -->
+  <div class="export-config" [class.disabled]="licenseService.isExpired()">
+    <div class="config-section">
+      <h3>Export Settings</h3>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <label for="format">Export Format</label>
+          <select id="format" [(ngModel)]="exportFormat" [disabled]="licenseService.isExpired()">
+            @for (format of formats; track format) {
+              <option [value]="format.value">
+                {{ format.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label for="dateRange">Date Range</label>
+          <select id="dateRange" [(ngModel)]="dateRange" [disabled]="licenseService.isExpired()">
+            @for (range of dateRanges; track range) {
+              <option [value]="range.value">
+                {{ range.label }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Available Data Types -->
+    <div class="config-section">
+      <h3>Select Data to Export</h3>
+      <div class="selection-controls">
+        <button class="btn btn-small" (click)="selectAll()" [disabled]="licenseService.isExpired()">
+          Select All Available
+        </button>
+        <button class="btn btn-small" (click)="clearAll()" [disabled]="licenseService.isExpired()">
+          Clear Selection
+        </button>
+      </div>
+
+      <div class="data-types-grid">
+        @for (option of availableExports; track option) {
+          <div
+            class="data-type-card"
+            [class.selected]="isSelected(option.id)"
+            tabindex="0"
+            (click)="!licenseService.isExpired() && toggleExport(option.id)"
+            (keydown.enter)="!licenseService.isExpired() && toggleExport(option.id)">
+            <div class="card-header">
+              <input
+                type="checkbox"
+                [checked]="isSelected(option.id)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleExport(option.id)"
+                [disabled]="licenseService.isExpired()">
+                <h4>{{ option.name }}</h4>
+                <span class="record-count">{{ option.recordCount | number }} records</span>
+              </div>
+              <p class="description">{{ option.description }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Restricted Data Types (if not system admin) -->
+      @if (!isSystemAdmin && restrictedExports.length > 0) {
+        <div class="config-section">
+          <h3>Restricted Data Types</h3>
+          <p class="restriction-note">The following data types are only available to System Administrators:</p>
+          <div class="data-types-grid restricted">
+            @for (option of restrictedExports; track option) {
+              <div class="data-type-card restricted">
+                <div class="card-header">
+                  <input type="checkbox" disabled>
+                  <h4>{{ option.name }}</h4>
+                  <span class="record-count">{{ option.recordCount | number }} records</span>
+                  <span class="admin-only-badge">Admin Only</span>
+                </div>
+                <p class="description">{{ option.description }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Export Summary -->
+    @if (selectedExports.length > 0 && !licenseService.isExpired()) {
+      <div class="export-summary">
+        <h3>Export Summary</h3>
+        <div class="summary-details">
+          <div class="summary-item">
+            <strong>Format:</strong> {{ exportFormatLabel }}
+          </div>
+          <div class="summary-item">
+            <strong>Date Range:</strong> {{ dateRangeLabel }}
+          </div>
+          <div class="summary-item">
+            <strong>Selected Data Types:</strong> {{ selectedExportNames }}
+          </div>
+          <div class="summary-item">
+            <strong>Total Records:</strong> {{ selectedExportRecordCount | number }}
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Export Actions -->
+    <div class="export-actions">
+      <button
+        class="btn btn-primary btn-large"
+        (click)="startExport()"
+        [disabled]="!canExport() || licenseService.isExpired()">
+        @if (!licenseService.isExpired()) {
+          <span>Start Export</span>
+        }
+        @if (licenseService.isExpired()) {
+          <span>Export Unavailable (License Expired)</span>
+        }
+      </button>
+
+      <div class="export-notes">
+        <p><strong>Note:</strong> Large exports may take several minutes to complete.</p>
+        <p>You will receive an email notification when your export is ready for download.</p>
+        @if (!isSystemAdmin) {
+          <p>Contact your System Administrator to export customer, order, and product data.</p>
+        }
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,10 @@
+.order-add-container { padding: 20px; background: var(--bakery-bg); color: var(--bakery-text-emph); min-height: 100vh; }
+.page-header { margin-bottom: 20px; }
+.order-form { background: var(--bakery-surface); padding: 20px; border-radius: 8px; box-shadow: var(--bakery-shadow-soft); max-width: 720px; }
+.form-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+label { font-weight: 600; margin-bottom: 6px; }
+input, textarea { padding: 10px; border: 1px solid var(--bakery-accent); border-radius: 4px; background: var(--bakery-bg); color: var(--bakery-text-emph); }
+textarea { min-height: 100px; }
+.error { color: var(--bakery-error); font-size: 0.85rem; }
+.btn-primary { background: var(--bakery-accent); color: var(--bakery-text-emph); padding: 10px 16px; border-radius: 4px; border: none; cursor: pointer; }
+.btn-primary[disabled] { background: var(--bakery-text-muted); cursor: not-allowed; }

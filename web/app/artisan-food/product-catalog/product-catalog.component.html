@@ -1,0 +1,122 @@
+<!-- Admin Controls: Add Product -->
+@if (isAdmin) {
+  <div class="admin-controls">
+    <button (click)="showAddForm = true">Add Product</button>
+    @if (showAddForm) {
+      <div class="add-form">
+        <h3>Add New Product</h3>
+        <form (ngSubmit)="addProduct()" #addProductForm="ngForm">
+          <input type="text" placeholder="Name" [(ngModel)]="newProduct.name" name="name" required>
+          <input type="text" placeholder="Category" [(ngModel)]="newProduct.category" name="category" required>
+          <input type="number" placeholder="Unit Price" [(ngModel)]="newProduct.unitPrice" name="unitPrice" required>
+          <input type="text" placeholder="SKU" [(ngModel)]="newProduct.sku" name="sku">
+          <textarea placeholder="Description" [(ngModel)]="newProduct.description" name="description"></textarea>
+          <button type="submit">Save</button>
+          <button type="button" (click)="showAddForm = false">Cancel</button>
+        </form>
+      </div>
+    }
+  </div>
+}
+<div class="product-catalog">
+  <h1>Product Catalog</h1>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <p>Loading products...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage && !isLoading) {
+    <div class="error-message">
+      <p>{{ errorMessage }}</p>
+      <button (click)="loadProducts()">Retry</button>
+    </div>
+  }
+
+  <!-- Search and Filter Controls -->
+  @if (!isLoading) {
+    <div class="controls">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Search products..."
+          [(ngModel)]="searchTerm"
+          class="search-input"
+          >
+        </div>
+        <div class="filter-box">
+          <label for="category">Category:</label>
+          <select id="category" [(ngModel)]="selectedCategory" class="category-select">
+            @for (category of categories; track category) {
+              <option [value]="category">
+                {{ category | titlecase }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+    }
+
+    <!-- Products Grid -->
+    @if (!isLoading) {
+      <div class="products-grid">
+        @for (product of filteredProducts; track product) {
+          <div class="product-card">
+            <!-- Product image section removed for Phase 1 - will be added in Phase 2 with image upload -->
+            <div class="product-info">
+              <h3>{{ product.name }}</h3>
+              <p class="description">{{ product.description }}</p>
+              <div class="product-details">
+                <div class="price">From ${{ product.unitPrice | number: '1.2-2' }}</div>
+                <div class="category">
+                  <small><strong>Category:</strong> {{ product.category | titlecase }}</small>
+                </div>
+                <div class="sku">
+                  <small><strong>SKU:</strong> {{ product.sku }}</small>
+                </div>
+              </div>
+              <!-- Actions -->
+              <div class="actions">
+                <button class="btn btn-primary" (click)="addToCart(product)">Add to Cart</button>
+                @if (isAdmin) {
+                  <button class="btn btn-secondary" (click)="editProduct(product.id)">Edit</button>
+                  <button class="btn btn-danger" (click)="showDeleteConfirm(product.id)">Delete</button>
+                  @if (deleteIndex === product.id) {
+                    <div class="delete-confirm">
+                      <p>Are you sure you want to delete this product?</p>
+                      <button class="btn btn-danger" (click)="confirmDeleteProduct()">Confirm Delete</button>
+                      <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+                    </div>
+                  }
+                }
+              </div>
+              <!-- Edit Form -->
+              @if (editIndex === product.id) {
+                <div class="edit-form">
+                  <h3>Edit Product</h3>
+                  <form (ngSubmit)="saveEditProduct()" #editProductForm="ngForm">
+                    <input type="text" [(ngModel)]="editProductData.name" name="editName" required>
+                    <input type="text" [(ngModel)]="editProductData.sku" name="editSku">
+                    <input type="number" [(ngModel)]="editProductData.unitPrice" name="editUnitPrice" required>
+                    <textarea [(ngModel)]="editProductData.description" name="editDescription"></textarea>
+                    <button type="submit">Save</button>
+                    <button type="button" (click)="cancelEdit()">Cancel</button>
+                  </form>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- No Results -->
+    @if (!isLoading && filteredProducts.length === 0) {
+      <div class="no-results">
+        <p>No products found matching your criteria.</p>
+      </div>
+    }
+  </div>

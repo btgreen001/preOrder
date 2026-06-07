@@ -1,0 +1,199 @@
+<div class="invites-admin">
+  <h2>Staff Invite Codes</h2>
+  <p class="subtitle">Generate one-time invite codes, track usage status, and manage organization members from one screen.</p>
+
+  @if (errorMessage) {
+    <div class="alert alert-error">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert alert-success">{{ successMessage }}</div>
+  }
+
+  <div class="generate-form">
+    <h3>Generate New Code</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="email">Email (optional — pre-fill for specific person)</label>
+        <input id="email" type="email" [(ngModel)]="newCodeEmail" placeholder="staff@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="expiry">Expires In (days)</label>
+        <input id="expiry" type="number" [(ngModel)]="newCodeExpiryDays" min="1" max="90" />
+      </div>
+      <button class="btn btn-primary" (click)="generateCode()" [disabled]="isSaving">
+        {{ isSaving ? 'Creating...' : 'Generate Code' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="codes-table-wrapper">
+    <h3>Invited Members</h3>
+    <p class="subtitle">Resend or revoke activation codes for invited members.</p>
+    @if (isLoading) {
+      <div class="loading">Loading codes...</div>
+    }
+
+    @if (!isLoading && codes.length > 0) {
+      <div class="codes-table-scroll">
+        <table class="codes-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Expires</th>
+              <th>Created</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (code of codes; track code) {
+              <tr [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
+                <td class="code-cell">
+                  <span class="code-value">{{ code.code }}</span>
+                  <button class="btn-icon" (click)="copyCode(code)" [title]="copiedCodeId === code.codeId ? 'Copied!' : 'Copy code'">
+                    {{ copiedCodeId === code.codeId ? '✓' : '⎘' }}
+                  </button>
+                </td>
+                <td>{{ code.email || '—' }}</td>
+                <td>
+                  <span class="status-badge" [class.active]="!code.isUsed && !code.isExpired"
+                    [class.used]="code.isUsed" [class.expired]="code.isExpired && !code.isUsed">
+                    {{ codeStatus(code) === 'Active' ? 'Invited' : codeStatus(code) }}
+                  </span>
+                </td>
+                <td>{{ code.expiresOn | date:'MMM d, y' }}</td>
+                <td>{{ code.createdOn | date:'MMM d, y' }}</td>
+                <td>
+                  @if (canResend(code)) {
+                    <button class="btn btn-secondary btn-sm" (click)="resendCode(code)" [disabled]="isResending">
+                      {{ isResending ? 'Sending...' : 'Resend' }}
+                    </button>
+                  }
+                </td>
+                <td>
+                  @if (!code.isUsed) {
+                    <button class="btn btn-danger btn-sm" (click)="deleteCode(code)">Revoke</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (!isLoading && codes.length === 0) {
+      <div class="empty-state">
+        No invite codes yet. Generate one above to invite your first staff member.
+      </div>
+    }
+  </div>
+
+  <div class="members-section">
+    <h3>Organization Members</h3>
+    <p class="subtitle">Deactivate or reactivate staff access when people leave or return.</p>
+
+    @if (isMembersLoading) {
+      <div class="loading">Loading members...</div>
+    }
+
+    @if (!isMembersLoading && members.length > 0) {
+      <div class="members-table-wrapper">
+        <table class="codes-table members-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (member of members; track member) {
+              <tr [class.used]="!member.isEnabled">
+                <td>{{ member.firstName }} {{ member.lastName }}</td>
+                <td>{{ member.userName }}</td>
+                <td>{{ member.email }}</td>
+                <td>{{ member.userRole }}</td>
+                <td>
+                  <span class="status-badge" [class.active]="member.isEnabled" [class.expired]="!member.isEnabled">
+                    {{ memberStatus(member) }}
+                  </span>
+                </td>
+                <td>{{ member.lastLoginOn ? (member.lastLoginOn | date:'MMM d, y, h:mm a') : 'Never' }}</td>
+                <td>
+                  @if (member.isEnabled) {
+                    <button
+                      class="btn btn-danger btn-sm"
+                      (click)="deactivateMember(member)">
+                      Remove Access
+                    </button>
+                  }
+                  @if (!member.isEnabled) {
+                    <button
+                      class="btn btn-secondary btn-sm"
+                      (click)="reactivateMember(member)">
+                      Restore Access
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (!isMembersLoading && members.length === 0) {
+      <div class="empty-state">
+        No members found for this organization.
+      </div>
+    }
+  </div>
+
+  @if (passwordPromptOpen) {
+    <div class="password-confirm-overlay">
+      <div class="password-confirm-modal">
+        <h3>Confirm Password</h3>
+        <p class="prompt-text">{{ pendingActionMainText }}</p>
+        @if (pendingActionWarningText) {
+          <div class="prompt-warning" role="alert" aria-live="assertive">
+            <div class="prompt-warning-title">Warning</div>
+            <div>{{ pendingActionWarningText }}</div>
+          </div>
+        }
+        @if (requiresCompanyNameConfirmation) {
+          <div class="company-confirmation">
+            <label for="confirmCompanyName">To proceed you must enter your company name exactly as shown</label>
+            <div class="company-name-value">{{ requiredCompanyName }}</div>
+            <input
+              id="confirmCompanyName"
+              type="text"
+              [(ngModel)]="confirmCompanyName"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Enter company name exactly" />
+          </div>
+        }
+        <label for="confirmPassword">Your password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          [(ngModel)]="confirmPassword"
+          autocomplete="current-password"
+          placeholder="Enter your password" />
+        <div class="password-confirm-actions">
+          <button class="btn btn-secondary" (click)="cancelPasswordPrompt()" [disabled]="isConfirmingAction">Cancel</button>
+          <button class="btn btn-danger" (click)="confirmSensitiveAction()" [disabled]="isConfirmingAction || !confirmPassword || !isCompanyNameConfirmationValid">
+            {{ isConfirmingAction ? 'Processing...' : 'Confirm' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

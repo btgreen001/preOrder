@@ -1,0 +1,138 @@
+<div class="dashboard" [class.expired-license]="licenseService.isExpired()">
+  <!-- Trial/License Banner -->
+  <app-trial-banner feature="dashboard" [alwaysShow]="true"></app-trial-banner>
+
+  <h1>BakeAhead Dashboard</h1>
+  <p class="role-info">Logged in as: <strong>{{ currentUserName }}</strong> | Role: <strong>{{ currentRole | titlecase }}</strong> | License: <strong>{{ licenseTier | titlecase }}</strong></p>
+
+  <!-- Quick Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>{{ stats.todayOrders }}</h3>
+      <p>Today's Orders</p>
+    </div>
+    <div class="stat-card revenue">
+      <h3>${{ stats.weeklyRevenue }}</h3>
+      <p>Weekly Revenue</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ stats.pendingOrders }}</h3>
+      <p>Pending Orders</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ stats.completedOrders }}</h3>
+      <p>Completed Orders</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ stats.upcomingDeliveries }}</h3>
+      <p>Upcoming Deliveries</p>
+    </div>
+    <div class="stat-card warning">
+      <h3>{{ stats.lowStockItems }}</h3>
+      <p>Low Stock Items</p>
+    </div>
+  </div>
+
+  <!-- Phase 3.1 Navigation - Recipe, Batch, Waste Management -->
+  <div class="section">
+    <h2>Recipe & Production Management</h2>
+    <div class="nav-grid">
+      <a routerLink="/recipes/list" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>list</mat-icon></div>
+        <div class="nav-card-title">Recipes</div>
+        <div class="nav-card-desc">View and manage recipes</div>
+      </a>
+      <a routerLink="/recipes/add" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>add</mat-icon></div>
+        <div class="nav-card-title">New Recipe</div>
+        <div class="nav-card-desc">Create new recipe</div>
+      </a>
+      <a routerLink="/batches/list" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>inventory_2</mat-icon></div>
+        <div class="nav-card-title">Batches</div>
+        <div class="nav-card-desc">View production batches</div>
+      </a>
+      <a routerLink="/batches/add" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>add_circle_outline</mat-icon></div>
+        <div class="nav-card-title">New Batch</div>
+        <div class="nav-card-desc">Start new batch</div>
+      </a>
+      <a routerLink="/waste/list" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>delete_sweep</mat-icon></div>
+        <div class="nav-card-title">Waste Events</div>
+        <div class="nav-card-desc">Track waste & spoilage</div>
+      </a>
+      <a routerLink="/waste/log" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>edit_note</mat-icon></div>
+        <div class="nav-card-title">Log Waste</div>
+        <div class="nav-card-desc">Record waste event</div>
+      </a>
+      <a routerLink="/waste/analytics" class="nav-card">
+        <div class="nav-card-icon"><mat-icon>analytics</mat-icon></div>
+        <div class="nav-card-title">Waste Analytics</div>
+        <div class="nav-card-desc">Waste analytics & insights</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="section">
+    <h2>Recent Orders</h2>
+    <div class="orders-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Item</th>
+            <th>Amount</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of recentOrders; track order) {
+            <tr>
+              <td>{{ order.id }}</td>
+              <td>{{ order.customer }}</td>
+              <td>{{ order.item }}</td>
+              <td>${{ order.amount }}</td>
+              <td>
+                <span class="source-badge" [ngClass]="order.source">{{ order.source | titlecase }}</span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="order.status.toLowerCase().replace(' ', '-')">{{ order.status }}</span>
+                @if (currentRole === 'admin' || currentRole === 'staff') {
+                  <select [(ngModel)]="order.status" (ngModelChange)="updateOrderStatus(order, $event)">
+                    @for (s of orderStatuses; track s) {
+                      <option [value]="s">{{ s }}</option>
+                    }
+                  </select>
+                }
+              </td>
+              <td>{{ order.dueDate }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Production Schedule -->
+  <div class="section">
+    <h2>Today's Production Schedule</h2>
+    <div class="production-list">
+      @for (item of upcomingProduction; track item) {
+        <div class="production-item">
+          <div class="production-time">{{ item.startTime }}</div>
+          <div class="production-details">
+            <strong>{{ item.item }}</strong> ({{ item.quantity }} units)
+            <br>
+              <small>Est. Duration: {{ item.estimatedDuration }}</small>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>

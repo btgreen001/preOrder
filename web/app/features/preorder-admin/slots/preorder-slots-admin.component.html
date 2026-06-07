@@ -1,0 +1,117 @@
+<section class="preorder-admin">
+  <header class="page-head">
+    <div>
+      <h1>Event Pickup Slots</h1>
+      <p>Manage pickup windows and enforce slot capacities.</p>
+    </div>
+    <nav class="admin-links">
+      <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
+      <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
+      <a routerLink="/admin/slots" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Slots</a>
+      <a routerLink="/admin/orders" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Orders</a>
+    </nav>
+  </header>
+
+  <section class="filter-row">
+    <label>
+      Pre-Order Event
+      <select [(ngModel)]="selectedHolidayEventExternalId" (change)="onEventChange()">
+        <option value="" disabled>Select an event</option>
+        @for (event of holidayEvents; track event) {
+          <option [value]="event.externalId">{{ event.name }}</option>
+        }
+      </select>
+    </label>
+  </section>
+
+  <section #slotPickupHeader class="editor">
+    <h2>{{ editingExternalId ? 'Edit Pickup Slot' : 'Create Pickup Slot' }}</h2>
+    @if (selectedHolidayEvent) {
+      <p class="window-hint">
+        Event Pickup Window (local time):
+        {{ selectedHolidayEvent.pickupStartDt | date: 'MM-dd-yyyy h:mm a' }}
+        to
+        {{ selectedHolidayEvent.pickupEndDt | date: 'MM-dd-yyyy h:mm a' }}
+      </p>
+    }
+    <div class="grid">
+      <label>
+        Slot Start (local time)
+        <input #slotStartAtInput [(ngModel)]="form.slotStartAt" type="datetime-local" />
+      </label>
+
+      <label>
+        Slot End
+        <input [(ngModel)]="form.slotEndAt" type="datetime-local" />
+      </label>
+
+      <label>
+        Capacity
+        <input [(ngModel)]="form.capacity" type="number" min="1" step="1" />
+      </label>
+
+      <label>
+        Active
+        <select [(ngModel)]="form.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" (click)="savePickupSlot()" [disabled]="isSaving">{{ editingExternalId ? 'Save Changes' : 'Create Slot' }}</button>
+      <button type="button" (click)="startCreate()" [disabled]="isSaving">Reset</button>
+      <button type="button" (click)="loadPickupSlots()" [disabled]="isLoading">Refresh</button>
+    </div>
+  </section>
+
+  @if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  }
+  @if (successMessage) {
+    <p class="success-message">{{ successMessage }}</p>
+  }
+
+  @if (!isLoading) {
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Start (local time)</th>
+            <th>End</th>
+            <th>Capacity</th>
+            <th>Reserved</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (slot of pickupSlots; track slot) {
+            <tr>
+              <td>{{ slot.slotStartAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+              <td>{{ slot.slotEndAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+              <td>{{ slot.capacity }}</td>
+              <td>{{ slot.reservedCount }}</td>
+              <td>{{ slot.isActive ? 'Active' : 'Inactive' }}</td>
+              <td>
+                <button type="button" (click)="startEdit(slot)">Edit</button>
+                <button type="button" (click)="deletePickupSlot(slot)" class="delete-btn" [disabled]="isSaving">
+                  {{ slot.reservedCount>0 ? 'Deactivate' : 'Delete' }}
+                </button>
+              </td>
+            </tr>
+          }
+          @if (pickupSlots.length === 0) {
+            <tr>
+              <td colspan="6" class="empty">No pickup slots found for selected event.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @else {
+    <p class="loading">Loading pickup slots...</p>
+  }
+
+</section>

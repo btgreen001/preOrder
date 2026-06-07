@@ -1,0 +1,110 @@
+<section class="preorder-admin">
+  <header class="page-head">
+    <div>
+      <h1>Event Orders</h1>
+      <p>Review incoming preorders and export day-of-pickup operations CSV files.</p>
+    </div>
+    <nav class="admin-links">
+      <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
+      <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
+      <a routerLink="/admin/slots" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Slots</a>
+      <a routerLink="/admin/orders" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Orders</a>
+    </nav>
+  </header>
+
+  <section class="filters">
+    <label>
+      Pre-Order event (with orders)
+      <select [(ngModel)]="selectedHolidayEventExternalId" (change)="loadPreOrders()">
+        <option value="">All events</option>
+
+        @for (event of holidayEvents; track event) {
+          @if (hasOrdersFor(event.id)) {
+            <option [value]="event.externalId">
+              {{ event.name }}
+            </option>
+          }
+        }
+
+
+
+      </select>
+    </label>
+
+    <label>
+      Pickup day
+      <input type="date" [(ngModel)]="selectedPickupDateLocal" (change)="loadPreOrders()" />
+    </label>
+
+    <div class="actions">
+      <button type="button" (click)="loadPreOrders()" [disabled]="isLoading">Refresh</button>
+      <button type="button" (click)="exportCsv()" [disabled]="isExporting">Export CSV</button>
+    </div>
+  </section>
+
+  @if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  }
+
+  @if (!isLoading) {
+    <section class="orders-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Order #</th>
+            <th>Created</th>
+            <th>Customer</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Pick Up</th>
+            <th>Items</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of filteredPreOrders; track order) {
+            <tr>
+              <td>{{ getHolidayEventName(order.holidayEventId) }}</td>
+              <td>{{ order.id }}</td>
+              <td>{{ order.createdAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+              <td>{{ order.customerName }}</td>
+              <td>{{ order.customerEmail }}</td>
+              <td>
+                <div class="status">
+                  <select
+                    [(ngModel)]="pendingStatusByOrderExternalId[order.externalId]"
+                    [disabled]="savingStatusByOrderExternalId[order.externalId] || getAllowedNextStatuses(order.status).length === 0">
+                    <option [ngValue]="order.status">{{ order.status }}</option>
+                    @for (nextStatus of getAllowedNextStatuses(order.status); track nextStatus) {
+                      <option [ngValue]="nextStatus">
+                        {{ nextStatus }}
+                      </option>
+                    }
+                  </select>
+                  <button
+                    type="button"
+                    (click)="updateOrderStatus(order)"
+                    [disabled]="savingStatusByOrderExternalId[order.externalId] || !canUpdateStatus(order)">
+                    {{ savingStatusByOrderExternalId[order.externalId] ? 'Saving...' : 'Update' }}
+                  </button>
+                </div>
+              </td>
+              <td>{{ (order.pickupSlot?.slotStartAt || null) | date: 'MM-dd-yyyy h:mm a' }}</td>
+              <td>{{ order.lines.length }}</td>
+              <td>{{ formatCurrency(order.totalAmount) }}</td>
+            </tr>
+          }
+          @if (filteredPreOrders.length === 0) {
+            <tr>
+              <td colspan="9" class="empty">No preorder operations found for current filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @else {
+    <p class="loading">Loading preorder operations...</p>
+  }
+
+</section>
