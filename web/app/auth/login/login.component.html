@@ -1,0 +1,50 @@
+<div class="spotify-login-root">
+  <div class="left-graphic">
+    <div class="brand">BakeAhead™</div>
+    <div class="promo">Welcome to BakeAhead™ Pre-Order Manager — where every order is a promise of something delicious.
+
+    </div>
+  </div>
+  <div class="login-area">
+    <mat-card class="spotify-card" data-testid="login-card">
+      <div class="card-header">
+        <h2>Welcome to BakeAhead™</h2>
+        <p class="muted">Sign in to continue to your dashboard</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" data-testid="login-form">
+        <!-- Error message display -->
+        @if (errorMessage) {
+          <div class="error-message" data-testid="error-message">
+            {{ errorMessage }}
+          </div>
+        }
+
+        <mat-form-field appearance="outline" class="full" data-testid="username-field">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" data-testid="username-input" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full" data-testid="password-field">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" data-testid="password-input" />
+        </mat-form-field>
+
+        <button mat-flat-button class="spotify-btn events-primary-btn" type="submit" data-testid="login-submit-button">Log in</button>
+
+        <div class="or-divider" aria-hidden="true">
+          <span>Or</span>
+        </div>
+
+        <button mat-stroked-button class="register-btn" type="button" routerLink="/company-register" data-testid="register-button">
+          Register Now!
+        </button>
+      </form>
+
+      <mat-card-actions class="card-actions">
+        <a routerLink="/forgot-password" data-testid="forgot-password-link">Forgot password?</a>
+        <a routerLink="/forgot-username" data-testid="forgot-username-link">Forgot username?</a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

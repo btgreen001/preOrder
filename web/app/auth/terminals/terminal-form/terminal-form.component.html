@@ -1,0 +1,114 @@
+<div class="terminal-form-container">
+  <mat-card class="form-card">
+    <mat-card-header>
+      <h2 class="form-title">{{ isEditMode ? 'Edit Terminal' : 'Create Terminal' }}</h2>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Success Message -->
+      @if (successMessage) {
+        <div class="success-message" data-testid="success-message">
+          <strong>✓</strong> {{ successMessage }}
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="error-message" data-testid="error-message">
+          <strong>✗</strong> {{ errorMessage }}
+        </div>
+      }
+
+      <!-- Loading Spinner -->
+      @if (isLoading) {
+        <div class="loading-container" data-testid="loading-spinner">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading terminal...</p>
+        </div>
+      }
+
+      <!-- Form -->
+      @if (!isLoading) {
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>Terminal Code</mat-label>
+            <input
+              matInput
+              formControlName="terminalCode"
+              placeholder="e.g., TERM-001"
+              data-testid="terminal-code-input"
+              />
+            @if (form.get('terminalCode')?.hasError('required')) {
+              <mat-error>
+                Terminal code is required.
+              </mat-error>
+            }
+            @if (form.get('terminalCode')?.hasError('minlength')) {
+              <mat-error>
+                Terminal code must be at least 3 characters.
+              </mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>Location</mat-label>
+            <input
+              matInput
+              formControlName="location"
+              placeholder="e.g., Warehouse A, Section 3"
+              data-testid="location-input"
+              />
+            @if (form.get('location')?.hasError('required')) {
+              <mat-error>
+                Location is required.
+              </mat-error>
+            }
+            @if (form.get('location')?.hasError('minlength')) {
+              <mat-error>
+                Location must be at least 3 characters.
+              </mat-error>
+            }
+          </mat-form-field>
+          <div class="active-toggle">
+            <mat-slide-toggle
+              formControlName="isActive"
+              data-testid="active-toggle"
+              >
+              Active/Inactive?
+            </mat-slide-toggle>
+            <p class="toggle-hint">
+              {{ form.get('isActive')?.value ? 'This terminal is active' : 'This terminal is inactive' }}
+            </p>
+          </div>
+          <div class="form-actions">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="!form.valid || isSaving"
+              data-testid="submit-button"
+              >
+              @if (!isSaving) {
+                <span>{{ isEditMode ? 'Update Terminal' : 'Create Terminal' }}</span>
+              }
+              @if (isSaving) {
+                <span>
+                  <mat-spinner diameter="20"></mat-spinner>
+                  Saving...
+                </span>
+              }
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="cancel()"
+              [disabled]="isSaving"
+              data-testid="cancel-button"
+              >
+              Cancel
+            </button>
+          </div>
+        </form>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

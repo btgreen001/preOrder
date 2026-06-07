@@ -1,0 +1,31 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h2>Forgot Username</h2>
+    <p class="muted">Enter your account email and we will send your login username.</p>
+
+    @if (errorMessage) {
+      <div class="error">{{ errorMessage }}</div>
+    }
+    @if (successMessage) {
+      <div class="success">{{ successMessage }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        Email
+        <input type="email" formControlName="email" />
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Sending...' : 'Send Username' }}
+        </button>
+      </div>
+    </form>
+
+    <div class="links">
+      <a routerLink="/forgot-password">Forgot password instead?</a>
+      <a routerLink="/login">Back to login</a>
+    </div>
+  </div>
+</div>

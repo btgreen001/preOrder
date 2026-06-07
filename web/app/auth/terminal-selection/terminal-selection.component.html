@@ -1,0 +1,52 @@
+<div class="terminal-selection-container">
+  <div class="terminal-selection-card">
+    <h1 class="terminal-selection-title">Select a Terminal</h1>
+    <p class="terminal-selection-subtitle">
+      This is your first login on this device. Please select a terminal to continue.
+    </p>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading available terminals...</p>
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (error && !isLoading) {
+      <div class="error-state">
+        <p class="error-message">{{ error }}</p>
+        <button (click)="loadAvailableTerminals()" class="retry-button">
+          Try Again
+        </button>
+      </div>
+    }
+
+    <!-- Terminal List -->
+    @if (!isLoading && !error && availableTerminals.length > 0) {
+      <div class="terminal-list">
+        @for (terminal of availableTerminals; track terminal) {
+          <div
+            class="terminal-card"
+            (click)="selectTerminal(terminal)"
+            [attr.data-testid]="'terminal-' + terminal.terminalUid"
+            >
+            <div class="terminal-code">{{ terminal.terminalCode }}</div>
+            <div class="terminal-location">{{ terminal.location }}</div>
+            <div class="terminal-status" [class.active]="terminal.isActive">
+              {{ terminal.isActive ? 'Active' : 'Inactive' }}
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- No Terminals State -->
+    @if (!isLoading && !error && availableTerminals.length === 0) {
+      <div class="no-terminals-state">
+        <p>No terminals available</p>
+      </div>
+    }
+  </div>
+</div>

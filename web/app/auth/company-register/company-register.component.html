@@ -1,0 +1,112 @@
+<div class="spotify-register-root">
+
+  <div class="register-area">
+    <mat-card class="spotify-card">
+      <div class="card-header">
+        <h2>Register Your Company</h2>
+        <p class="muted">Create your company account and an administrator login</p>
+      </div>
+
+      <form [formGroup]="companyRegisterForm" (ngSubmit)="onSubmit()" class="register-form">
+        <div class="section-label"><strong>Company Information</strong></div>
+        <div class="section">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Company Name</mat-label>
+            <input matInput formControlName="companyName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Company Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Mailing Address</mat-label>
+            <input matInput formControlName="addressLine1" />
+          </mat-form-field>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="locality" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>State / Region</mat-label>
+              <input matInput formControlName="region" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>Postal Code</mat-label>
+              <input matInput formControlName="postalCode" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>Country</mat-label>
+              <input matInput formControlName="countryCode" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label"><strong>Administrator Account</strong></div>
+          <div class="row">
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="adminFirstName" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="adminLastName" />
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Admin Email</mat-label>
+            <input matInput type="email" formControlName="adminEmail" />
+          </mat-form-field>
+
+          <div class="row">
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>Admin Username</mat-label>
+              <input matInput formControlName="adminUsername" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half">
+              <mat-label>Admin Password</mat-label>
+              <input matInput type="password" formControlName="adminPassword" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <button mat-flat-button class="spotify-btn" type="submit" [disabled]="companyRegisterForm.invalid || isLoading">
+          @if (!isLoading) {
+            <span>Register</span>
+          }
+        </button>
+
+        @if (successMessage) {
+          <div class="success">
+            <span class="success-icon">✓</span> {{ successMessage }}
+          </div>
+        }
+
+        @if (errorMessage) {
+          <div class="error">{{ errorMessage }}</div>
+        }
+      </form>
+
+      <mat-card-actions class="card-actions">
+        <a routerLink="/register">Have an invite code?</a>
+        <a routerLink="/login">Back to login</a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>
