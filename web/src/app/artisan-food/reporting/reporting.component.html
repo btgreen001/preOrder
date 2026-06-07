@@ -1,21 +1,24 @@
 <div class="reporting" [class.expired-license]="licenseService.isExpired()">
   <!-- Trial Banner for PDF Export -->
-  <app-trial-banner 
-    *ngIf="licenseService.isFeatureGated('pdfExport')" 
-    feature="pdfExport">
-  </app-trial-banner>
+  @if (licenseService.isFeatureGated('pdfExport')) {
+    <app-trial-banner
+      feature="pdfExport">
+    </app-trial-banner>
+  }
 
   <div class="report-header">
     <h1>Reports & Analytics</h1>
     <div class="controls">
       <select [(ngModel)]="selectedPeriod" (change)="refreshData()" class="period-select">
-        <option *ngFor="let period of periods" [value]="period.value">
-          {{ period.label }}
-        </option>
+        @for (period of periods; track period) {
+          <option [value]="period.value">
+            {{ period.label }}
+          </option>
+        }
       </select>
       <button class="btn btn-primary" (click)="refreshData()">Refresh</button>
-      <button 
-        class="btn btn-secondary" 
+      <button
+        class="btn btn-secondary"
         (click)="exportToPDF()"
         [disabled]="!canExportPDF && licenseService.isExpired()">
         Export PDF
@@ -53,17 +56,20 @@
       <h3>Monthly Revenue Trend</h3>
       <div class="simple-chart">
         <div class="chart-bars">
-          <div 
-            *ngFor="let month of reportData.monthlyRevenue" 
-            class="chart-bar"
-            [style.height.%]="(month.revenue / 15000) * 100">
-            <div class="bar-value">${{ (month.revenue / 1000) | number:'1.0-0' }}k</div>
-          </div>
+          @for (month of reportData.monthlyRevenue; track month) {
+            <div
+              class="chart-bar"
+              [style.height.%]="(month.revenue / 15000) * 100">
+              <div class="bar-value">${{ (month.revenue / 1000) | number:'1.0-0' }}k</div>
+            </div>
+          }
         </div>
         <div class="chart-labels">
-          <div *ngFor="let month of reportData.monthlyRevenue" class="chart-label">
-            {{ month.month }}
-          </div>
+          @for (month of reportData.monthlyRevenue; track month) {
+            <div class="chart-label">
+              {{ month.month }}
+            </div>
+          }
         </div>
       </div>
     </div>
@@ -71,19 +77,21 @@
     <div class="chart-container">
       <h3>Top Products</h3>
       <div class="products-chart">
-        <div *ngFor="let product of reportData.topProducts" class="product-row">
-          <div class="product-name">{{ product.name }}</div>
-          <div class="product-stats">
-            <div class="product-sales">{{ product.sales }} sales</div>
-            <div class="product-revenue">${{ product.revenue | number }}</div>
-          </div>
-          <div class="product-bar">
-            <div 
-              class="product-bar-fill" 
-              [style.width.%]="(product.revenue / 4200) * 100">
+        @for (product of reportData.topProducts; track product) {
+          <div class="product-row">
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-stats">
+              <div class="product-sales">{{ product.sales }} sales</div>
+              <div class="product-revenue">${{ product.revenue | number }}</div>
+            </div>
+            <div class="product-bar">
+              <div
+                class="product-bar-fill"
+                [style.width.%]="(product.revenue / 4200) * 100">
+              </div>
             </div>
           </div>
-        </div>
+        }
       </div>
     </div>
   </div>
@@ -103,13 +111,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let month of reportData.monthlyRevenue; let i = index">
-            <td>{{ month.month }}</td>
-            <td>${{ month.revenue | number }}</td>
-            <td>{{ (month.revenue / reportData.avgOrderValue) | number:'1.0-0' }}</td>
-            <td>${{ reportData.avgOrderValue | number:'1.2-2' }}</td>
-            <td class="growth positive">{{ getGrowthRate(month.revenue, i) }}%</td>
-          </tr>
+          @for (month of reportData.monthlyRevenue; track month; let i = $index) {
+            <tr>
+              <td>{{ month.month }}</td>
+              <td>${{ month.revenue | number }}</td>
+              <td>{{ (month.revenue / reportData.avgOrderValue) | number:'1.0-0' }}</td>
+              <td>${{ reportData.avgOrderValue | number:'1.2-2' }}</td>
+              <td class="growth positive">{{ getGrowthRate(month.revenue, i) }}%</td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
@@ -127,13 +137,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let product of reportData.topProducts">
-            <td>{{ product.name }}</td>
-            <td>{{ product.sales }}</td>
-            <td>${{ product.revenue | number }}</td>
-            <td>${{ (product.revenue / product.sales) | number:'1.2-2' }}</td>
-            <td>{{ (product.revenue / reportData.totalRevenue * 100) | number:'1.1-1' }}%</td>
-          </tr>
+          @for (product of reportData.topProducts; track product) {
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.sales }}</td>
+              <td>${{ product.revenue | number }}</td>
+              <td>${{ (product.revenue / product.sales) | number:'1.2-2' }}</td>
+              <td>{{ (product.revenue / reportData.totalRevenue * 100) | number:'1.1-1' }}%</td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { RoleService } from '../../../shared-data-services/role.service';
@@ -7,7 +7,7 @@ import { RoleService } from '../../../shared-data-services/role.service';
 @Component({
   selector: 'app-quick-order-entry',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './quick-order-entry.component.html',
   styleUrls: ['./quick-order-entry.component.scss']
 })

@@ -9,23 +9,27 @@ import { OrdersService, Order } from '../services/orders.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="order-detail-container" *ngIf="order">
-      <header class="page-header">
-        <h1>Order Details</h1>
-        <button class="btn-edit" (click)="editOrder()">Edit Order</button>
-      </header>
-      <div class="order-info">
-        <p><strong>Order ID:</strong> {{ order.externalId }}</p>
-        <p><strong>Customer:</strong> {{ order.customerId }}</p>
-        <p><strong>Status:</strong> <span class="status-badge status-{{ order.orderStatus }}">{{ order.orderStatus | titlecase }}</span></p>
-        <p><strong>Total:</strong> {{ order.totalAmount | currency:'USD':'symbol':'1.2-2' }}</p>
-        <p><strong>Created:</strong> {{ order.orderDate | date:'medium' }}</p>
+    @if (order) {
+      <div class="order-detail-container">
+        <header class="page-header">
+          <h1>Order Details</h1>
+          <button class="btn-edit" (click)="editOrder()">Edit Order</button>
+        </header>
+        <div class="order-info">
+          <p><strong>Order ID:</strong> {{ order.externalId }}</p>
+          <p><strong>Customer:</strong> {{ order.customerId }}</p>
+          <p><strong>Status:</strong> <span class="status-badge status-{{ order.orderStatus }}">{{ order.orderStatus | titlecase }}</span></p>
+          <p><strong>Total:</strong> {{ order.totalAmount | currency:'USD':'symbol':'1.2-2' }}</p>
+          <p><strong>Created:</strong> {{ order.orderDate | date:'medium' }}</p>
+        </div>
       </div>
-    </div>
-    <div *ngIf="!order">
-      <p>Order not found.</p>
-    </div>
-  `,
+    }
+    @if (!order) {
+      <div>
+        <p>Order not found.</p>
+      </div>
+    }
+    `,
   styles: [`
     .order-detail-container {
       padding: 20px;

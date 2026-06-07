@@ -1,18 +1,18 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-scan',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="scan-container">
       <header class="page-header">
         <h1>Inventory Scanning</h1>
         <p class="subtitle">Use barcode/QR scanning for fast inventory operations</p>
       </header>
-
+    
       <div class="scan-modes">
         <div class="mode-card" [class.active]="activeMode === 'receive'" (click)="setMode('receive')">
           <div class="icon">📦</div>
@@ -30,36 +30,41 @@ import { FormsModule } from '@angular/forms';
           <p>Track spoiled/damaged items</p>
         </div>
       </div>
-
-      <div class="scan-area" *ngIf="activeMode">
-        <div class="scanner-view">
-          <div class="camera-frame">
-            <div class="scan-line"></div>
-            <p>Position barcode/QR code in frame</p>
+    
+      @if (activeMode) {
+        <div class="scan-area">
+          <div class="scanner-view">
+            <div class="camera-frame">
+              <div class="scan-line"></div>
+              <p>Position barcode/QR code in frame</p>
+            </div>
+            <button class="scan-btn" (click)="startScan()">
+              {{ isScanning ? 'Stop Scanning' : 'Start Camera' }}
+            </button>
           </div>
-          <button class="scan-btn" (click)="startScan()">
-            {{ isScanning ? 'Stop Scanning' : 'Start Camera' }}
-          </button>
+          <div class="manual-entry">
+            <h3>Manual Entry</h3>
+            <input type="text" placeholder="Enter barcode manually" [(ngModel)]="manualBarcode">
+            <button (click)="processBarcode(manualBarcode)">Process</button>
+          </div>
         </div>
-
-        <div class="manual-entry">
-          <h3>Manual Entry</h3>
-          <input type="text" placeholder="Enter barcode manually" [(ngModel)]="manualBarcode">
-          <button (click)="processBarcode(manualBarcode)">Process</button>
+      }
+    
+      @if (recentScans.length) {
+        <div class="recent-scans">
+          <h3>Recent Scans</h3>
+          @for (scan of recentScans; track scan) {
+            <div class="scan-item">
+              <span class="item-name">{{ scan.itemName }}</span>
+              <span class="quantity">{{ scan.quantity }} {{ scan.unit }}</span>
+              <span class="timestamp">{{ scan.timestamp }}</span>
+              <button (click)="undoScan(scan.id)">Undo</button>
+            </div>
+          }
         </div>
-      </div>
-
-      <div class="recent-scans" *ngIf="recentScans.length">
-        <h3>Recent Scans</h3>
-        <div class="scan-item" *ngFor="let scan of recentScans">
-          <span class="item-name">{{ scan.itemName }}</span>
-          <span class="quantity">{{ scan.quantity }} {{ scan.unit }}</span>
-          <span class="timestamp">{{ scan.timestamp }}</span>
-          <button (click)="undoScan(scan.id)">Undo</button>
-        </div>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .scan-container { 
       padding: 20px; 

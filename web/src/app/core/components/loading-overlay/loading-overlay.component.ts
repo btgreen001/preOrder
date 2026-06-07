@@ -8,15 +8,19 @@ import { LoadingService } from '../../services/loading.service';
   standalone: true,
   imports: [CommonModule, MatProgressSpinnerModule],
   template: `
-    <div class="loading-overlay" *ngIf="(loadingService.loading$ | async)?.isLoading">
-      <div class="loading-content">
-        <mat-spinner diameter="60"></mat-spinner>
-        <p class="loading-message" *ngIf="(loadingService.loading$ | async)?.message">
-          {{ (loadingService.loading$ | async)?.message }}
-        </p>
+    @if ((loadingService.loading$ | async)?.isLoading) {
+      <div class="loading-overlay">
+        <div class="loading-content">
+          <mat-spinner diameter="60"></mat-spinner>
+          @if ((loadingService.loading$ | async)?.message) {
+            <p class="loading-message">
+              {{ (loadingService.loading$ | async)?.message }}
+            </p>
+          }
+        </div>
       </div>
-    </div>
-  `,
+    }
+    `,
   styles: [`
     .loading-overlay {
       position: fixed;

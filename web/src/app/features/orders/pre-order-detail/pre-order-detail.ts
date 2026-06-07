@@ -10,102 +10,120 @@ import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-order
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="order-detail-container" *ngIf="order">
-      <header class="page-header">
-        <h1>Order Details</h1>
-        <button class="btn-cancel" (click)="cancelOrder()" [disabled]="isCancelling || !canCancel(order.orderStatus)">
-          {{ isCancelling ? 'Cancelling...' : 'Cancel Order' }}
-        </button>
-      <button class="btn" (click)="startAnotherOrder()">
-          Place Another Order
-        </button>
-      </header>
-      <div class="notice notice-success" *ngIf="cancelNotice">{{ cancelNotice }}</div>
-      <div class="notice notice-error" *ngIf="cancelError">{{ cancelError }}</div>
-      <div class="order-info">
-        <p><strong>Order ID:</strong> {{ order.id }}</p>
-        <p><strong>Confirmation:</strong> {{ order.externalId }}</p>
-        <p><strong>Order Date:</strong> {{ order.orderDate | date:'medium' }}</p>
-        <p><strong>Status:</strong> <span class="status-badge status-{{ order.orderStatus }}">{{ order.orderStatus | titlecase }}</span></p>
-        <p><strong>Event:</strong> {{ order.eventName }}</p>
-        <p><strong>Customer:</strong> {{ order.customerName }}</p>
-        <p><strong>Total:</strong> {{ order.totalAmount | currency:'USD':'symbol':'1.2-2' }}</p>
-      </div>
-      <div class="order-items" *ngIf="order.items?.length">
-        <h2>Items</h2>
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Quantity</th>
-              <th>Unit Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of order.items">
-              <td>{{ item.menuItemName }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.unitPrice | currency:'USD':'symbol':'1.2-2' }}</td>
-              <td>{{ item.lineTotal | currency:'USD':'symbol':'1.2-2' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      @if (order.pickupSlot) {
-        <div class="pickup-location">
-          <h2>Pickup Location</h2>
-          <p>{{ order.organization?.organizationName }}</p>
-          <p>{{ order.organization?.addressLine1 }} {{ order.organization?.addressLine2 }}</p>
-          <p>{{ order.organization?.city }}@if (order.organization?.state) {,  {{ order.organization?.state }} }</p>
-          <p></p>
-          @if (order.organization?.contactPhone) {
-            <p><strong>Phone:</strong> {{ order.organization?.contactPhone }}</p>
-          }
-
-          @if (order.organization?.contactEmail) {
-            <p><strong>Email:</strong> {{ order.organization?.contactEmail }}</p>
-          }
+    @if (order) {
+      <div class="order-detail-container">
+        <header class="page-header">
+          <h1>Order Details</h1>
+          <button class="btn-cancel" (click)="cancelOrder()" [disabled]="isCancelling || !canCancel(order.orderStatus)">
+            {{ isCancelling ? 'Cancelling...' : 'Cancel Order' }}
+          </button>
+          <button class="btn" (click)="startAnotherOrder()">
+            Place Another Order
+          </button>
+        </header>
+        @if (cancelNotice) {
+          <div class="notice notice-success">{{ cancelNotice }}</div>
+        }
+        @if (cancelError) {
+          <div class="notice notice-error">{{ cancelError }}</div>
+        }
+        <div class="order-info">
+          <p><strong>Order ID:</strong> {{ order.id }}</p>
+          <p><strong>Confirmation:</strong> {{ order.externalId }}</p>
+          <p><strong>Order Date:</strong> {{ order.orderDate | date:'medium' }}</p>
+          <p><strong>Status:</strong> <span class="status-badge status-{{ order.orderStatus }}">{{ order.orderStatus | titlecase }}</span></p>
+          <p><strong>Event:</strong> {{ order.eventName }}</p>
+          <p><strong>Customer:</strong> {{ order.customerName }}</p>
+          <p><strong>Total:</strong> {{ order.totalAmount | currency:'USD':'symbol':'1.2-2' }}</p>
         </div>
-      }
-
-
-      <div class="pickup-slot" *ngIf="order.pickupSlot">
-        <h2>Pickup Time</h2>
-        <p><strong>Start:</strong> {{ order.pickupSlot.slotStartAt | date:'short' }} (local time)</p>
-        <p><strong>End:</strong> {{ order.pickupSlot.slotEndAt | date:'short' }} (local time)</p>
-
-        <div class="pickup-slot-change" *ngIf="canChangePickupSlot(order.orderStatus)">
-          <p class="pickup-slot-help">You can change your pickup slot while this order is still pending or submitted.</p>
-          <div class="notice notice-success" *ngIf="pickupSlotNotice">{{ pickupSlotNotice }}</div>
-          <div class="notice notice-error" *ngIf="pickupSlotError">{{ pickupSlotError }}</div>
-          <p class="pickup-slot-help" *ngIf="isLoadingPickupSlots">Checking available pickup slots...</p>
-
-          <ng-container *ngIf="!isLoadingPickupSlots && hasAlternatePickupSlots(); else noAlternateSlots">
-            <label class="pickup-slot-field">
-              <span>Pickup slot</span>
-              <select [(ngModel)]="selectedPickupSlotExternalId" [disabled]="isChangingPickupSlot">
-                <option *ngFor="let slot of availablePickupSlots" [ngValue]="slot.externalId">
-                  {{ formatPickupSlotOption(slot) }}
-                </option>
-              </select>
-            </label>
-            <button class="btn" type="button" (click)="changePickupSlot()" [disabled]="isChangingPickupSlot || !canSubmitPickupSlotChange()">
-              {{ isChangingPickupSlot ? 'Updating...' : 'Change Pickup Slot' }}
-            </button>
-          </ng-container>
-
-          <ng-template #noAlternateSlots>
-            <p class="pickup-slot-help" *ngIf="!isLoadingPickupSlots">No alternate pickup slots are currently available.</p>
-          </ng-template>
-        </div>
+        @if (order.items?.length) {
+          <div class="order-items">
+            <h2>Items</h2>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of order.items; track item) {
+                  <tr>
+                    <td>{{ item.menuItemName }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.unitPrice | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td>{{ item.lineTotal | currency:'USD':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (order.pickupSlot) {
+          <div class="pickup-location">
+            <h2>Pickup Location</h2>
+            <p>{{ order.organization?.organizationName }}</p>
+            <p>{{ order.organization?.addressLine1 }} {{ order.organization?.addressLine2 }}</p>
+            <p>{{ order.organization?.city }}@if (order.organization?.state) {,  {{ order.organization?.state }} }</p>
+            <p></p>
+            @if (order.organization?.contactPhone) {
+              <p><strong>Phone:</strong> {{ order.organization?.contactPhone }}</p>
+            }
+            @if (order.organization?.contactEmail) {
+              <p><strong>Email:</strong> {{ order.organization?.contactEmail }}</p>
+            }
+          </div>
+        }
+        @if (order.pickupSlot) {
+          <div class="pickup-slot">
+            <h2>Pickup Time</h2>
+            <p><strong>Start:</strong> {{ order.pickupSlot.slotStartAt | date:'short' }} (local time)</p>
+            <p><strong>End:</strong> {{ order.pickupSlot.slotEndAt | date:'short' }} (local time)</p>
+            @if (canChangePickupSlot(order.orderStatus)) {
+              <div class="pickup-slot-change">
+                <p class="pickup-slot-help">You can change your pickup slot while this order is still pending or submitted.</p>
+                @if (pickupSlotNotice) {
+                  <div class="notice notice-success">{{ pickupSlotNotice }}</div>
+                }
+                @if (pickupSlotError) {
+                  <div class="notice notice-error">{{ pickupSlotError }}</div>
+                }
+                @if (isLoadingPickupSlots) {
+                  <p class="pickup-slot-help">Checking available pickup slots...</p>
+                }
+                @if (!isLoadingPickupSlots && hasAlternatePickupSlots()) {
+                  <label class="pickup-slot-field">
+                    <span>Pickup slot</span>
+                    <select [(ngModel)]="selectedPickupSlotExternalId" [disabled]="isChangingPickupSlot">
+                      @for (slot of availablePickupSlots; track slot) {
+                        <option [ngValue]="slot.externalId">
+                          {{ formatPickupSlotOption(slot) }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+                  <button class="btn" type="button" (click)="changePickupSlot()" [disabled]="isChangingPickupSlot || !canSubmitPickupSlotChange()">
+                    {{ isChangingPickupSlot ? 'Updating...' : 'Change Pickup Slot' }}
+                  </button>
+                } @else {
+                  @if (!isLoadingPickupSlots) {
+                    <p class="pickup-slot-help">No alternate pickup slots are currently available.</p>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
       </div>
-    </div>
-    <div *ngIf="!order">
-      <p>Order not found.</p>
-    </div>
-  `,
+    }
+    @if (!order) {
+      <div>
+        <p>Order not found.</p>
+      </div>
+    }
+    `,
   styles: [`
     .order-detail-container {
       padding: 20px;

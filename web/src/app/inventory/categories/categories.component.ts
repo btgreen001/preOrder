@@ -16,39 +16,48 @@ import { InventoryService, InventoryCategory } from '../inventory.service';
           <button class="btn-primary" (click)="addCategory()">Add Category</button>
         </div>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading categories...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadCategories()">Retry</button>
-      </div>
-
-      <div class="categories-grid" *ngIf="!loading && !error">
-        <div class="category-card" *ngFor="let category of categories" (click)="viewCategory(category.id)" style="cursor:pointer;">
-          <div class="category-header">
-            <h3>{{ category.name }}</h3>
-            <div class="category-actions">
-              <button class="btn-edit" (click)="editCategory(category.id); $event.stopPropagation();">Edit</button>
-              <button class="btn-delete" (click)="deleteCategory(category.id); $event.stopPropagation();">Delete</button>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading categories...</p>
+        </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadCategories()">Retry</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="categories-grid">
+          @for (category of categories; track category) {
+            <div class="category-card" (click)="viewCategory(category.id)" style="cursor:pointer;">
+              <div class="category-header">
+                <h3>{{ category.name }}</h3>
+                <div class="category-actions">
+                  <button class="btn-edit" (click)="editCategory(category.id); $event.stopPropagation();">Edit</button>
+                  <button class="btn-delete" (click)="deleteCategory(category.id); $event.stopPropagation();">Delete</button>
+                </div>
+              </div>
+              <p class="category-description">{{ category.description }}</p>
+              <div class="category-stats">
+                <span class="item-count">{{ category.itemCount }} items</span>
+                <span class="created-date">Created: {{ category.createdDate | date:'shortDate' }}</span>
+              </div>
             </div>
-          </div>
-          <p class="category-description">{{ category.description }}</p>
-          <div class="category-stats">
-            <span class="item-count">{{ category.itemCount }} items</span>
-            <span class="created-date">Created: {{ category.createdDate | date:'shortDate' }}</span>
-          </div>
+          }
+          @if (categories.length === 0) {
+            <div class="no-categories">
+              <p>No categories found.</p>
+              <button class="btn-primary" (click)="addCategory()">Create First Category</button>
+            </div>
+          }
         </div>
-
-        <div class="no-categories" *ngIf="categories.length === 0">
-          <p>No categories found.</p>
-          <button class="btn-primary" (click)="addCategory()">Create First Category</button>
-        </div>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .categories-container {
       padding: 20px;

@@ -13,7 +13,7 @@ import { InventoryService, InventoryItem } from '../inventory.service';
         <h1>Expiring Items</h1>
         <p>Items approaching expiration dates that require attention</p>
       </header>
-
+    
       <div class="filters">
         <label>
           Days ahead to check:
@@ -25,69 +25,80 @@ import { InventoryService, InventoryItem } from '../inventory.service';
           </select>
         </label>
       </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading expiring items...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadExpiringItems()">Retry</button>
-      </div>
-
-      <div class="items-summary" *ngIf="!loading && !error">
-        <div class="summary-card">
-          <h3>Items Expiring Soon</h3>
-          <span class="count">{{ expiringItems.length }}</span>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading expiring items...</p>
         </div>
-        <div class="summary-card critical">
-          <h3>Expiring Within 7 Days</h3>
-          <span class="count">{{ getCriticalCount() }}</span>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadExpiringItems()">Retry</button>
         </div>
-      </div>
-
-      <div class="items-list" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Current Stock</th>
-              <th>Unit</th>
-              <th>Expiration Date</th>
-              <th>Days Until Expiry</th>
-              <th>Supplier</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of expiringItems" [class]="getUrgencyClass(item)">
-              <td>{{ item.name }}</td>
-              <td>{{ item.categoryId || 'Uncategorized' }}</td>
-              <td>{{ item.quantityOnHand }}</td>
-              <td>{{ item.unitOfMeasure }}</td>
-              <td>{{ item.expirationDate | date:'shortDate' }}</td>
-              <td>
-                <span class="days-badge" [class]="getUrgencyClass(item)">
-                  {{ getDaysUntilExpiry(item) }} days
-                </span>
-              </td>
-              <td>{{ item.supplierName || 'Unknown' }}</td>
-              <td>
-                <button class="btn-use" (click)="useItem(item.externalId)">Use First</button>
-                <button class="btn-discount" (click)="markForDiscount(item.externalId)">Discount</button>
-                <button class="btn-view" (click)="viewItem(item.externalId)">View</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-items" *ngIf="expiringItems.length === 0">
-          <p>✅ No items expiring within {{ daysAhead }} days. Inventory is fresh!</p>
+      }
+    
+      @if (!loading && !error) {
+        <div class="items-summary">
+          <div class="summary-card">
+            <h3>Items Expiring Soon</h3>
+            <span class="count">{{ expiringItems.length }}</span>
+          </div>
+          <div class="summary-card critical">
+            <h3>Expiring Within 7 Days</h3>
+            <span class="count">{{ getCriticalCount() }}</span>
+          </div>
         </div>
-      </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="items-list">
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Unit</th>
+                <th>Expiration Date</th>
+                <th>Days Until Expiry</th>
+                <th>Supplier</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of expiringItems; track item) {
+                <tr [class]="getUrgencyClass(item)">
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.categoryId || 'Uncategorized' }}</td>
+                  <td>{{ item.quantityOnHand }}</td>
+                  <td>{{ item.unitOfMeasure }}</td>
+                  <td>{{ item.expirationDate | date:'shortDate' }}</td>
+                  <td>
+                    <span class="days-badge" [class]="getUrgencyClass(item)">
+                      {{ getDaysUntilExpiry(item) }} days
+                    </span>
+                  </td>
+                  <td>{{ item.supplierName || 'Unknown' }}</td>
+                  <td>
+                    <button class="btn-use" (click)="useItem(item.externalId)">Use First</button>
+                    <button class="btn-discount" (click)="markForDiscount(item.externalId)">Discount</button>
+                    <button class="btn-view" (click)="viewItem(item.externalId)">View</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (expiringItems.length === 0) {
+            <div class="no-items">
+              <p>✅ No items expiring within {{ daysAhead }} days. Inventory is fresh!</p>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .expiring-container {
       padding: 20px;

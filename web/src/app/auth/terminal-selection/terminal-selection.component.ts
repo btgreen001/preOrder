@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -34,7 +34,7 @@ export interface TerminalDto {
 @Component({
   selector: 'app-terminal-selection',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './terminal-selection.component.html',
   styleUrls: ['./terminal-selection.component.scss']
 })

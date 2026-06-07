@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InventoryService } from '../../inventory.service';
@@ -7,14 +7,14 @@ import { InventoryService } from '../../inventory.service';
 @Component({
   selector: 'app-supplier-add',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="supplier-add-container">
       <header class="page-header">
         <h1>Add New Supplier</h1>
         <button class="btn-secondary" (click)="goBack()">Back to Suppliers</button>
       </header>
-
+    
       <div class="form-container">
         <form [formGroup]="supplierForm" (ngSubmit)="saveSupplier()">
           <div class="form-section">
@@ -23,47 +23,57 @@ import { InventoryService } from '../../inventory.service';
               <div class="form-group">
                 <label for="name">Supplier Name *</label>
                 <input type="text" id="name" formControlName="name" placeholder="Enter supplier name">
-                <div class="error" *ngIf="supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched">
-                  Supplier name is required
-                </div>
+                @if (supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) {
+                  <div class="error">
+                    Supplier name is required
+                  </div>
+                }
               </div>
               <div class="form-group">
                 <label for="contactName">Contact Name *</label>
                 <input type="text" id="contactName" formControlName="contactName" placeholder="Enter contact person name">
-                <div class="error" *ngIf="supplierForm.get('contactName')?.invalid && supplierForm.get('contactName')?.touched">
-                  Contact name is required
-                </div>
+                @if (supplierForm.get('contactName')?.invalid && supplierForm.get('contactName')?.touched) {
+                  <div class="error">
+                    Contact name is required
+                  </div>
+                }
               </div>
             </div>
           </div>
-
+    
           <div class="form-section">
             <h2>Contact Information</h2>
             <div class="form-row">
               <div class="form-group">
                 <label for="email">Email *</label>
                 <input type="email" id="email" formControlName="email" placeholder="supplier@example.com">
-                <div class="error" *ngIf="supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched">
-                  Please enter a valid email address
-                </div>
+                @if (supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) {
+                  <div class="error">
+                    Please enter a valid email address
+                  </div>
+                }
               </div>
               <div class="form-group">
                 <label for="phone">Phone *</label>
                 <input type="tel" id="phone" formControlName="phone" placeholder="(555) 123-4567">
-                <div class="error" *ngIf="supplierForm.get('phone')?.invalid && supplierForm.get('phone')?.touched">
-                  Phone number is required
-                </div>
+                @if (supplierForm.get('phone')?.invalid && supplierForm.get('phone')?.touched) {
+                  <div class="error">
+                    Phone number is required
+                  </div>
+                }
               </div>
             </div>
             <div class="form-group full-width">
               <label for="address">Address *</label>
               <textarea id="address" formControlName="address" rows="3" placeholder="Enter full address"></textarea>
-              <div class="error" *ngIf="supplierForm.get('address')?.invalid && supplierForm.get('address')?.touched">
-                Address is required
-              </div>
+              @if (supplierForm.get('address')?.invalid && supplierForm.get('address')?.touched) {
+                <div class="error">
+                  Address is required
+                </div>
+              }
             </div>
           </div>
-
+    
           <div class="form-section">
             <h2>Business Details</h2>
             <div class="form-row">
@@ -80,9 +90,11 @@ import { InventoryService } from '../../inventory.service';
               <div class="form-group">
                 <label for="leadTime">Lead Time (days) *</label>
                 <input type="number" id="leadTime" formControlName="leadTime" min="1" placeholder="7">
-                <div class="error" *ngIf="supplierForm.get('leadTime')?.invalid && supplierForm.get('leadTime')?.touched">
-                  Lead time must be at least 1 day
-                </div>
+                @if (supplierForm.get('leadTime')?.invalid && supplierForm.get('leadTime')?.touched) {
+                  <div class="error">
+                    Lead time must be at least 1 day
+                  </div>
+                }
               </div>
             </div>
             <div class="form-group">
@@ -92,7 +104,7 @@ import { InventoryService } from '../../inventory.service';
               </label>
             </div>
           </div>
-
+    
           <div class="form-actions">
             <button type="submit" class="btn-primary" [disabled]="supplierForm.invalid || saving">
               {{ saving ? 'Saving...' : 'Save Supplier' }}
@@ -102,7 +114,7 @@ import { InventoryService } from '../../inventory.service';
         </form>
       </div>
     </div>
-  `,
+    `,
   styles: [`
     .supplier-add-container {
       padding: 20px;

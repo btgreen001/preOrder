@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InventoryService } from '../../inventory.service';
@@ -7,14 +7,14 @@ import { InventoryService } from '../../inventory.service';
 @Component({
   selector: 'app-category-add',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="category-add-container">
       <header class="page-header">
         <h1>Add New Category</h1>
         <button class="btn-secondary" (click)="goBack()">Back to Categories</button>
       </header>
-
+    
       <div class="form-container">
         <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
           <div class="form-section">
@@ -22,19 +22,23 @@ import { InventoryService } from '../../inventory.service';
             <div class="form-group">
               <label for="name">Category Name *</label>
               <input type="text" id="name" formControlName="name" placeholder="Enter category name">
-              <div class="error" *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
-                Category name is required and must be at least 2 characters
-              </div>
+              @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                <div class="error">
+                  Category name is required and must be at least 2 characters
+                </div>
+              }
             </div>
             <div class="form-group">
               <label for="description">Description *</label>
               <textarea id="description" formControlName="description" rows="4" placeholder="Describe what items belong in this category"></textarea>
-              <div class="error" *ngIf="categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched">
-                Description is required and must be at least 10 characters
-              </div>
+              @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
+                <div class="error">
+                  Description is required and must be at least 10 characters
+                </div>
+              }
             </div>
           </div>
-
+    
           <div class="form-actions">
             <button type="submit" class="btn-primary" [disabled]="categoryForm.invalid || saving">
               {{ saving ? 'Saving...' : 'Save Category' }}
@@ -44,7 +48,7 @@ import { InventoryService } from '../../inventory.service';
         </form>
       </div>
     </div>
-  `,
+    `,
   styles: [`
     .category-add-container {
       padding: 20px;

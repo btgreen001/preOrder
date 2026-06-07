@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -24,7 +24,6 @@ interface Product {
   selector: 'app-fifo-batches',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatTableModule,
@@ -38,7 +37,7 @@ interface Product {
     MatSnackBarModule,
     MatTooltipModule,
     MatBadgeModule
-  ],
+],
   templateUrl: './fifo-batches.component.html',
   styleUrls: ['./fifo-batches.component.css']
 })

@@ -14,57 +14,69 @@ import { OrdersService, Order } from '../services/orders.service';
         <h1>Complete Orders</h1>
         <p>Mark orders as completed</p>
       </header>
-
+    
       <div class="orders-section">
         <button (click)="loadPendingOrders()" [attr.data-testid]="'refresh-btn'">Load Pending Orders</button>
-        
-        <div class="loading" *ngIf="loading" [attr.data-testid]="'loading-spinner'">
-          <p>Loading pending orders...</p>
-        </div>
-
-        <table *ngIf="orders.length > 0" [attr.data-testid]="'orders-table'">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Total</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let order of orders" [attr.data-testid]="'order-row-' + order.externalId">
-              <td>{{ order.externalId }}</td>
-              <td>{{ order.customerId }}</td>
-              <td>{{ order.orderDate | date:'short' }}</td>
-              <td>{{ '$' + order.totalAmount }}</td>
-              <td>
-                <button (click)="confirmCompletion(order)" [attr.data-testid]="'complete-btn-' + order.externalId" class="complete-btn">
-                  Complete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div *ngIf="!loading && orders.length === 0" class="no-items">
-          <p>No pending orders</p>
-        </div>
+    
+        @if (loading) {
+          <div class="loading" [attr.data-testid]="'loading-spinner'">
+            <p>Loading pending orders...</p>
+          </div>
+        }
+    
+        @if (orders.length > 0) {
+          <table [attr.data-testid]="'orders-table'">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of orders; track order) {
+                <tr [attr.data-testid]="'order-row-' + order.externalId">
+                  <td>{{ order.externalId }}</td>
+                  <td>{{ order.customerId }}</td>
+                  <td>{{ order.orderDate | date:'short' }}</td>
+                  <td>{{ '$' + order.totalAmount }}</td>
+                  <td>
+                    <button (click)="confirmCompletion(order)" [attr.data-testid]="'complete-btn-' + order.externalId" class="complete-btn">
+                      Complete
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+    
+        @if (!loading && orders.length === 0) {
+          <div class="no-items">
+            <p>No pending orders</p>
+          </div>
+        }
       </div>
-
-      <div class="result" *ngIf="completionResult">
-        <div class="success" [attr.data-testid]="'completion-result'">
-          <h3>✅ Order Completed</h3>
-          <p>Order {{ completionResult.externalId }} has been marked as completed</p>
-          <p>Completed at: {{ completionResult.completedAt | date:'short' }}</p>
+    
+      @if (completionResult) {
+        <div class="result">
+          <div class="success" [attr.data-testid]="'completion-result'">
+            <h3>✅ Order Completed</h3>
+            <p>Order {{ completionResult.externalId }} has been marked as completed</p>
+            <p>Completed at: {{ completionResult.completedAt | date:'short' }}</p>
+          </div>
         </div>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-      </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .completion-container { padding: 20px; }
     .page-header h1 { margin: 0 0 0.5rem; font-size: 2rem; }

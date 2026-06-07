@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,13 +21,12 @@ export interface UserTile {
   selector: 'app-pin-signin',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatGridListModule,
     PinEntryComponent
-  ],
+],
   templateUrl: './pin-signin.component.html',
   styleUrls: ['./pin-signin.component.scss']
 })

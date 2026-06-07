@@ -13,71 +13,85 @@ import { OrdersService, Order } from '../services/orders.service';
         <h1>Cancel Orders</h1>
         <p>Cancel orders and release reservations</p>
       </header>
-
+    
       <div class="orders-section">
         <button (click)="loadActiveOrders()" [attr.data-testid]="'refresh-btn'">Load Active Orders</button>
-        
-        <div class="loading" *ngIf="loading" [attr.data-testid]="'loading-spinner'">
-          <p>Loading active orders...</p>
-        </div>
-
-        <table *ngIf="orders.length > 0" [attr.data-testid]="'orders-table'">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let order of orders" [attr.data-testid]="'order-row-' + order.externalId">
-              <td>{{ order.externalId }}</td>
-              <td>{{ order.customerId }}</td>
-              <td>{{ order.orderStatus }}</td>
-              <td>{{ order.orderDate | date:'short' }}</td>
-              <td>
-                <button (click)="showCancellationForm(order)" [attr.data-testid]="'cancel-btn-' + order.externalId" class="cancel-btn">
-                  Cancel
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div *ngIf="!loading && orders.length === 0" class="no-items">
-          <p>No active orders</p>
-        </div>
+    
+        @if (loading) {
+          <div class="loading" [attr.data-testid]="'loading-spinner'">
+            <p>Loading active orders...</p>
+          </div>
+        }
+    
+        @if (orders.length > 0) {
+          <table [attr.data-testid]="'orders-table'">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of orders; track order) {
+                <tr [attr.data-testid]="'order-row-' + order.externalId">
+                  <td>{{ order.externalId }}</td>
+                  <td>{{ order.customerId }}</td>
+                  <td>{{ order.orderStatus }}</td>
+                  <td>{{ order.orderDate | date:'short' }}</td>
+                  <td>
+                    <button (click)="showCancellationForm(order)" [attr.data-testid]="'cancel-btn-' + order.externalId" class="cancel-btn">
+                      Cancel
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+    
+        @if (!loading && orders.length === 0) {
+          <div class="no-items">
+            <p>No active orders</p>
+          </div>
+        }
       </div>
-
-      <div class="cancellation-form" *ngIf="selectedOrder">
-        <h2>Confirm Cancellation</h2>
-        <p>Order: {{ selectedOrder.externalId }}</p>
-        <p>Customer: {{ selectedOrder.customerId }}</p>
-        <div class="form-group">
-          <label>Reason for cancellation:</label>
-          <textarea [(ngModel)]="cancellationReason" [attr.data-testid]="'reason-textarea'" placeholder="Enter reason"></textarea>
+    
+      @if (selectedOrder) {
+        <div class="cancellation-form">
+          <h2>Confirm Cancellation</h2>
+          <p>Order: {{ selectedOrder.externalId }}</p>
+          <p>Customer: {{ selectedOrder.customerId }}</p>
+          <div class="form-group">
+            <label>Reason for cancellation:</label>
+            <textarea [(ngModel)]="cancellationReason" [attr.data-testid]="'reason-textarea'" placeholder="Enter reason"></textarea>
+          </div>
+          <div class="actions">
+            <button (click)="processCancellation()" [attr.data-testid]="'confirm-cancel-btn'" class="confirm-btn">Confirm Cancellation</button>
+            <button (click)="selectedOrder = null" class="cancel-btn-secondary">Cancel</button>
+          </div>
         </div>
-        <div class="actions">
-          <button (click)="processCancellation()" [attr.data-testid]="'confirm-cancel-btn'" class="confirm-btn">Confirm Cancellation</button>
-          <button (click)="selectedOrder = null" class="cancel-btn-secondary">Cancel</button>
+      }
+    
+      @if (cancellationResult) {
+        <div class="result">
+          <div class="success" [attr.data-testid]="'cancellation-result'">
+            <h3>✅ Order Cancelled</h3>
+            <p>Order {{ cancellationResult.externalId }} has been cancelled</p>
+            <p>Reservations have been released</p>
+          </div>
         </div>
-      </div>
-
-      <div class="result" *ngIf="cancellationResult">
-        <div class="success" [attr.data-testid]="'cancellation-result'">
-          <h3>✅ Order Cancelled</h3>
-          <p>Order {{ cancellationResult.externalId }} has been cancelled</p>
-          <p>Reservations have been released</p>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
         </div>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .cancellation-container { padding: 20px; }
     .page-header h1 { margin: 0 0 0.5rem; font-size: 2rem; }

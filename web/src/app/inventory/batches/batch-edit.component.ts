@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InventoryService } from '../inventory.service';
@@ -7,7 +7,7 @@ import { InventoryService } from '../inventory.service';
 @Component({
   selector: 'app-batch-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule],
   template: `
     <div class="batch-edit-container">
       <header class="page-header">
@@ -19,77 +19,77 @@ import { InventoryService } from '../inventory.service';
           </button>
         </div>
       </header>
-
-      <div *ngIf="loading" class="loading">
-        <p>Loading batch data...</p>
-      </div>
-
-      <form *ngIf="!loading" [formGroup]="batchForm" class="batch-form">
-        <div class="form-section">
-          <h2>Batch Information</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="batchNumber">Batch Number *</label>
-              <input type="text" id="batchNumber" formControlName="batchNumber" placeholder="e.g., BATCH-2025-001">
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading batch data...</p>
+        </div>
+      }
+    
+      @if (!loading) {
+        <form [formGroup]="batchForm" class="batch-form">
+          <div class="form-section">
+            <h2>Batch Information</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="batchNumber">Batch Number *</label>
+                <input type="text" id="batchNumber" formControlName="batchNumber" placeholder="e.g., BATCH-2025-001">
+              </div>
+              <div class="form-group">
+                <label for="itemName">Item Name *</label>
+                <input type="text" id="itemName" formControlName="itemName" placeholder="e.g., All-Purpose Flour">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="quantity">Quantity *</label>
+                <input type="number" id="quantity" formControlName="quantity" min="0.01" step="0.01">
+              </div>
+              <div class="form-group">
+                <label for="unit">Unit *</label>
+                <select id="unit" formControlName="unit">
+                  <option value="lbs">Pounds (lbs)</option>
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="cups">Cups</option>
+                  <option value="pieces">Pieces</option>
+                  <option value="gallons">Gallons</option>
+                  <option value="liters">Liters</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="costPerUnit">Cost per Unit ($)</label>
+                <input type="number" id="costPerUnit" formControlName="costPerUnit" min="0" step="0.01">
+              </div>
+              <div class="form-group">
+                <label for="supplier">Supplier</label>
+                <input type="text" id="supplier" formControlName="supplier" placeholder="Supplier name">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="receivedDate">Received Date *</label>
+                <input type="date" id="receivedDate" formControlName="receivedDate">
+              </div>
+              <div class="form-group">
+                <label for="expirationDate">Expiration Date</label>
+                <input type="date" id="expirationDate" formControlName="expirationDate">
+              </div>
             </div>
             <div class="form-group">
-              <label for="itemName">Item Name *</label>
-              <input type="text" id="itemName" formControlName="itemName" placeholder="e.g., All-Purpose Flour">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="quantity">Quantity *</label>
-              <input type="number" id="quantity" formControlName="quantity" min="0.01" step="0.01">
-            </div>
-            <div class="form-group">
-              <label for="unit">Unit *</label>
-              <select id="unit" formControlName="unit">
-                <option value="lbs">Pounds (lbs)</option>
-                <option value="kg">Kilograms (kg)</option>
-                <option value="cups">Cups</option>
-                <option value="pieces">Pieces</option>
-                <option value="gallons">Gallons</option>
-                <option value="liters">Liters</option>
+              <label for="status">Status *</label>
+              <select id="status" formControlName="status">
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+                <option value="used">Used</option>
               </select>
             </div>
           </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="costPerUnit">Cost per Unit ($)</label>
-              <input type="number" id="costPerUnit" formControlName="costPerUnit" min="0" step="0.01">
-            </div>
-            <div class="form-group">
-              <label for="supplier">Supplier</label>
-              <input type="text" id="supplier" formControlName="supplier" placeholder="Supplier name">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="receivedDate">Received Date *</label>
-              <input type="date" id="receivedDate" formControlName="receivedDate">
-            </div>
-            <div class="form-group">
-              <label for="expirationDate">Expiration Date</label>
-              <input type="date" id="expirationDate" formControlName="expirationDate">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="status">Status *</label>
-            <select id="status" formControlName="status">
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-              <option value="used">Used</option>
-            </select>
-          </div>
-        </div>
-      </form>
+        </form>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .batch-edit-container {
       padding: 20px;

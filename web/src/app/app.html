@@ -1,77 +1,87 @@
 <div class="app-shell">
   <app-loading-overlay></app-loading-overlay>
   <nav class="topnav">
-    <button
-      class="mobile-nav-toggle"
-      *ngIf="showAdminShell"
-      (click)="toggleSidebar()"
-      title="Toggle navigation"
-      aria-label="Toggle navigation"
-      [attr.aria-expanded]="isSidebarOpen"
-      aria-controls="primary-sidebar"
-    >
-      <mat-icon>{{ isSidebarOpen ? 'close' : 'menu' }}</mat-icon>
-      
-    </button>
+    @if (showAdminShell) {
+      <button
+        class="mobile-nav-toggle"
+        (click)="toggleSidebar()"
+        title="Toggle navigation"
+        aria-label="Toggle navigation"
+        [attr.aria-expanded]="isSidebarOpen"
+        aria-controls="primary-sidebar"
+        >
+        <mat-icon>{{ isSidebarOpen ? 'close' : 'menu' }}</mat-icon>
+      </button>
+    }
     <mat-icon class="brand-icon">bakery_dining</mat-icon>
     <div class="app-title-wrapper">
       <div class="app-title">BakeAhead™</div>
       <div class="tiny">Powered by BakeBoard™</div>
     </div>
     <span class="spacer"></span>
-    <div class="nav-controls" *ngIf="showAdminShell">
-      <button class="logout-btn" (click)="logoutThisSession()" title="Logout" data-testid="logout-button">
-        <mat-icon>logout</mat-icon>
-        Logout
-      </button>
-    </div>
-  </nav>
-  <div
-    class="mobile-sidebar-backdrop"
-    *ngIf="showAdminShell && isSidebarOpen"
-    role="button"
-    tabindex="0"
-    (click)="closeSidebar()"
-    (keydown.enter)="closeSidebar()"
-    (keydown.space)="closeSidebar()"
-  >
-  </div>
-  <div class="main-layout">
-  <aside id="primary-sidebar" class="sidebar" *ngIf="showAdminShell" [class.mobile-open]="isSidebarOpen">
-  <ul>
-    <li *ngFor="let nav of sidebarNav"
-      [class.active]="nav.route && !nav.nonInteractive && nav.action !== 'quick-tour' ? isActive(nav.route) : false"
-        [class.child]="nav.isChild">
-
-      <!-- Divider BEFORE this item -->
-      <div *ngIf="nav.dividerBefore" class="nav-divider"></div>
-
-      <div *ngIf="nav.nonInteractive" class="section-header" aria-hidden="true">
-        <mat-icon>{{ nav.icon }}</mat-icon>
-        {{ nav.label }}
+    @if (showAdminShell) {
+      <div class="nav-controls">
+        <button class="logout-btn" (click)="logoutThisSession()" title="Logout" data-testid="logout-button">
+          <mat-icon>logout</mat-icon>
+          Logout
+        </button>
       </div>
-
-      <!-- External link -->
-      <a *ngIf="nav.externalUrl"
-        [href]="getNavExternalUrl(nav)"
-         (click)="onExternalNavClick($event, nav)"
-         target="_blank"
-         rel="noopener noreferrer">
-        <mat-icon>{{ nav.icon }}</mat-icon>
-        {{ nav.label }}
-      </a>
-
-        <!-- Internal route -->
-        <a *ngIf="nav.route && !nav.externalUrl && !nav.nonInteractive"
-          [routerLink]="nav.route"
-          (click)="onSidebarNavClick(nav)">
-          <mat-icon>{{ nav.icon }}</mat-icon>
-          {{ nav.label }}
-        </a>
-
-      </li>
-    </ul>
-  </aside>
+    }
+  </nav>
+  @if (showAdminShell && isSidebarOpen) {
+    <div
+      class="mobile-sidebar-backdrop"
+      role="button"
+      tabindex="0"
+      (click)="closeSidebar()"
+      (keydown.enter)="closeSidebar()"
+      (keydown.space)="closeSidebar()"
+      >
+    </div>
+  }
+  <div class="main-layout">
+    @if (showAdminShell) {
+      <aside id="primary-sidebar" class="sidebar" [class.mobile-open]="isSidebarOpen">
+        <ul>
+          @for (nav of sidebarNav; track nav) {
+            <li
+              [class.active]="nav.route && !nav.nonInteractive && nav.action !== 'quick-tour' ? isActive(nav.route) : false"
+              [class.child]="nav.isChild">
+              <!-- Divider BEFORE this item -->
+              @if (nav.dividerBefore) {
+                <div class="nav-divider"></div>
+              }
+              @if (nav.nonInteractive) {
+                <div class="section-header" aria-hidden="true">
+                  <mat-icon>{{ nav.icon }}</mat-icon>
+                  {{ nav.label }}
+                </div>
+              }
+              <!-- External link -->
+              @if (nav.externalUrl) {
+                <a
+                  [href]="getNavExternalUrl(nav)"
+                  (click)="onExternalNavClick($event, nav)"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <mat-icon>{{ nav.icon }}</mat-icon>
+                  {{ nav.label }}
+                </a>
+              }
+              <!-- Internal route -->
+              @if (nav.route && !nav.externalUrl && !nav.nonInteractive) {
+                <a
+                  [routerLink]="nav.route"
+                  (click)="onSidebarNavClick(nav)">
+                  <mat-icon>{{ nav.icon }}</mat-icon>
+                  {{ nav.label }}
+                </a>
+              }
+            </li>
+          }
+        </ul>
+      </aside>
+    }
 
 
     <main class="main-content">

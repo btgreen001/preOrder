@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -14,7 +14,6 @@ import { ProductComponentCreateComponent, ProductComponentCreateModel } from '..
   selector: 'app-products-list',
   standalone: true,
   imports: [
-    CommonModule,
     MatTableModule,
     MatButtonModule,
     MatProgressSpinnerModule,
@@ -22,7 +21,7 @@ import { ProductComponentCreateComponent, ProductComponentCreateModel } from '..
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule
-  ],
+],
   templateUrl: './products-list.component.html',
   styleUrls: ['./products-list.component.css']
 })

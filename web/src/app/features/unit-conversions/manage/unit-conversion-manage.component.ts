@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -13,7 +13,7 @@ import {
 @Component({
   selector: 'app-unit-conversion-manage',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './unit-conversion-manage.component.html',
   styleUrl: './unit-conversion-manage.component.scss'
 })

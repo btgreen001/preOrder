@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,7 +14,6 @@ import { TerminalService, Terminal, CreateTerminalRequest, UpdateTerminalRequest
   selector: 'app-terminal-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
     MatFormFieldModule,
@@ -23,7 +22,7 @@ import { TerminalService, Terminal, CreateTerminalRequest, UpdateTerminalRequest
     MatCardModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule
-  ],
+],
   templateUrl: './terminal-form.component.html',
   styleUrls: ['./terminal-form.component.scss']
 })

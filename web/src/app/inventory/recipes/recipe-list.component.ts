@@ -41,7 +41,7 @@ interface RecipeIngredient {
           <button class="btn-secondary" (click)="importRecipes()">Import</button>
         </div>
       </header>
-
+    
       <div class="filters">
         <input type="text" placeholder="Search recipes..." [(ngModel)]="searchTerm" (input)="filterRecipes()">
         <select [(ngModel)]="categoryFilter" (change)="filterRecipes()">
@@ -59,55 +59,68 @@ interface RecipeIngredient {
           <option value="modified">Last Modified</option>
         </select>
       </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading recipes...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadRecipes()">Retry</button>
-      </div>
-
-      <div class="recipes-grid" *ngIf="!loading && !error">
-        <div class="recipe-card" *ngFor="let recipe of filteredRecipes" (click)="viewRecipe(recipe.id)">
-          <div class="recipe-header">
-            <h3>{{ recipe.name }}</h3>
-            <div class="recipe-actions">
-              <button class="btn-edit" (click)="editRecipe(recipe.id); $event.stopPropagation()">Edit</button>
-              <button class="btn-cost" (click)="viewCost(recipe.id); $event.stopPropagation()">Cost</button>
-              <button class="btn-delete" (click)="deleteRecipe(recipe.id); $event.stopPropagation()">Delete</button>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading recipes...</p>
+        </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadRecipes()">Retry</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="recipes-grid">
+          @for (recipe of filteredRecipes; track recipe) {
+            <div class="recipe-card" (click)="viewRecipe(recipe.id)">
+              <div class="recipe-header">
+                <h3>{{ recipe.name }}</h3>
+                <div class="recipe-actions">
+                  <button class="btn-edit" (click)="editRecipe(recipe.id); $event.stopPropagation()">Edit</button>
+                  <button class="btn-cost" (click)="viewCost(recipe.id); $event.stopPropagation()">Cost</button>
+                  <button class="btn-delete" (click)="deleteRecipe(recipe.id); $event.stopPropagation()">Delete</button>
+                </div>
+              </div>
+              <p class="recipe-description">{{ recipe.description }}</p>
+              <div class="recipe-details">
+                <span class="category">{{ recipe.category | titlecase }}</span>
+                <span class="yield">Yield: {{ recipe.yield }} {{ recipe.yieldUnit }}</span>
+                <span class="cost">\${{ recipe.costPerUnit.toFixed(2) }}/unit</span>
+              </div>
+              <div class="recipe-times">
+                <span>Prep: {{ recipe.prepTime }}min</span>
+                <span>Cook: {{ recipe.cookTime }}min</span>
+                <span>Total: {{ recipe.prepTime + recipe.cookTime }}min</span>
+              </div>
+              <div class="ingredients-preview">
+                <strong>Ingredients ({{ recipe.ingredients.length }}):</strong>
+                <ul>
+                  @for (ingredient of recipe.ingredients.slice(0, 3); track ingredient) {
+                    <li>
+                      {{ ingredient.quantity }} {{ ingredient.unit }} {{ ingredient.itemName }}
+                    </li>
+                  }
+                  @if (recipe.ingredients.length > 3) {
+                    <li>...and {{ recipe.ingredients.length - 3 }} more</li>
+                  }
+                </ul>
+              </div>
             </div>
-          </div>
-          <p class="recipe-description">{{ recipe.description }}</p>
-          <div class="recipe-details">
-            <span class="category">{{ recipe.category | titlecase }}</span>
-            <span class="yield">Yield: {{ recipe.yield }} {{ recipe.yieldUnit }}</span>
-            <span class="cost">\${{ recipe.costPerUnit.toFixed(2) }}/unit</span>
-          </div>
-          <div class="recipe-times">
-            <span>Prep: {{ recipe.prepTime }}min</span>
-            <span>Cook: {{ recipe.cookTime }}min</span>
-            <span>Total: {{ recipe.prepTime + recipe.cookTime }}min</span>
-          </div>
-          <div class="ingredients-preview">
-            <strong>Ingredients ({{ recipe.ingredients.length }}):</strong>
-            <ul>
-              <li *ngFor="let ingredient of recipe.ingredients.slice(0, 3)">
-                {{ ingredient.quantity }} {{ ingredient.unit }} {{ ingredient.itemName }}
-              </li>
-              <li *ngIf="recipe.ingredients.length > 3">...and {{ recipe.ingredients.length - 3 }} more</li>
-            </ul>
-          </div>
+          }
+          @if (filteredRecipes.length === 0) {
+            <div class="no-recipes">
+              <p>No recipes found matching your criteria.</p>
+              <button class="btn-primary" (click)="addRecipe()">Create First Recipe</button>
+            </div>
+          }
         </div>
-
-        <div class="no-recipes" *ngIf="filteredRecipes.length === 0">
-          <p>No recipes found matching your criteria.</p>
-          <button class="btn-primary" (click)="addRecipe()">Create First Recipe</button>
-        </div>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .recipes-container {
       padding: 20px;

@@ -18,12 +18,14 @@ import { Product, ProductsService } from '../../features/products/services/produ
           <button class="btn-secondary" (click)="exportItems()">Export</button>
         </div>
       </header>
-
+    
       <div class="filters">
         <input type="text" placeholder="Search items..." [(ngModel)]="searchTerm" (input)="filterItems()">
         <select [(ngModel)]="categoryFilter" (change)="filterItems()">
           <option value="">All Categories</option>
-          <option *ngFor="let category of categories" [value]="category.name">{{ category.name }}</option>
+          @for (category of categories; track category) {
+            <option [value]="category.name">{{ category.name }}</option>
+          }
         </select>
         <select [(ngModel)]="stockFilter" (change)="filterItems()">
           <option value="">All Stock Levels</option>
@@ -31,91 +33,102 @@ import { Product, ProductsService } from '../../features/products/services/produ
           <option value="out">Out of Stock</option>
         </select>
       </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading inventory items...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadItems()">Retry</button>
-      </div>
-
-      <div class="items-table" *ngIf="!loading && !error">
-        <h2 class="section-title">Raw Ingredients (Inventory Items)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Current Stock</th>
-              <th>Unit</th>
-              <th>Reorder Point</th>
-              <th>Cost/Unit</th>
-              <th>Expires</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of filteredItems"
-                [class.low-stock]="item.quantityOnHand <= item.reorderPoint"
-                [class.out-of-stock]="item.quantityOnHand === 0">
-              <td>{{ item.name }}</td>
-              <td>{{ item.categoryId || 0 }}</td>
-              <td [class.warning]="item.quantityOnHand <= item.reorderPoint">
-                {{ item.quantityOnHand }}
-              </td>
-              <td>{{ item.unitOfMeasure }}</td>
-              <td>{{ item.reorderPoint }}</td>
-              <td>\${{ item.unitCost.toFixed(2) }}</td>
-              <td>{{ item.expirationDate ? (item.expirationDate | date:'shortDate') : 'N/A' }}</td>
-              <td>
-                <button class="btn-edit" (click)="editItem(item.externalId)">Edit</button>
-                <button class="btn-history" (click)="viewHistory(item.externalId)">History</button>
-                <button class="btn-delete" (click)="deleteItem(item.externalId)">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-items" *ngIf="filteredItems.length === 0">
-          <p>No items found matching your criteria.</p>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading inventory items...</p>
         </div>
-
-        <h2 class="section-title recipe-components">Recipe Components (Sellable Products)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Component Name</th>
-              <th>SKU</th>
-              <th>Category</th>
-              <th>Unit Price</th>
-              <th>Output Unit</th>
-              <th>For Sale</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let product of filteredRecipeComponentProducts">
-              <td>{{ product.name }}</td>
-              <td>{{ product.sku || 'Auto' }}</td>
-              <td>{{ product.category || 'N/A' }}</td>
-              <td>\${{ product.unitPrice.toFixed(2) }}</td>
-              <td>{{ product.outputUnitMsr || 'N/A' }}</td>
-              <td>{{ product.isForSale ? 'Yes' : 'No' }}</td>
-              <td>
-                <button class="btn-edit" (click)="viewProductInProducts(product)">View in Products</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-items" *ngIf="filteredRecipeComponentProducts.length === 0">
-          <p>No recipe components found for the current filters.</p>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadItems()">Retry</button>
         </div>
-      </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="items-table">
+          <h2 class="section-title">Raw Ingredients (Inventory Items)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Unit</th>
+                <th>Reorder Point</th>
+                <th>Cost/Unit</th>
+                <th>Expires</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filteredItems; track item) {
+                <tr
+                  [class.low-stock]="item.quantityOnHand <= item.reorderPoint"
+                  [class.out-of-stock]="item.quantityOnHand === 0">
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.categoryId || 0 }}</td>
+                  <td [class.warning]="item.quantityOnHand <= item.reorderPoint">
+                    {{ item.quantityOnHand }}
+                  </td>
+                  <td>{{ item.unitOfMeasure }}</td>
+                  <td>{{ item.reorderPoint }}</td>
+                  <td>\${{ item.unitCost.toFixed(2) }}</td>
+                  <td>{{ item.expirationDate ? (item.expirationDate | date:'shortDate') : 'N/A' }}</td>
+                  <td>
+                    <button class="btn-edit" (click)="editItem(item.externalId)">Edit</button>
+                    <button class="btn-history" (click)="viewHistory(item.externalId)">History</button>
+                    <button class="btn-delete" (click)="deleteItem(item.externalId)">Delete</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (filteredItems.length === 0) {
+            <div class="no-items">
+              <p>No items found matching your criteria.</p>
+            </div>
+          }
+          <h2 class="section-title recipe-components">Recipe Components (Sellable Products)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Component Name</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Unit Price</th>
+                <th>Output Unit</th>
+                <th>For Sale</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of filteredRecipeComponentProducts; track product) {
+                <tr>
+                  <td>{{ product.name }}</td>
+                  <td>{{ product.sku || 'Auto' }}</td>
+                  <td>{{ product.category || 'N/A' }}</td>
+                  <td>\${{ product.unitPrice.toFixed(2) }}</td>
+                  <td>{{ product.outputUnitMsr || 'N/A' }}</td>
+                  <td>{{ product.isForSale ? 'Yes' : 'No' }}</td>
+                  <td>
+                    <button class="btn-edit" (click)="viewProductInProducts(product)">View in Products</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (filteredRecipeComponentProducts.length === 0) {
+            <div class="no-items">
+              <p>No recipe components found for the current filters.</p>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .items-container {
       padding: 20px;

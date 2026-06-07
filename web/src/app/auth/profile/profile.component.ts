@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,10 +9,9 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-profile',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
-    RouterModule,
-  ],
+    RouterModule
+],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })

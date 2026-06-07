@@ -1,152 +1,157 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { InventoryService, InventorySettings } from '../inventory.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="settings-container">
       <header class="page-header">
         <h1>Inventory Settings</h1>
         <p>Configure system preferences, thresholds, and notifications</p>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading settings...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadSettings()">Retry</button>
-      </div>
-
-      <form *ngIf="!loading && !error" (ngSubmit)="saveSettings()" #settingsForm="ngForm">
-        <div class="settings-section">
-          <h3>Inventory Thresholds</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="defaultReorderPoint">Default Reorder Point:</label>
-              <input type="number" id="defaultReorderPoint" [(ngModel)]="settings.defaultReorderPoint" name="defaultReorderPoint" min="1" required>
-              <small>Default reorder point for new items</small>
-            </div>
-            <div class="form-group">
-              <label for="lowStockThreshold">Low Stock Alert Threshold (%):</label>
-              <input type="number" id="lowStockThreshold" [(ngModel)]="settings.lowStockThreshold" name="lowStockThreshold" min="1" max="100" required>
-              <small>Percentage of reorder point to trigger alerts</small>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="expiringSoonDays">Expiring Soon Alert (Days):</label>
-              <input type="number" id="expiringSoonDays" [(ngModel)]="settings.expiringSoonDays" name="expiringSoonDays" min="1" required>
-              <small>Days before expiration to show alerts</small>
-            </div>
-          </div>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading settings...</p>
         </div>
-
-        <div class="settings-section">
-          <h3>Automation</h3>
-          <div class="form-row">
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="settings.autoReorderEnabled" name="autoReorderEnabled">
-                <span class="checkmark"></span>
-                Enable Automatic Reordering
-              </label>
-              <small>Automatically create orders when items reach reorder point</small>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadSettings()">Retry</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <form (ngSubmit)="saveSettings()" #settingsForm="ngForm">
+          <div class="settings-section">
+            <h3>Inventory Thresholds</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="defaultReorderPoint">Default Reorder Point:</label>
+                <input type="number" id="defaultReorderPoint" [(ngModel)]="settings.defaultReorderPoint" name="defaultReorderPoint" min="1" required>
+                <small>Default reorder point for new items</small>
+              </div>
+              <div class="form-group">
+                <label for="lowStockThreshold">Low Stock Alert Threshold (%):</label>
+                <input type="number" id="lowStockThreshold" [(ngModel)]="settings.lowStockThreshold" name="lowStockThreshold" min="1" max="100" required>
+                <small>Percentage of reorder point to trigger alerts</small>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="expiringSoonDays">Expiring Soon Alert (Days):</label>
+                <input type="number" id="expiringSoonDays" [(ngModel)]="settings.expiringSoonDays" name="expiringSoonDays" min="1" required>
+                <small>Days before expiration to show alerts</small>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Notifications</h3>
-          <div class="form-row">
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="settings.emailNotifications" name="emailNotifications">
-                <span class="checkmark"></span>
-                Email Notifications
-              </label>
-            </div>
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="settings.smsNotifications" name="smsNotifications">
-                <span class="checkmark"></span>
-                SMS Notifications
-              </label>
+          <div class="settings-section">
+            <h3>Automation</h3>
+            <div class="form-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="settings.autoReorderEnabled" name="autoReorderEnabled">
+                  <span class="checkmark"></span>
+                  Enable Automatic Reordering
+                </label>
+                <small>Automatically create orders when items reach reorder point</small>
+              </div>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="notificationEmail">Notification Email:</label>
-              <input type="email" id="notificationEmail" [(ngModel)]="settings.notificationEmail" name="notificationEmail" required>
-              <small>Email address for notifications</small>
+          <div class="settings-section">
+            <h3>Notifications</h3>
+            <div class="form-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="settings.emailNotifications" name="emailNotifications">
+                  <span class="checkmark"></span>
+                  Email Notifications
+                </label>
+              </div>
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="settings.smsNotifications" name="smsNotifications">
+                  <span class="checkmark"></span>
+                  SMS Notifications
+                </label>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="notificationEmail">Notification Email:</label>
+                <input type="email" id="notificationEmail" [(ngModel)]="settings.notificationEmail" name="notificationEmail" required>
+                <small>Email address for notifications</small>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>System Preferences</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="currency">Currency:</label>
-              <select id="currency" [(ngModel)]="settings.currency" name="currency" required>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="CAD">CAD (C$)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="dateFormat">Date Format:</label>
-              <select id="dateFormat" [(ngModel)]="settings.dateFormat" name="dateFormat" required>
-                <option value="MM/dd/yyyy">MM/dd/yyyy</option>
-                <option value="dd/MM/yyyy">dd/MM/yyyy</option>
-                <option value="yyyy-MM-dd">yyyy-MM-dd</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Data Management</h3>
-          <div class="form-row">
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="settings.autoBackupEnabled" name="autoBackupEnabled">
-                <span class="checkmark"></span>
-                Enable Automatic Backups
-              </label>
-            </div>
-            <div class="form-group" *ngIf="settings.autoBackupEnabled">
-              <label for="backupFrequency">Backup Frequency:</label>
-              <select id="backupFrequency" [(ngModel)]="settings.backupFrequency" name="backupFrequency" required>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
+          <div class="settings-section">
+            <h3>System Preferences</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="currency">Currency:</label>
+                <select id="currency" [(ngModel)]="settings.currency" name="currency" required>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="CAD">CAD (C$)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="dateFormat">Date Format:</label>
+                <select id="dateFormat" [(ngModel)]="settings.dateFormat" name="dateFormat" required>
+                  <option value="MM/dd/yyyy">MM/dd/yyyy</option>
+                  <option value="dd/MM/yyyy">dd/MM/yyyy</option>
+                  <option value="yyyy-MM-dd">yyyy-MM-dd</option>
+                </select>
+              </div>
             </div>
           </div>
+          <div class="settings-section">
+            <h3>Data Management</h3>
+            <div class="form-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="settings.autoBackupEnabled" name="autoBackupEnabled">
+                  <span class="checkmark"></span>
+                  Enable Automatic Backups
+                </label>
+              </div>
+              @if (settings.autoBackupEnabled) {
+                <div class="form-group">
+                  <label for="backupFrequency">Backup Frequency:</label>
+                  <select id="backupFrequency" [(ngModel)]="settings.backupFrequency" name="backupFrequency" required>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="!settingsForm.valid || !hasChanges()">
+              Save Settings
+            </button>
+            <button type="button" class="btn-secondary" (click)="resetSettings()">
+              Reset to Defaults
+            </button>
+          </div>
+        </form>
+      }
+    
+      @if (saveSuccess) {
+        <div class="success-message">
+          <p>✅ Settings saved successfully!</p>
         </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-primary" [disabled]="!settingsForm.valid || !hasChanges()">
-            Save Settings
-          </button>
-          <button type="button" class="btn-secondary" (click)="resetSettings()">
-            Reset to Defaults
-          </button>
-        </div>
-      </form>
-
-      <div class="success-message" *ngIf="saveSuccess">
-        <p>✅ Settings saved successfully!</p>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .settings-container {
       padding: 20px;

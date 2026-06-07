@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InventoryService, Supplier } from '../../inventory.service';
@@ -7,111 +7,126 @@ import { InventoryService, Supplier } from '../../inventory.service';
 @Component({
   selector: 'app-supplier-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="supplier-edit-container">
       <header class="page-header">
         <h1>Edit Supplier</h1>
         <button class="btn-secondary" (click)="goBack()">Back to Suppliers</button>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading supplier...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="goBack()">Back to Suppliers</button>
-      </div>
-
-      <div class="form-container" *ngIf="!loading && !error">
-        <form [formGroup]="supplierForm" (ngSubmit)="saveSupplier()">
-          <div class="form-section">
-            <h2>Basic Information</h2>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="name">Supplier Name *</label>
-                <input type="text" id="name" formControlName="name" placeholder="Enter supplier name">
-                <div class="error" *ngIf="supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched">
-                  Supplier name is required
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading supplier...</p>
+        </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="goBack()">Back to Suppliers</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="form-container">
+          <form [formGroup]="supplierForm" (ngSubmit)="saveSupplier()">
+            <div class="form-section">
+              <h2>Basic Information</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name">Supplier Name *</label>
+                  <input type="text" id="name" formControlName="name" placeholder="Enter supplier name">
+                  @if (supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) {
+                    <div class="error">
+                      Supplier name is required
+                    </div>
+                  }
                 </div>
-              </div>
-              <div class="form-group">
-                <label for="contactName">Contact Name *</label>
-                <input type="text" id="contactName" formControlName="contactName" placeholder="Enter contact person name">
-                <div class="error" *ngIf="supplierForm.get('contactName')?.invalid && supplierForm.get('contactName')?.touched">
-                  Contact name is required
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h2>Contact Information</h2>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="email">Email *</label>
-                <input type="email" id="email" formControlName="email" placeholder="supplier@example.com">
-                <div class="error" *ngIf="supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched">
-                  Please enter a valid email address
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="phone">Phone *</label>
-                <input type="tel" id="phone" formControlName="phone" placeholder="(555) 123-4567">
-                <div class="error" *ngIf="supplierForm.get('phone')?.invalid && supplierForm.get('phone')?.touched">
-                  Phone number is required
+                <div class="form-group">
+                  <label for="contactName">Contact Name *</label>
+                  <input type="text" id="contactName" formControlName="contactName" placeholder="Enter contact person name">
+                  @if (supplierForm.get('contactName')?.invalid && supplierForm.get('contactName')?.touched) {
+                    <div class="error">
+                      Contact name is required
+                    </div>
+                  }
                 </div>
               </div>
             </div>
-            <div class="form-group full-width">
-              <label for="address">Address *</label>
-              <textarea id="address" formControlName="address" rows="3" placeholder="Enter full address"></textarea>
-              <div class="error" *ngIf="supplierForm.get('address')?.invalid && supplierForm.get('address')?.touched">
-                Address is required
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h2>Business Details</h2>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="paymentTerms">Payment Terms *</label>
-                <select id="paymentTerms" formControlName="paymentTerms">
-                  <option value="Net 15">Net 15</option>
-                  <option value="Net 30">Net 30</option>
-                  <option value="Net 45">Net 45</option>
-                  <option value="Net 60">Net 60</option>
-                  <option value="Cash on Delivery">Cash on Delivery</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="leadTime">Lead Time (days) *</label>
-                <input type="number" id="leadTime" formControlName="leadTime" min="1" placeholder="7">
-                <div class="error" *ngIf="supplierForm.get('leadTime')?.invalid && supplierForm.get('leadTime')?.touched">
-                  Lead time must be at least 1 day
+            <div class="form-section">
+              <h2>Contact Information</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">Email *</label>
+                  <input type="email" id="email" formControlName="email" placeholder="supplier@example.com">
+                  @if (supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) {
+                    <div class="error">
+                      Please enter a valid email address
+                    </div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone *</label>
+                  <input type="tel" id="phone" formControlName="phone" placeholder="(555) 123-4567">
+                  @if (supplierForm.get('phone')?.invalid && supplierForm.get('phone')?.touched) {
+                    <div class="error">
+                      Phone number is required
+                    </div>
+                  }
                 </div>
               </div>
+              <div class="form-group full-width">
+                <label for="address">Address *</label>
+                <textarea id="address" formControlName="address" rows="3" placeholder="Enter full address"></textarea>
+                @if (supplierForm.get('address')?.invalid && supplierForm.get('address')?.touched) {
+                  <div class="error">
+                    Address is required
+                  </div>
+                }
+              </div>
             </div>
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="active">
-                Active Supplier
-              </label>
+            <div class="form-section">
+              <h2>Business Details</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="paymentTerms">Payment Terms *</label>
+                  <select id="paymentTerms" formControlName="paymentTerms">
+                    <option value="Net 15">Net 15</option>
+                    <option value="Net 30">Net 30</option>
+                    <option value="Net 45">Net 45</option>
+                    <option value="Net 60">Net 60</option>
+                    <option value="Cash on Delivery">Cash on Delivery</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="leadTime">Lead Time (days) *</label>
+                  <input type="number" id="leadTime" formControlName="leadTime" min="1" placeholder="7">
+                  @if (supplierForm.get('leadTime')?.invalid && supplierForm.get('leadTime')?.touched) {
+                    <div class="error">
+                      Lead time must be at least 1 day
+                    </div>
+                  }
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="active">
+                  Active Supplier
+                </label>
+              </div>
             </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" [disabled]="supplierForm.invalid || saving">
-              {{ saving ? 'Saving...' : 'Update Supplier' }}
-            </button>
-            <button type="button" class="btn-secondary" (click)="goBack()">Cancel</button>
-          </div>
-        </form>
-      </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="supplierForm.invalid || saving">
+                {{ saving ? 'Saving...' : 'Update Supplier' }}
+              </button>
+              <button type="button" class="btn-secondary" (click)="goBack()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .supplier-edit-container {
       padding: 20px;

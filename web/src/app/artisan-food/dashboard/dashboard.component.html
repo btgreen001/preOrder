@@ -1,7 +1,7 @@
 <div class="dashboard" [class.expired-license]="licenseService.isExpired()">
   <!-- Trial/License Banner -->
   <app-trial-banner feature="dashboard" [alwaysShow]="true"></app-trial-banner>
-  
+
   <h1>BakeAhead Dashboard</h1>
   <p class="role-info">Logged in as: <strong>{{ currentUserName }}</strong> | Role: <strong>{{ currentRole | titlecase }}</strong> | License: <strong>{{ licenseTier | titlecase }}</strong></p>
 
@@ -92,24 +92,28 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let order of recentOrders">
-            <td>{{ order.id }}</td>
-            <td>{{ order.customer }}</td>
-            <td>{{ order.item }}</td>
-            <td>${{ order.amount }}</td>
-            <td>
-              <span class="source-badge" [ngClass]="order.source">{{ order.source | titlecase }}</span>
-            </td>
-            <td>
-              <span class="status-badge" [ngClass]="order.status.toLowerCase().replace(' ', '-')">{{ order.status }}</span>
-              <ng-container *ngIf="currentRole === 'admin' || currentRole === 'staff'">
-                <select [(ngModel)]="order.status" (ngModelChange)="updateOrderStatus(order, $event)">
-                  <option *ngFor="let s of orderStatuses" [value]="s">{{ s }}</option>
-                </select>
-              </ng-container>
-            </td>
-            <td>{{ order.dueDate }}</td>
-          </tr>
+          @for (order of recentOrders; track order) {
+            <tr>
+              <td>{{ order.id }}</td>
+              <td>{{ order.customer }}</td>
+              <td>{{ order.item }}</td>
+              <td>${{ order.amount }}</td>
+              <td>
+                <span class="source-badge" [ngClass]="order.source">{{ order.source | titlecase }}</span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="order.status.toLowerCase().replace(' ', '-')">{{ order.status }}</span>
+                @if (currentRole === 'admin' || currentRole === 'staff') {
+                  <select [(ngModel)]="order.status" (ngModelChange)="updateOrderStatus(order, $event)">
+                    @for (s of orderStatuses; track s) {
+                      <option [value]="s">{{ s }}</option>
+                    }
+                  </select>
+                }
+              </td>
+              <td>{{ order.dueDate }}</td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
@@ -119,14 +123,16 @@
   <div class="section">
     <h2>Today's Production Schedule</h2>
     <div class="production-list">
-      <div *ngFor="let item of upcomingProduction" class="production-item">
-        <div class="production-time">{{ item.startTime }}</div>
-        <div class="production-details">
-          <strong>{{ item.item }}</strong> ({{ item.quantity }} units)
-          <br>
-          <small>Est. Duration: {{ item.estimatedDuration }}</small>
-        </div>
+      @for (item of upcomingProduction; track item) {
+        <div class="production-item">
+          <div class="production-time">{{ item.startTime }}</div>
+          <div class="production-details">
+            <strong>{{ item.item }}</strong> ({{ item.quantity }} units)
+            <br>
+              <small>Est. Duration: {{ item.estimatedDuration }}</small>
+            </div>
+          </div>
+        }
       </div>
     </div>
   </div>
-</div>

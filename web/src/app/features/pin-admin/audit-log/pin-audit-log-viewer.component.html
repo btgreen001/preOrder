@@ -15,12 +15,16 @@
   </div>
 
   <!-- Loading Spinner -->
-  <mat-progress-spinner *ngIf="loading" diameter="50" class="loading"></mat-progress-spinner>
+  @if (loading) {
+    <mat-progress-spinner diameter="50" class="loading"></mat-progress-spinner>
+  }
 
   <!-- Error Message -->
-  <div *ngIf="error" class="error-message">
-    {{ error }}
-  </div>
+  @if (error) {
+    <div class="error-message">
+      {{ error }}
+    </div>
+  }
 
   <!-- Filter Card -->
   <mat-card class="filter-card">
@@ -48,7 +52,9 @@
             <mat-label>Action Type</mat-label>
             <mat-select formControlName="action">
               <mat-option value="">All Actions</mat-option>
-              <mat-option *ngFor="let action of actionTypes" [value]="action">{{ action }}</mat-option>
+              @for (action of actionTypes; track action) {
+                <mat-option [value]="action">{{ action }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -85,45 +91,52 @@
       <mat-card-title>Audit Logs ({{ totalLogs }} total)</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div *ngIf="filteredLogs.length === 0 && !loading" class="empty-state">
-        No audit logs found matching your filters.
-      </div>
-
-      <div *ngIf="filteredLogs.length > 0" class="logs-list">
-        <div *ngFor="let log of filteredLogs | slice: currentPage * pageSize : (currentPage + 1) * pageSize" 
-             class="log-item"
-             [ngStyle]="{ borderLeftColor: getActionColor(log.action) }">
-          <div class="log-content">
-            <div class="log-header">
-              <div class="log-meta">
-                <span class="timestamp">{{ formatTimestamp(log.loggedAt) }}</span>
-                <span class="days-ago">({{ getDaysAgo(log.loggedAt) }})</span>
-              </div>
-              <span class="action-badge" [ngClass]="'action-' + log.action.toLowerCase()">
-                {{ log.action }}
-              </span>
-            </div>
-            <div class="log-details">
-              {{ log.details }}
-            </div>
-            <div class="log-footer">
-              <span class="performed-by">
-                <mat-icon>account_circle</mat-icon>
-                {{ log.performedBy }}
-              </span>
-            </div>
-          </div>
+      @if (filteredLogs.length === 0 && !loading) {
+        <div class="empty-state">
+          No audit logs found matching your filters.
         </div>
-      </div>
+      }
+
+      @if (filteredLogs.length > 0) {
+        <div class="logs-list">
+          @for (log of filteredLogs | slice: currentPage * pageSize : (currentPage + 1) * pageSize; track log) {
+            <div
+              class="log-item"
+              [ngStyle]="{ borderLeftColor: getActionColor(log.action) }">
+              <div class="log-content">
+                <div class="log-header">
+                  <div class="log-meta">
+                    <span class="timestamp">{{ formatTimestamp(log.loggedAt) }}</span>
+                    <span class="days-ago">({{ getDaysAgo(log.loggedAt) }})</span>
+                  </div>
+                  <span class="action-badge" [ngClass]="'action-' + log.action.toLowerCase()">
+                    {{ log.action }}
+                  </span>
+                </div>
+                <div class="log-details">
+                  {{ log.details }}
+                </div>
+                <div class="log-footer">
+                  <span class="performed-by">
+                    <mat-icon>account_circle</mat-icon>
+                    {{ log.performedBy }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       <!-- Pagination -->
-      <mat-paginator
-        *ngIf="filteredLogs.length > 0"
-        [length]="totalLogs"
-        [pageSize]="pageSize"
-        [pageSizeOptions]="pageSizeOptions"
-        (page)="onPageChange($event)">
-      </mat-paginator>
+      @if (filteredLogs.length > 0) {
+        <mat-paginator
+          [length]="totalLogs"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)">
+        </mat-paginator>
+      }
     </mat-card-content>
   </mat-card>
 

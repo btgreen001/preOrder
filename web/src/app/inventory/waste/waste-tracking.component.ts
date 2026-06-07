@@ -13,119 +13,134 @@ import { InventoryService, WasteRecord } from '../inventory.service';
         <h1>Waste Tracking</h1>
         <p>Monitor and record inventory losses to improve efficiency</p>
       </header>
-
+    
       <div class="actions">
         <button class="btn-primary" (click)="showAddForm = !showAddForm">
           {{ showAddForm ? 'Cancel' : 'Record Waste' }}
         </button>
       </div>
-
-      <div class="add-waste-form" *ngIf="showAddForm">
-        <h3>Record New Waste</h3>
-        <form (ngSubmit)="addWasteRecord()" #wasteForm="ngForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="itemSelect">Item:</label>
-              <select id="itemSelect" [(ngModel)]="newWaste.itemId" name="itemId" required>
-                <option value="">Select an item...</option>
-                <option *ngFor="let item of allItems" [value]="item.externalId">
-                  {{ item.name }} ({{ item.quantityOnHand }} {{ item.unitOfMeasure }})
-                </option>
-              </select>
+    
+      @if (showAddForm) {
+        <div class="add-waste-form">
+          <h3>Record New Waste</h3>
+          <form (ngSubmit)="addWasteRecord()" #wasteForm="ngForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="itemSelect">Item:</label>
+                <select id="itemSelect" [(ngModel)]="newWaste.itemId" name="itemId" required>
+                  <option value="">Select an item...</option>
+                  @for (item of allItems; track item) {
+                    <option [value]="item.externalId">
+                      {{ item.name }} ({{ item.quantityOnHand }} {{ item.unitOfMeasure }})
+                    </option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" [(ngModel)]="newWaste.quantity" name="quantity" min="0.01" step="0.01" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="quantity">Quantity:</label>
-              <input type="number" id="quantity" [(ngModel)]="newWaste.quantity" name="quantity" min="0.01" step="0.01" required>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reason">Reason:</label>
+                <select id="reason" [(ngModel)]="newWaste.reason" name="reason" required>
+                  <option value="">Select reason...</option>
+                  <option value="expired">Expired</option>
+                  <option value="damaged">Damaged</option>
+                  <option value="spoilage">Spoilage</option>
+                  <option value="theft">Theft</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="recordedBy">Recorded By:</label>
+                <input type="text" id="recordedBy" [(ngModel)]="newWaste.recordedBy" name="recordedBy" required>
+              </div>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="reason">Reason:</label>
-              <select id="reason" [(ngModel)]="newWaste.reason" name="reason" required>
-                <option value="">Select reason...</option>
-                <option value="expired">Expired</option>
-                <option value="damaged">Damaged</option>
-                <option value="spoilage">Spoilage</option>
-                <option value="theft">Theft</option>
-                <option value="other">Other</option>
-              </select>
+            <div class="form-group full-width">
+              <label for="notes">Notes:</label>
+              <textarea id="notes" [(ngModel)]="newWaste.notes" name="notes" rows="3"></textarea>
             </div>
-            <div class="form-group">
-              <label for="recordedBy">Recorded By:</label>
-              <input type="text" id="recordedBy" [(ngModel)]="newWaste.recordedBy" name="recordedBy" required>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="!wasteForm.valid">Save Waste Record</button>
+              <button type="button" class="btn-secondary" (click)="cancelAdd()">Cancel</button>
             </div>
+          </form>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="waste-summary">
+          <div class="summary-card">
+            <h3>Total Waste Records</h3>
+            <span class="count">{{ wasteRecords.length }}</span>
           </div>
-          <div class="form-group full-width">
-            <label for="notes">Notes:</label>
-            <textarea id="notes" [(ngModel)]="newWaste.notes" name="notes" rows="3"></textarea>
+          <div class="summary-card">
+            <h3>Total Cost</h3>
+            <span class="count">\${{ getTotalWasteCost().toFixed(2) }}</span>
           </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" [disabled]="!wasteForm.valid">Save Waste Record</button>
-            <button type="button" class="btn-secondary" (click)="cancelAdd()">Cancel</button>
+          <div class="summary-card">
+            <h3>This Month</h3>
+            <span class="count">\${{ getMonthlyWasteCost().toFixed(2) }}</span>
           </div>
-        </form>
-      </div>
-
-      <div class="waste-summary" *ngIf="!loading && !error">
-        <div class="summary-card">
-          <h3>Total Waste Records</h3>
-          <span class="count">{{ wasteRecords.length }}</span>
         </div>
-        <div class="summary-card">
-          <h3>Total Cost</h3>
-          <span class="count">\${{ getTotalWasteCost().toFixed(2) }}</span>
+      }
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading waste records...</p>
         </div>
-        <div class="summary-card">
-          <h3>This Month</h3>
-          <span class="count">\${{ getMonthlyWasteCost().toFixed(2) }}</span>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadWasteRecords()">Retry</button>
         </div>
-      </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading waste records...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadWasteRecords()">Retry</button>
-      </div>
-
-      <div class="waste-records" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Quantity</th>
-              <th>Reason</th>
-              <th>Cost</th>
-              <th>Recorded By</th>
-              <th>Date</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let record of wasteRecords">
-              <td>{{ record.itemName }}</td>
-              <td>{{ record.quantity }} {{ record.unit }}</td>
-              <td>
-                <span class="reason-badge" [class]="record.reason">
-                  {{ record.reason | titlecase }}
-                </span>
-              </td>
-              <td>\${{ record.cost.toFixed(2) }}</td>
-              <td>{{ record.recordedBy }}</td>
-              <td>{{ record.recordedDate | date:'short' }}</td>
-              <td>{{ record.notes || 'N/A' }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-records" *ngIf="wasteRecords.length === 0">
-          <p>✅ No waste records found. Great job minimizing losses!</p>
+      }
+    
+      @if (!loading && !error) {
+        <div class="waste-records">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Reason</th>
+                <th>Cost</th>
+                <th>Recorded By</th>
+                <th>Date</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (record of wasteRecords; track record) {
+                <tr>
+                  <td>{{ record.itemName }}</td>
+                  <td>{{ record.quantity }} {{ record.unit }}</td>
+                  <td>
+                    <span class="reason-badge" [class]="record.reason">
+                      {{ record.reason | titlecase }}
+                    </span>
+                  </td>
+                  <td>\${{ record.cost.toFixed(2) }}</td>
+                  <td>{{ record.recordedBy }}</td>
+                  <td>{{ record.recordedDate | date:'short' }}</td>
+                  <td>{{ record.notes || 'N/A' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (wasteRecords.length === 0) {
+            <div class="no-records">
+              <p>✅ No waste records found. Great job minimizing losses!</p>
+            </div>
+          }
         </div>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .waste-container {
       padding: 20px;

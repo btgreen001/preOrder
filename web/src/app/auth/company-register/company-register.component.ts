@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { RegisterCompanyRequest } from '../../core/models/auth.model';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -23,7 +23,6 @@ interface LicenseTier {
   selector: 'app-company-register',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
     MatCardModule,
@@ -32,7 +31,7 @@ interface LicenseTier {
     MatRadioModule,
     MatButtonModule,
     MatProgressSpinnerModule
-  ],
+],
   templateUrl: './company-register.component.html',
   styleUrls: ['./company-register.component.scss']
 })

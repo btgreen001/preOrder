@@ -23,7 +23,7 @@ export interface Reservation {
         <h1>Inventory Reservations</h1>
         <p>View and manage reserved inventory items</p>
       </header>
-
+    
       <div class="summary-cards">
         <div class="summary-card" [attr.data-testid]="'total-reservations-card'">
           <h3>Total Reservations</h3>
@@ -38,52 +38,62 @@ export interface Reservation {
           <p class="metric">{{ uniqueOrders }}</p>
         </div>
       </div>
-
+    
       <div class="reservations-section">
         <button (click)="loadReservations()" [attr.data-testid]="'refresh-btn'" class="refresh-btn">Refresh</button>
-        
-        <div class="loading" *ngIf="loading" [attr.data-testid]="'loading-spinner'">
-          <p>Loading reservations...</p>
-        </div>
-
-        <table *ngIf="reservations.length > 0" [attr.data-testid]="'reservations-table'">
-          <thead>
-            <tr>
-              <th>Item ID</th>
-              <th>Item Name</th>
-              <th>Reserved Qty</th>
-              <th>Order ID</th>
-              <th>Reserved Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let reservation of reservations" [attr.data-testid]="'reservation-row-' + reservation.id">
-              <td>{{ reservation.itemId }}</td>
-              <td>{{ reservation.itemName }}</td>
-              <td class="quantity">{{ reservation.quantity }}</td>
-              <td><span class="order-id">{{ reservation.orderId }}</span></td>
-              <td>{{ reservation.reservedDate | date:'short' }}</td>
-              <td><span class="status-badge" [class]="reservation.status.toLowerCase()">{{ reservation.status }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div *ngIf="!loading && reservations.length === 0" class="no-items">
-          <p>No active reservations</p>
-        </div>
+    
+        @if (loading) {
+          <div class="loading" [attr.data-testid]="'loading-spinner'">
+            <p>Loading reservations...</p>
+          </div>
+        }
+    
+        @if (reservations.length > 0) {
+          <table [attr.data-testid]="'reservations-table'">
+            <thead>
+              <tr>
+                <th>Item ID</th>
+                <th>Item Name</th>
+                <th>Reserved Qty</th>
+                <th>Order ID</th>
+                <th>Reserved Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (reservation of reservations; track reservation) {
+                <tr [attr.data-testid]="'reservation-row-' + reservation.id">
+                  <td>{{ reservation.itemId }}</td>
+                  <td>{{ reservation.itemName }}</td>
+                  <td class="quantity">{{ reservation.quantity }}</td>
+                  <td><span class="order-id">{{ reservation.orderId }}</span></td>
+                  <td>{{ reservation.reservedDate | date:'short' }}</td>
+                  <td><span class="status-badge" [class]="reservation.status.toLowerCase()">{{ reservation.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+    
+        @if (!loading && reservations.length === 0) {
+          <div class="no-items">
+            <p>No active reservations</p>
+          </div>
+        }
       </div>
-
+    
       <div class="info-section">
         <h2>About Reservations</h2>
         <p>Reservations hold inventory items for specific orders during the fulfillment process. When an order is completed or cancelled, its reservations are automatically released.</p>
       </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-      </div>
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .reservations-container { padding: 20px; }
     .page-header h1 { margin: 0 0 0.5rem; font-size: 2rem; }

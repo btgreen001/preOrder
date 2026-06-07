@@ -41,8 +41,12 @@
           </mat-form-field>
         </div>
 
-        <div *ngIf="error" class="error-message">{{ error }}</div>
-        <div *ngIf="success" class="success-message">{{ success }}</div>
+        @if (error) {
+          <div class="error-message">{{ error }}</div>
+        }
+        @if (success) {
+          <div class="success-message">{{ success }}</div>
+        }
 
         <button mat-flat-button class="spotify-btn" type="submit" [disabled]="form.invalid || loading">Register</button>
       </form>

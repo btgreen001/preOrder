@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 
 interface OrderItem {
@@ -26,7 +26,7 @@ interface Order {
 @Component({
   selector: 'app-pick-pack-label',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './pick-pack-label.component.html',
   styleUrls: ['./pick-pack-label.component.scss']
 })

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InventoryService } from '../inventory.service';
@@ -8,12 +8,12 @@ import { CategoryAddComponent } from '../categories/category-add/category-add';
 @Component({
   selector: 'app-item-add',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="item-add-container">
       <h2>Add Inventory Item</h2>
       <p>Create a new item and receive initial stock.</p>
-
+    
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="item-form">
         <div class="row">
           <label>
@@ -25,12 +25,12 @@ import { CategoryAddComponent } from '../categories/category-add/category-add';
             <input type="text" formControlName="sku" />
           </label>
         </div>
-
+    
         <label>
           Description
           <textarea formControlName="description" rows="3"></textarea>
         </label>
-
+    
         <div class="row three">
           <label>
             Quantity *
@@ -45,7 +45,7 @@ import { CategoryAddComponent } from '../categories/category-add/category-add';
             <input type="number" step="0.01" min="0" formControlName="unitCost" />
           </label>
         </div>
-
+    
         <div class="row three">
           <label>
             Warehouse Location
@@ -60,7 +60,7 @@ import { CategoryAddComponent } from '../categories/category-add/category-add';
             <input type="date" formControlName="expirationDate" />
           </label>
         </div>
-
+    
         <div class="row two">
           <label>
             Category (optional)
@@ -71,10 +71,14 @@ import { CategoryAddComponent } from '../categories/category-add/category-add';
             <input type="number" step="0.01" min="0" formControlName="reorderPoint" />
           </label>
         </div>
-
-        <p class="error" *ngIf="error">{{ error }}</p>
-        <p class="success" *ngIf="success">{{ success }}</p>
-
+    
+        @if (error) {
+          <p class="error">{{ error }}</p>
+        }
+        @if (success) {
+          <p class="success">{{ success }}</p>
+        }
+    
         <div class="actions">
           <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
           <button type="submit" class="btn-primary" [disabled]="submitting || form.invalid">
@@ -83,7 +87,7 @@ import { CategoryAddComponent } from '../categories/category-add/category-add';
         </div>
       </form>
     </div>
-  `,
+    `,
   styles: [`
     .item-add-container {
       padding: 20px;

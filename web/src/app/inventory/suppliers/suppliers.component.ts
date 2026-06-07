@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InventoryService, Supplier } from '../inventory.service';
@@ -7,7 +7,7 @@ import { InventoryService, Supplier } from '../inventory.service';
 @Component({
   selector: 'app-suppliers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="suppliers-container">
       <header class="page-header">
@@ -16,7 +16,7 @@ import { InventoryService, Supplier } from '../inventory.service';
           <button class="btn-primary" (click)="addSupplier()">Add Supplier</button>
         </div>
       </header>
-
+    
       <div class="filters">
         <input type="text" placeholder="Search suppliers..." [(ngModel)]="searchTerm" (input)="filterSuppliers()">
         <select [(ngModel)]="statusFilter" (change)="filterSuppliers()">
@@ -25,61 +25,70 @@ import { InventoryService, Supplier } from '../inventory.service';
           <option value="inactive">Inactive</option>
         </select>
       </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading suppliers...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadSuppliers()">Retry</button>
-      </div>
-
-      <div class="suppliers-table" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>Supplier Name</th>
-              <th>Contact</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Payment Terms</th>
-              <th>Lead Time</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let supplier of filteredSuppliers" [class.inactive]="!supplier.active">
-              <td>{{ supplier.name }}</td>
-              <td>{{ supplier.contactName }}</td>
-              <td><a [href]="'mailto:' + supplier.email">{{ supplier.email }}</a></td>
-              <td><a [href]="'tel:' + supplier.phone">{{ supplier.phone }}</a></td>
-              <td>{{ supplier.paymentTerms }}</td>
-              <td>{{ supplier.leadTime }} days</td>
-              <td>
-                <span class="status-badge" [class.active]="supplier.active" [class.inactive]="!supplier.active">
-                  {{ supplier.active ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td>
-                <button class="btn-view" (click)="viewSupplier(supplier.id)">View</button>
-                <button class="btn-edit" (click)="editSupplier(supplier.id)">Edit</button>
-                <button class="btn-orders" (click)="viewOrders(supplier.id)">Orders</button>
-                <button class="btn-toggle" (click)="toggleStatus(supplier)">
-                  {{ supplier.active ? 'Deactivate' : 'Activate' }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-suppliers" *ngIf="filteredSuppliers.length === 0">
-          <p>No suppliers found matching your criteria.</p>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading suppliers...</p>
         </div>
-      </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadSuppliers()">Retry</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="suppliers-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Supplier Name</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Payment Terms</th>
+                <th>Lead Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (supplier of filteredSuppliers; track supplier) {
+                <tr [class.inactive]="!supplier.active">
+                  <td>{{ supplier.name }}</td>
+                  <td>{{ supplier.contactName }}</td>
+                  <td><a [href]="'mailto:' + supplier.email">{{ supplier.email }}</a></td>
+                  <td><a [href]="'tel:' + supplier.phone">{{ supplier.phone }}</a></td>
+                  <td>{{ supplier.paymentTerms }}</td>
+                  <td>{{ supplier.leadTime }} days</td>
+                  <td>
+                    <span class="status-badge" [class.active]="supplier.active" [class.inactive]="!supplier.active">
+                      {{ supplier.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn-view" (click)="viewSupplier(supplier.id)">View</button>
+                    <button class="btn-edit" (click)="editSupplier(supplier.id)">Edit</button>
+                    <button class="btn-orders" (click)="viewOrders(supplier.id)">Orders</button>
+                    <button class="btn-toggle" (click)="toggleStatus(supplier)">
+                      {{ supplier.active ? 'Deactivate' : 'Activate' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (filteredSuppliers.length === 0) {
+            <div class="no-suppliers">
+              <p>No suppliers found matching your criteria.</p>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .suppliers-container {
       padding: 20px;

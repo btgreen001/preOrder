@@ -3,74 +3,72 @@
     <h2>Company Profile</h2>
     <p class="muted">Company administrators can update organization contact details.</p>
 
-    <div class="info" *ngIf="isLoading">Loading company profile...</div>
-    <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
-    <div class="success" *ngIf="successMessage">{{ successMessage }}</div>
+    @if (isLoading) {
+      <div class="info">Loading company profile...</div>
+    }
+    @if (errorMessage) {
+      <div class="error">{{ errorMessage }}</div>
+    }
+    @if (successMessage) {
+      <div class="success">{{ successMessage }}</div>
+    }
 
-    <form [formGroup]="form" (ngSubmit)="save()" *ngIf="!isLoading">
-      <label>
-        Organization Name
-        <input formControlName="organizationName" />
-      </label>
-
-      <label>
-        Primary Email
-        <input type="email" formControlName="primaryEmail" />
-      </label>
-
-      <label>
-        Contact Phone
-        <input formControlName="contactPhone" />
-      </label>
-
-      <label>
-        Address Line 1
-        <input formControlName="addressLine1" />
-      </label>
-
-      <label>
-        Address Line 2
-        <input formControlName="addressLine2" />
-      </label>
-
-      <label>
-        Address Line 3
-        <input formControlName="addressLine3" />
-      </label>
-
-      <div class="row">
-        <label class="half">
-          City
-          <input formControlName="locality" />
+    @if (!isLoading) {
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <label>
+          Organization Name
+          <input formControlName="organizationName" />
         </label>
-
-        <label class="half">
-          State / Region
-          <input formControlName="region" />
+        <label>
+          Primary Email
+          <input type="email" formControlName="primaryEmail" />
         </label>
-      </div>
-
-      <div class="row">
-        <label class="half">
-          Postal Code
-          <input formControlName="postalCode" />
+        <label>
+          Contact Phone
+          <input formControlName="contactPhone" />
         </label>
-
-        <label class="half">
-          Country Code
-          <input formControlName="countryCode" />
+        <label>
+          Address Line 1
+          <input formControlName="addressLine1" />
         </label>
-      </div>
-
-      <label>
-        Current Password (required to save)
-        <input type="password" formControlName="currentPassword" autocomplete="current-password" />
-      </label>
-      <div class="actions">
-        <button type="submit" class="btn-primary" [disabled]="isSaving">
-          {{ isSaving ? 'Saving...' : 'Save Company Profile' }}
-        </button>
-      </div>
-    </form>
+        <label>
+          Address Line 2
+          <input formControlName="addressLine2" />
+        </label>
+        <label>
+          Address Line 3
+          <input formControlName="addressLine3" />
+        </label>
+        <div class="row">
+          <label class="half">
+            City
+            <input formControlName="locality" />
+          </label>
+          <label class="half">
+            State / Region
+            <input formControlName="region" />
+          </label>
+        </div>
+        <div class="row">
+          <label class="half">
+            Postal Code
+            <input formControlName="postalCode" />
+          </label>
+          <label class="half">
+            Country Code
+            <input formControlName="countryCode" />
+          </label>
+        </div>
+        <label>
+          Current Password (required to save)
+          <input type="password" formControlName="currentPassword" autocomplete="current-password" />
+        </label>
+        <div class="actions">
+          <button type="submit" class="btn-primary" [disabled]="isSaving">
+            {{ isSaving ? 'Saving...' : 'Save Company Profile' }}
+          </button>
+        </div>
+      </form>
+    }
   </div>
 </div>

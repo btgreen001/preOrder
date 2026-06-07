@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InventoryService } from '../inventory.service';
@@ -7,84 +7,86 @@ import { InventoryService } from '../inventory.service';
 @Component({
   selector: 'app-item-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="item-edit-container">
       <h2>Edit Item</h2>
       <p>Update inventory details and save changes.</p>
-
-      <div class="error" *ngIf="loadError">{{ loadError }}</div>
-
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="item-form" *ngIf="!loadError">
-        <div class="row">
+    
+      @if (loadError) {
+        <div class="error">{{ loadError }}</div>
+      }
+    
+      @if (!loadError) {
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="item-form">
+          <div class="row">
+            <label>
+              Name *
+              <input type="text" formControlName="name" />
+            </label>
+            <label>
+              SKU
+              <input type="text" formControlName="sku" />
+            </label>
+          </div>
           <label>
-            Name *
-            <input type="text" formControlName="name" />
+            Description
+            <textarea formControlName="description" rows="3"></textarea>
           </label>
-          <label>
-            SKU
-            <input type="text" formControlName="sku" />
-          </label>
-        </div>
-
-        <label>
-          Description
-          <textarea formControlName="description" rows="3"></textarea>
-        </label>
-
-        <div class="row three">
-          <label>
-            Quantity On Hand *
-            <input type="number" step="0.01" min="0" formControlName="quantityOnHand" />
-          </label>
-          <label>
-            Unit Of Measure *
-            <input type="text" formControlName="unitOfMeasure" />
-          </label>
-          <label>
-            Unit Cost *
-            <input type="number" step="0.01" min="0" formControlName="unitCost" />
-          </label>
-        </div>
-
-        <div class="row three">
-          <label>
-            Warehouse Location
-            <input type="text" formControlName="warehouseLocation" />
-          </label>
-          <label>
-            Batch Number
-            <input type="text" formControlName="batchNumber" />
-          </label>
-          <label>
-            Expiration Date
-            <input type="date" formControlName="expirationDate" />
-          </label>
-        </div>
-
-        <div class="row two">
-          <label>
-            Category (optional)
-            <input type="text" formControlName="category" />
-          </label>
-          <label>
-            Reorder Point
-            <input type="number" step="0.01" min="0" formControlName="reorderPoint" />
-          </label>
-        </div>
-
-        <p class="error" *ngIf="error">{{ error }}</p>
-        <p class="success" *ngIf="success">{{ success }}</p>
-
-        <div class="actions">
-          <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
-          <button type="submit" class="btn-primary" [disabled]="saving || form.invalid">
-            {{ saving ? 'Saving...' : 'Save Changes' }}
-          </button>
-        </div>
-      </form>
+          <div class="row three">
+            <label>
+              Quantity On Hand *
+              <input type="number" step="0.01" min="0" formControlName="quantityOnHand" />
+            </label>
+            <label>
+              Unit Of Measure *
+              <input type="text" formControlName="unitOfMeasure" />
+            </label>
+            <label>
+              Unit Cost *
+              <input type="number" step="0.01" min="0" formControlName="unitCost" />
+            </label>
+          </div>
+          <div class="row three">
+            <label>
+              Warehouse Location
+              <input type="text" formControlName="warehouseLocation" />
+            </label>
+            <label>
+              Batch Number
+              <input type="text" formControlName="batchNumber" />
+            </label>
+            <label>
+              Expiration Date
+              <input type="date" formControlName="expirationDate" />
+            </label>
+          </div>
+          <div class="row two">
+            <label>
+              Category (optional)
+              <input type="text" formControlName="category" />
+            </label>
+            <label>
+              Reorder Point
+              <input type="number" step="0.01" min="0" formControlName="reorderPoint" />
+            </label>
+          </div>
+          @if (error) {
+            <p class="error">{{ error }}</p>
+          }
+          @if (success) {
+            <p class="success">{{ success }}</p>
+          }
+          <div class="actions">
+            <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="saving || form.invalid">
+              {{ saving ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .item-edit-container {
       padding: 20px;

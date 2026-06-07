@@ -8,34 +8,39 @@ import { InventoryService, Batch } from '../inventory.service';
 	standalone: true,
 	imports: [CommonModule],
 	template: `
-		<div class="batch-detail-container" *ngIf="!loading && batch">
-			<header class="page-header">
-				<h1>Batch Details</h1>
-				<div class="actions">
-					<button class="btn-secondary" (click)="edit()">Edit</button>
-					<button class="btn-danger" (click)="delete()">Delete</button>
-					<button class="btn-secondary" (click)="back()">Back</button>
-				</div>
-			</header>
-
-			<div class="detail-grid">
-				<div class="detail-item"><label>Batch Number</label><p>{{ batch.batchNumber }}</p></div>
-				<div class="detail-item"><label>Item</label><p>{{ batch.itemName }}</p></div>
-				<div class="detail-item"><label>Quantity</label><p>{{ batch.quantity }} {{ batch.unit }}</p></div>
-				<div class="detail-item"><label>Cost/Unit</label><p>{{ batch.costPerUnit | number:'1.2-2' }}</p></div>
-				<div class="detail-item"><label>Supplier</label><p>{{ batch.supplier }}</p></div>
-				<div class="detail-item"><label>Received</label><p>{{ batch.receivedDate | date:'mediumDate' }}</p></div>
-				<div class="detail-item"><label>Expires</label><p>{{ batch.expirationDate ? (batch.expirationDate | date:'mediumDate') : 'N/A' }}</p></div>
-				<div class="detail-item"><label>Status</label>
-					<p><span class="status-badge" [class]="batch.status">{{ batch.status | titlecase }}</span></p>
-				</div>
-				<div class="detail-item"><label>Location</label><p>{{ batch.location }}</p></div>
-			</div>
+		@if (!loading && batch) {
+		  <div class="batch-detail-container">
+		    <header class="page-header">
+		      <h1>Batch Details</h1>
+		      <div class="actions">
+		        <button class="btn-secondary" (click)="edit()">Edit</button>
+		        <button class="btn-danger" (click)="delete()">Delete</button>
+		        <button class="btn-secondary" (click)="back()">Back</button>
+		      </div>
+		    </header>
+		    <div class="detail-grid">
+		      <div class="detail-item"><label>Batch Number</label><p>{{ batch.batchNumber }}</p></div>
+		      <div class="detail-item"><label>Item</label><p>{{ batch.itemName }}</p></div>
+		      <div class="detail-item"><label>Quantity</label><p>{{ batch.quantity }} {{ batch.unit }}</p></div>
+		      <div class="detail-item"><label>Cost/Unit</label><p>{{ batch.costPerUnit | number:'1.2-2' }}</p></div>
+		      <div class="detail-item"><label>Supplier</label><p>{{ batch.supplier }}</p></div>
+		      <div class="detail-item"><label>Received</label><p>{{ batch.receivedDate | date:'mediumDate' }}</p></div>
+		      <div class="detail-item"><label>Expires</label><p>{{ batch.expirationDate ? (batch.expirationDate | date:'mediumDate') : 'N/A' }}</p></div>
+		      <div class="detail-item"><label>Status</label>
+		      <p><span class="status-badge" [class]="batch.status">{{ batch.status | titlecase }}</span></p>
+		    </div>
+		    <div class="detail-item"><label>Location</label><p>{{ batch.location }}</p></div>
+		  </div>
 		</div>
-
-		<div *ngIf="loading" class="loading">Loading batch...</div>
-		<div *ngIf="error" class="error">{{ error }}</div>
-	`,
+		}
+		
+		@if (loading) {
+		  <div class="loading">Loading batch...</div>
+		}
+		@if (error) {
+		  <div class="error">{{ error }}</div>
+		}
+		`,
 	styles: [`
 		.batch-detail-container { padding: 20px; background: var(--bakery-bg); color: var(--bakery-text-emph); min-height: 100vh; }
 		.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }

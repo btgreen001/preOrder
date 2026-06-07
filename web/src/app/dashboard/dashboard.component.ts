@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,6 @@ import { AuthResponse } from '../core/models/auth.model';
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
     RouterModule,
     MatToolbarModule,
     MatIconModule,
@@ -24,7 +23,7 @@ import { AuthResponse } from '../core/models/auth.model';
     MatListModule,
     MatCardModule,
     MatMenuModule
-  ],
+],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

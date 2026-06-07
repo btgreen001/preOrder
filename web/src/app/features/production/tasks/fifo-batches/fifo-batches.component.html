@@ -14,9 +14,11 @@
           <mat-form-field class="form-field" appearance="fill">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productExternalId" data-testid="product-select">
-              <mat-option *ngFor="let product of products" [value]="product.ExternalId">
-                {{ product.Name }}
-              </mat-option>
+              @for (product of products; track product) {
+                <mat-option [value]="product.ExternalId">
+                  {{ product.Name }}
+                </mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -30,171 +32,171 @@
             Query FIFO Batches
           </button>
 
-          <button mat-raised-button (click)="clearSelection()" data-testid="clear-btn" *ngIf="batches.length > 0">
-            <mat-icon>clear</mat-icon>
-            Clear
-          </button>
+          @if (batches.length > 0) {
+            <button mat-raised-button (click)="clearSelection()" data-testid="clear-btn">
+              <mat-icon>clear</mat-icon>
+              Clear
+            </button>
+          }
         </div>
       </form>
     </mat-card-content>
   </mat-card>
 
   <!-- Available Batches Table -->
-  <mat-card class="batches-card" *ngIf="batches.length > 0">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>list</mat-icon>
-        Available Batches ({{ batches.length }})
-      </mat-card-title>
-      <mat-card-subtitle>Ordered by expiration date (oldest first - FIFO)</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="batches" class="batches-table" data-testid="batches-table">
-          <!-- Batch Number Column -->
-          <ng-container matColumnDef="batchNumber">
-            <th mat-header-cell *matHeaderCellDef>Batch Number</th>
-            <td mat-cell *matCellDef="let batch">
-              <strong>{{ batch.BatchNumber }}</strong>
-            </td>
-          </ng-container>
-
-          <!-- Quantity Available Column -->
-          <ng-container matColumnDef="quantityAvailable">
-            <th mat-header-cell *matHeaderCellDef>Qty Available</th>
-            <td mat-cell *matCellDef="let batch">{{ batch.QuantityAvailable }}</td>
-          </ng-container>
-
-          <!-- Production Date Column -->
-          <ng-container matColumnDef="productionDate">
-            <th mat-header-cell *matHeaderCellDef>Production Date</th>
-            <td mat-cell *matCellDef="let batch">{{ formatDate(batch.ProductionDate) }}</td>
-          </ng-container>
-
-          <!-- Expiration Date Column -->
-          <ng-container matColumnDef="expirationDate">
-            <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
-            <td mat-cell *matCellDef="let batch">
-              <span [style.color]="getStatusColor(batch.ExpirationStatus)">
-                <strong>{{ formatDate(batch.ExpirationDate) }}</strong>
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Days Until Expiration Column -->
-          <ng-container matColumnDef="daysUntilExpiration">
-            <th mat-header-cell *matHeaderCellDef>Days Until Exp</th>
-            <td mat-cell *matCellDef="let batch">
-              <span [style.color]="getStatusColor(batch.ExpirationStatus)">
-                <strong>{{ batch.DaysUntilExpiration }}</strong>
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let batch">
-              <mat-icon
-                [style.color]="getStatusColor(batch.ExpirationStatus)"
-                [matTooltip]="batch.ExpirationStatus"
-              >
-                {{ getStatusIcon(batch.ExpirationStatus) }}
-              </mat-icon>
-              <span [style.color]="getStatusColor(batch.ExpirationStatus)">
-                {{ batch.ExpirationStatus }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Cost Per Unit Column -->
-          <ng-container matColumnDef="costPerUnit">
-            <th mat-header-cell *matHeaderCellDef>Cost/Unit</th>
-            <td mat-cell *matCellDef="let batch">{{ formatCurrency(batch.CostPerUnit) }}</td>
-          </ng-container>
-
-          <!-- Total Cost Column -->
-          <ng-container matColumnDef="totalCost">
-            <th mat-header-cell *matHeaderCellDef>Total Cost</th>
-            <td mat-cell *matCellDef="let batch">{{ formatCurrency(batch.TotalCost) }}</td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Select</th>
-            <td mat-cell *matCellDef="let batch">
-              <button
-                mat-icon-button
-                (click)="toggleBatchSelection(batch)"
-                [color]="isBatchSelected(batch.ExternalId) ? 'primary' : ''"
-                data-testid="select-batch-btn"
-              >
-                <mat-icon>
-                  {{ isBatchSelected(batch.ExternalId) ? 'check_circle' : 'radio_button_unchecked' }}
+  @if (batches.length > 0) {
+    <mat-card class="batches-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>list</mat-icon>
+          Available Batches ({{ batches.length }})
+        </mat-card-title>
+        <mat-card-subtitle>Ordered by expiration date (oldest first - FIFO)</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="batches" class="batches-table" data-testid="batches-table">
+            <!-- Batch Number Column -->
+            <ng-container matColumnDef="batchNumber">
+              <th mat-header-cell *matHeaderCellDef>Batch Number</th>
+              <td mat-cell *matCellDef="let batch">
+                <strong>{{ batch.BatchNumber }}</strong>
+              </td>
+            </ng-container>
+            <!-- Quantity Available Column -->
+            <ng-container matColumnDef="quantityAvailable">
+              <th mat-header-cell *matHeaderCellDef>Qty Available</th>
+              <td mat-cell *matCellDef="let batch">{{ batch.QuantityAvailable }}</td>
+            </ng-container>
+            <!-- Production Date Column -->
+            <ng-container matColumnDef="productionDate">
+              <th mat-header-cell *matHeaderCellDef>Production Date</th>
+              <td mat-cell *matCellDef="let batch">{{ formatDate(batch.ProductionDate) }}</td>
+            </ng-container>
+            <!-- Expiration Date Column -->
+            <ng-container matColumnDef="expirationDate">
+              <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
+              <td mat-cell *matCellDef="let batch">
+                <span [style.color]="getStatusColor(batch.ExpirationStatus)">
+                  <strong>{{ formatDate(batch.ExpirationDate) }}</strong>
+                </span>
+              </td>
+            </ng-container>
+            <!-- Days Until Expiration Column -->
+            <ng-container matColumnDef="daysUntilExpiration">
+              <th mat-header-cell *matHeaderCellDef>Days Until Exp</th>
+              <td mat-cell *matCellDef="let batch">
+                <span [style.color]="getStatusColor(batch.ExpirationStatus)">
+                  <strong>{{ batch.DaysUntilExpiration }}</strong>
+                </span>
+              </td>
+            </ng-container>
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let batch">
+                <mat-icon
+                  [style.color]="getStatusColor(batch.ExpirationStatus)"
+                  [matTooltip]="batch.ExpirationStatus"
+                  >
+                  {{ getStatusIcon(batch.ExpirationStatus) }}
                 </mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-      </div>
-
-      <!-- Loading Spinner -->
-      <mat-spinner *ngIf="fifoLoading" diameter="40" class="spinner"></mat-spinner>
-
-      <!-- Empty State -->
-      <div *ngIf="!fifoLoading && batches.length === 0" class="empty-state">
-        <mat-icon>inbox</mat-icon>
-        <p>No batches available. Select a product and quantity to search.</p>
-      </div>
-    </mat-card-content>
-  </mat-card>
+                <span [style.color]="getStatusColor(batch.ExpirationStatus)">
+                  {{ batch.ExpirationStatus }}
+                </span>
+              </td>
+            </ng-container>
+            <!-- Cost Per Unit Column -->
+            <ng-container matColumnDef="costPerUnit">
+              <th mat-header-cell *matHeaderCellDef>Cost/Unit</th>
+              <td mat-cell *matCellDef="let batch">{{ formatCurrency(batch.CostPerUnit) }}</td>
+            </ng-container>
+            <!-- Total Cost Column -->
+            <ng-container matColumnDef="totalCost">
+              <th mat-header-cell *matHeaderCellDef>Total Cost</th>
+              <td mat-cell *matCellDef="let batch">{{ formatCurrency(batch.TotalCost) }}</td>
+            </ng-container>
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Select</th>
+              <td mat-cell *matCellDef="let batch">
+                <button
+                  mat-icon-button
+                  (click)="toggleBatchSelection(batch)"
+                  [color]="isBatchSelected(batch.ExternalId) ? 'primary' : ''"
+                  data-testid="select-batch-btn"
+                  >
+                  <mat-icon>
+                    {{ isBatchSelected(batch.ExternalId) ? 'check_circle' : 'radio_button_unchecked' }}
+                  </mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+        <!-- Loading Spinner -->
+        @if (fifoLoading) {
+          <mat-spinner diameter="40" class="spinner"></mat-spinner>
+        }
+        <!-- Empty State -->
+        @if (!fifoLoading && batches.length === 0) {
+          <div class="empty-state">
+            <mat-icon>inbox</mat-icon>
+            <p>No batches available. Select a product and quantity to search.</p>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
 
   <!-- Selected Batches Summary -->
-  <mat-card class="selected-card" *ngIf="selectedBatches.length > 0">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>done_all</mat-icon>
-        Selected Batches for Production ({{ selectedBatches.length }})
-      </mat-card-title>
-      <mat-card-subtitle>These batches will be used for production in FIFO order</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div class="summary-grid">
-        <div class="summary-item" *ngFor="let batch of selectedBatches">
-          <div class="summary-header">
-            <strong>{{ batch.BatchExternalId }}</strong>
-          </div>
-          <div class="summary-detail">
-            <span>Quantity: {{ batch.QuantitySelected }}</span>
-            <span>Days to Expire: {{ batch.DaysUntilExpiration }}</span>
-            <span>Cost: {{ formatCurrency(batch.TotalCost) }}</span>
-          </div>
+  @if (selectedBatches.length > 0) {
+    <mat-card class="selected-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>done_all</mat-icon>
+          Selected Batches for Production ({{ selectedBatches.length }})
+        </mat-card-title>
+        <mat-card-subtitle>These batches will be used for production in FIFO order</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="summary-grid">
+          @for (batch of selectedBatches; track batch) {
+            <div class="summary-item">
+              <div class="summary-header">
+                <strong>{{ batch.BatchExternalId }}</strong>
+              </div>
+              <div class="summary-detail">
+                <span>Quantity: {{ batch.QuantitySelected }}</span>
+                <span>Days to Expire: {{ batch.DaysUntilExpiration }}</span>
+                <span>Cost: {{ formatCurrency(batch.TotalCost) }}</span>
+              </div>
+            </div>
+          }
         </div>
-      </div>
-
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="applyFIFORotation()" data-testid="apply-fifo-btn">
-          <mat-icon>check</mat-icon>
-          Apply FIFO Rotation
-        </button>
-      </div>
-    </mat-card-content>
-  </mat-card>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="applyFIFORotation()" data-testid="apply-fifo-btn">
+            <mat-icon>check</mat-icon>
+            Apply FIFO Rotation
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
 
   <!-- No Data State -->
-  <mat-card class="empty-card" *ngIf="!loading && batches.length === 0 && selectedBatches.length === 0">
-    <mat-card-content>
-      <div class="empty-state">
-        <mat-icon>layers</mat-icon>
-        <h3>FIFO Batch Selector</h3>
-        <p>Start by selecting a product and quantity to view available batches in First-In-First-Out order.</p>
-        <p class="info-text">The oldest batches (by expiration date) are shown first to ensure optimal inventory rotation.</p>
-      </div>
-    </mat-card-content>
-  </mat-card>
+  @if (!loading && batches.length === 0 && selectedBatches.length === 0) {
+    <mat-card class="empty-card">
+      <mat-card-content>
+        <div class="empty-state">
+          <mat-icon>layers</mat-icon>
+          <h3>FIFO Batch Selector</h3>
+          <p>Start by selecting a product and quantity to view available batches in First-In-First-Out order.</p>
+          <p class="info-text">The oldest batches (by expiration date) are shown first to ensure optimal inventory rotation.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
 </div>

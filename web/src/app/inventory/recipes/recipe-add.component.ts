@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service';
@@ -7,7 +7,7 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
 @Component({
   selector: 'app-recipe-add',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule],
   template: `
     <div class="recipe-add-container">
       <header class="page-header">
@@ -19,7 +19,7 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
           </button>
         </div>
       </header>
-
+    
       <form [formGroup]="recipeForm" class="recipe-form">
         <div class="form-section">
           <h2>Basic Information</h2>
@@ -40,13 +40,13 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
               </select>
             </div>
           </div>
-
+    
           <div class="form-group">
             <label for="description">Description</label>
             <textarea id="description" formControlName="description" rows="3"
-                      placeholder="Brief description of the recipe"></textarea>
+            placeholder="Brief description of the recipe"></textarea>
           </div>
-
+    
           <div class="form-row">
             <div class="form-group">
               <label for="yield">Yield *</label>
@@ -64,7 +64,7 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
               </select>
             </div>
           </div>
-
+    
           <div class="form-row">
             <div class="form-group">
               <label for="prepTime">Prep Time (minutes)</label>
@@ -76,65 +76,69 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
             </div>
           </div>
         </div>
-
+    
         <div class="form-section">
           <h2>Ingredients</h2>
           <div formArrayName="ingredients" class="ingredients-list">
-            <div *ngFor="let ingredient of ingredients.controls; let i = index"
-                 [formGroupName]="i" class="ingredient-item">
-              <div class="ingredient-row">
-                <div class="form-group">
-                  <label>Ingredient Name *</label>
-                  <input type="text" formControlName="itemName" placeholder="e.g., All-Purpose Flour"
-                         (input)="onIngredientNameChange(i)">
+            @for (ingredient of ingredients.controls; track ingredient; let i = $index) {
+              <div
+                [formGroupName]="i" class="ingredient-item">
+                <div class="ingredient-row">
+                  <div class="form-group">
+                    <label>Ingredient Name *</label>
+                    <input type="text" formControlName="itemName" placeholder="e.g., All-Purpose Flour"
+                      (input)="onIngredientNameChange(i)">
+                    </div>
+                    <div class="form-group">
+                      <label>Quantity *</label>
+                      <input type="number" formControlName="quantity" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label>Unit *</label>
+                      <select formControlName="unit">
+                        <option value="c">Cups</option>
+                        <option value="T">Tablespoons</option>
+                        <option value="t">Teaspoons</option>
+                        <option value="lb">Pounds</option>
+                        <option value="oz">Ounces</option>
+                        <option value="kg">Kilograms</option>
+                        <option value="g">Grams</option>
+                        <option value="mL">Milliliters</option>
+                        <option value="L">Liters</option>
+                        <option value="unit">Pieces</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Cost ($)</label>
+                      <input type="number" formControlName="cost" min="0" step="0.01" readonly>
+                    </div>
+                    <button type="button" class="btn-remove" (click)="removeIngredient(i)">Remove</button>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Quantity *</label>
-                  <input type="number" formControlName="quantity" min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                  <label>Unit *</label>
-                  <select formControlName="unit">
-                    <option value="c">Cups</option>
-                    <option value="T">Tablespoons</option>
-                    <option value="t">Teaspoons</option>
-                    <option value="lb">Pounds</option>
-                    <option value="oz">Ounces</option>
-                    <option value="kg">Kilograms</option>
-                    <option value="g">Grams</option>
-                    <option value="mL">Milliliters</option>
-                    <option value="L">Liters</option>
-                    <option value="unit">Pieces</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Cost ($)</label>
-                  <input type="number" formControlName="cost" min="0" step="0.01" readonly>
-                </div>
-                <button type="button" class="btn-remove" (click)="removeIngredient(i)">Remove</button>
-              </div>
+              }
             </div>
+            <button type="button" class="btn-add-ingredient" (click)="addIngredient()">+ Add Ingredient</button>
           </div>
-          <button type="button" class="btn-add-ingredient" (click)="addIngredient()">+ Add Ingredient</button>
-        </div>
-
-        <div class="form-section">
-          <h2>Instructions</h2>
-          <div formArrayName="instructions" class="instructions-list">
-            <div *ngFor="let instruction of instructions.controls; let i = index" class="instruction-item">
-              <div class="instruction-row">
-                <span class="step-number">{{ i + 1 }}.</span>
-                <textarea formControlName="instruction" rows="2"
-                          placeholder="Describe this step..." class="instruction-text"></textarea>
-                <button type="button" class="btn-remove" (click)="removeInstruction(i)">Remove</button>
-              </div>
+    
+          <div class="form-section">
+            <h2>Instructions</h2>
+            <div formArrayName="instructions" class="instructions-list">
+              @for (instruction of instructions.controls; track instruction; let i = $index) {
+                <div class="instruction-item">
+                  <div class="instruction-row">
+                    <span class="step-number">{{ i + 1 }}.</span>
+                    <textarea formControlName="instruction" rows="2"
+                    placeholder="Describe this step..." class="instruction-text"></textarea>
+                    <button type="button" class="btn-remove" (click)="removeInstruction(i)">Remove</button>
+                  </div>
+                </div>
+              }
             </div>
+            <button type="button" class="btn-add-instruction" (click)="addInstruction()">+ Add Step</button>
           </div>
-          <button type="button" class="btn-add-instruction" (click)="addInstruction()">+ Add Step</button>
-        </div>
-      </form>
-    </div>
-  `,
+        </form>
+      </div>
+    `,
   styles: [`
     .recipe-add-container {
       padding: 20px;

@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-item-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="item-detail-container">
       <h2>Item Details</h2>

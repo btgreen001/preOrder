@@ -17,25 +17,25 @@
     "e2e:open": "cypress open"
   },
   "dependencies": {
-    "@angular/animations": "^20.3.19",
+    "@angular/animations": "^21.2.16",
     "@angular/cdk": "^20.2.3",
-    "@angular/common": "^20.3.19",
-    "@angular/compiler": "^20.3.19",
-    "@angular/core": "^20.3.19",
-    "@angular/forms": "^20.3.19",
+    "@angular/common": "^21.2.16",
+    "@angular/compiler": "^21.2.16",
+    "@angular/core": "^21.2.16",
+    "@angular/forms": "^21.2.16",
     "@angular/material": "^20.2.3",
-    "@angular/platform-browser": "^20.3.19",
-    "@angular/platform-browser-dynamic": "^20.3.19",
-    "@angular/router": "^20.3.19",
+    "@angular/platform-browser": "^21.2.16",
+    "@angular/platform-browser-dynamic": "^21.2.16",
+    "@angular/router": "^21.2.16",
     "jspdf": "^4.2.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.3.2",
-    "@angular/cli": "^20.3.2",
-    "@angular/compiler-cli": "^20.3.19",
+    "@angular/build": "^21.2.14",
+    "@angular/cli": "^21.2.14",
+    "@angular/compiler-cli": "^21.2.16",
     "@cypress/angular": "^4.0.0",
     "@types/jasmine": "~5.1.0",
     "http-server": "^14.1.1",
@@ -60,4 +60,3 @@
     "hono": "4.12.21"
   }
 }
-

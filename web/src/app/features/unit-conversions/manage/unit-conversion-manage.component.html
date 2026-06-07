@@ -2,15 +2,21 @@
   <h2>Unit Conversion Overrides</h2>
   <p class="subtitle">Manage organization and global conversion factors.</p>
 
-  <div class="alert error" *ngIf="error">{{ error }}</div>
-  <div class="alert success" *ngIf="success">{{ success }}</div>
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert success">{{ success }}</div>
+  }
 
   <form class="editor" [formGroup]="form" (ngSubmit)="save()">
     <div class="grid">
       <label>
         Category
         <select formControlName="category">
-          <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          @for (category of categories; track category) {
+            <option [value]="category">{{ category }}</option>
+          }
         </select>
       </label>
 
@@ -18,7 +24,9 @@
         From Unit
         <select formControlName="fromUnit">
           <option value="">Select from unit</option>
-          <option *ngFor="let unit of categoryUnits" [value]="unit">{{ unit }}</option>
+          @for (unit of categoryUnits; track unit) {
+            <option [value]="unit">{{ unit }}</option>
+          }
         </select>
       </label>
 
@@ -26,7 +34,9 @@
         To Unit
         <select formControlName="toUnit">
           <option value="">Select to unit</option>
-          <option *ngFor="let unit of categoryUnits" [value]="unit">{{ unit }}</option>
+          @for (unit of categoryUnits; track unit) {
+            <option [value]="unit">{{ unit }}</option>
+          }
         </select>
       </label>
 
@@ -35,10 +45,12 @@
         <input type="number" step="0.00000001" formControlName="conversionFactor" />
       </label>
 
-      <label class="checkbox" *ngIf="isSystemAdmin">
-        <input type="checkbox" formControlName="isGlobal" />
-        Save as Global conversion (SystemAdmin only)
-      </label>
+      @if (isSystemAdmin) {
+        <label class="checkbox">
+          <input type="checkbox" formControlName="isGlobal" />
+          Save as Global conversion (SystemAdmin only)
+        </label>
+      }
     </div>
 
     <div class="actions">
@@ -50,34 +62,44 @@
   <div class="table-wrap">
     <h3>Existing Conversions</h3>
 
-    <div *ngIf="loading">Loading...</div>
+    @if (loading) {
+      <div>Loading...</div>
+    }
 
-    <table *ngIf="!loading && conversions.length > 0">
-      <thead>
-        <tr>
-          <th>Scope</th>
-          <th>Category</th>
-          <th>From</th>
-          <th>To</th>
-          <th>Factor</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of conversions">
-          <td>{{ row.organizationGuid ? 'Organization' : 'Default' }}</td>
-          <td>{{ row.category }}</td>
-          <td>{{ row.fromUnit }}</td>
-          <td>{{ row.toUnit }}</td>
-          <td>{{ row.conversionFactor }}</td>
-          <td class="actions-inline">
-            <button type="button" (click)="edit(row)">Edit</button>
-            <button type="button" *ngIf="canDeactivate(row)" (click)="deactivate(row.externalId)">Deactivate</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    @if (!loading && conversions.length > 0) {
+      <table>
+        <thead>
+          <tr>
+            <th>Scope</th>
+            <th>Category</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Factor</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of conversions; track row) {
+            <tr>
+              <td>{{ row.organizationGuid ? 'Organization' : 'Default' }}</td>
+              <td>{{ row.category }}</td>
+              <td>{{ row.fromUnit }}</td>
+              <td>{{ row.toUnit }}</td>
+              <td>{{ row.conversionFactor }}</td>
+              <td class="actions-inline">
+                <button type="button" (click)="edit(row)">Edit</button>
+                @if (canDeactivate(row)) {
+                  <button type="button" (click)="deactivate(row.externalId)">Deactivate</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
 
-    <div *ngIf="!loading && conversions.length === 0">No conversions found.</div>
+    @if (!loading && conversions.length === 0) {
+      <div>No conversions found.</div>
+    }
   </div>
 </div>

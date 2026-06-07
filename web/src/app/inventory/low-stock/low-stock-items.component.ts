@@ -1,81 +1,92 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { InventoryService, InventoryItem } from '../inventory.service';
 
 @Component({
   selector: 'app-low-stock-items',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="low-stock-container">
       <header class="page-header">
         <h1>Low Stock Items</h1>
         <p>Items requiring immediate attention and reorder</p>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading low stock items...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadLowStockItems()">Retry</button>
-      </div>
-
-      <div class="items-summary" *ngIf="!loading && !error">
-        <div class="summary-card">
-          <h3>Items Below Reorder Point</h3>
-          <span class="count">{{ lowStockItems.length }}</span>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading low stock items...</p>
         </div>
-        <div class="summary-card critical">
-          <h3>Out of Stock</h3>
-          <span class="count">{{ getOutOfStockCount() }}</span>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadLowStockItems()">Retry</button>
         </div>
-      </div>
-
-      <div class="items-list" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Current Stock</th>
-              <th>Reorder Point</th>
-              <th>Unit</th>
-              <th>Supplier</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of lowStockItems" [class.critical]="item.quantityOnHand === 0">
-              <td>{{ item.name }}</td>
-              <td>{{ item.categoryId || 0 }}</td>
-              <td class="stock-level" [class.critical]="item.quantityOnHand === 0">
-                {{ item.quantityOnHand }}
-              </td>
-              <td>{{ item.reorderPoint }}</td>
-              <td>{{ item.unitOfMeasure }}</td>
-              <td>{{ item.supplierName || 'Unknown' }}</td>
-              <td>
-                <span class="status-badge" [class]="getStatusClass(item)">
-                  {{ getStatusText(item) }}
-                </span>
-              </td>
-              <td>
-                <button class="btn-order" (click)="placeOrder(item.externalId)">Order</button>
-                <button class="btn-view" (click)="viewItem(item.externalId)">View</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-items" *ngIf="lowStockItems.length === 0">
-          <p>✅ All items are above reorder points. Great job maintaining inventory levels!</p>
+      }
+    
+      @if (!loading && !error) {
+        <div class="items-summary">
+          <div class="summary-card">
+            <h3>Items Below Reorder Point</h3>
+            <span class="count">{{ lowStockItems.length }}</span>
+          </div>
+          <div class="summary-card critical">
+            <h3>Out of Stock</h3>
+            <span class="count">{{ getOutOfStockCount() }}</span>
+          </div>
         </div>
-      </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="items-list">
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Reorder Point</th>
+                <th>Unit</th>
+                <th>Supplier</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of lowStockItems; track item) {
+                <tr [class.critical]="item.quantityOnHand === 0">
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.categoryId || 0 }}</td>
+                  <td class="stock-level" [class.critical]="item.quantityOnHand === 0">
+                    {{ item.quantityOnHand }}
+                  </td>
+                  <td>{{ item.reorderPoint }}</td>
+                  <td>{{ item.unitOfMeasure }}</td>
+                  <td>{{ item.supplierName || 'Unknown' }}</td>
+                  <td>
+                    <span class="status-badge" [class]="getStatusClass(item)">
+                      {{ getStatusText(item) }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn-order" (click)="placeOrder(item.externalId)">Order</button>
+                    <button class="btn-view" (click)="viewItem(item.externalId)">View</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (lowStockItems.length === 0) {
+            <div class="no-items">
+              <p>✅ All items are above reorder points. Great job maintaining inventory levels!</p>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .low-stock-container {
       padding: 20px;

@@ -17,78 +17,86 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
           <button class="btn-delete" (click)="deleteRecipe()">Delete</button>
         </div>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading recipe...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="goBack()">Go Back</button>
-      </div>
-
-      <div class="recipe-content" *ngIf="!loading && !error && recipe">
-        <div class="recipe-header">
-          <div class="recipe-title">
-            <h1>{{ recipe.name }}</h1>
-            <span class="recipe-category">{{ recipe.category | titlecase }}</span>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading recipe...</p>
+        </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="goBack()">Go Back</button>
+        </div>
+      }
+    
+      @if (!loading && !error && recipe) {
+        <div class="recipe-content">
+          <div class="recipe-header">
+            <div class="recipe-title">
+              <h1>{{ recipe.name }}</h1>
+              <span class="recipe-category">{{ recipe.category | titlecase }}</span>
+            </div>
+            <div class="recipe-meta">
+              <div class="meta-item">
+                <strong>Yield:</strong> {{ recipe.yield }} {{ recipe.yieldUnit }}
+              </div>
+              <div class="meta-item">
+                <strong>Cost per Unit:</strong> \${{ recipe.costPerUnit.toFixed(2) }}
+              </div>
+              <div class="meta-item">
+                <strong>Prep Time:</strong> {{ recipe.prepTime }} min
+              </div>
+              <div class="meta-item">
+                <strong>Cook Time:</strong> {{ recipe.cookTime }} min
+              </div>
+              <div class="meta-item">
+                <strong>Total Time:</strong> {{ recipe.prepTime + recipe.cookTime }} min
+              </div>
+            </div>
           </div>
-          <div class="recipe-meta">
-            <div class="meta-item">
-              <strong>Yield:</strong> {{ recipe.yield }} {{ recipe.yieldUnit }}
+          @if (recipe.description) {
+            <div class="recipe-description">
+              <h2>Description</h2>
+              <p>{{ recipe.description }}</p>
             </div>
-            <div class="meta-item">
-              <strong>Cost per Unit:</strong> \${{ recipe.costPerUnit.toFixed(2) }}
+          }
+          <div class="recipe-ingredients">
+            <h2>Ingredients</h2>
+            <ul class="ingredients-list">
+              @for (ingredient of recipe.ingredients; track ingredient) {
+                <li class="ingredient-item">
+                  <span class="quantity">{{ ingredient.quantity }} {{ ingredient.unit }}</span>
+                  <span class="name">{{ ingredient.itemName }}</span>
+                  <span class="cost">(\${{ (ingredient.cost || 0).toFixed(2) }})</span>
+                </li>
+              }
+            </ul>
+            <div class="total-cost">
+              <strong>Total Cost: \${{ getTotalCost().toFixed(2) }}</strong>
             </div>
-            <div class="meta-item">
-              <strong>Prep Time:</strong> {{ recipe.prepTime }} min
-            </div>
-            <div class="meta-item">
-              <strong>Cook Time:</strong> {{ recipe.cookTime }} min
-            </div>
-            <div class="meta-item">
-              <strong>Total Time:</strong> {{ recipe.prepTime + recipe.cookTime }} min
+          </div>
+          <div class="recipe-instructions">
+            <h2>Instructions</h2>
+            <ol class="instructions-list">
+              @for (instruction of recipe.instructions; track instruction) {
+                <li class="instruction-item">
+                  {{ instruction }}
+                </li>
+              }
+            </ol>
+          </div>
+          <div class="recipe-footer">
+            <div class="recipe-dates">
+              <p><strong>Created:</strong> {{ recipe.createdDate | date:'mediumDate' }}</p>
+              <p><strong>Last Modified:</strong> {{ recipe.lastModified | date:'mediumDate' }}</p>
             </div>
           </div>
         </div>
-
-        <div class="recipe-description" *ngIf="recipe.description">
-          <h2>Description</h2>
-          <p>{{ recipe.description }}</p>
-        </div>
-
-        <div class="recipe-ingredients">
-          <h2>Ingredients</h2>
-          <ul class="ingredients-list">
-            <li *ngFor="let ingredient of recipe.ingredients" class="ingredient-item">
-              <span class="quantity">{{ ingredient.quantity }} {{ ingredient.unit }}</span>
-              <span class="name">{{ ingredient.itemName }}</span>
-              <span class="cost">(\${{ (ingredient.cost || 0).toFixed(2) }})</span>
-            </li>
-          </ul>
-          <div class="total-cost">
-            <strong>Total Cost: \${{ getTotalCost().toFixed(2) }}</strong>
-          </div>
-        </div>
-
-        <div class="recipe-instructions">
-          <h2>Instructions</h2>
-          <ol class="instructions-list">
-            <li *ngFor="let instruction of recipe.instructions" class="instruction-item">
-              {{ instruction }}
-            </li>
-          </ol>
-        </div>
-
-        <div class="recipe-footer">
-          <div class="recipe-dates">
-            <p><strong>Created:</strong> {{ recipe.createdDate | date:'mediumDate' }}</p>
-            <p><strong>Last Modified:</strong> {{ recipe.lastModified | date:'mediumDate' }}</p>
-          </div>
-        </div>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .recipe-detail-container {
       padding: 20px;

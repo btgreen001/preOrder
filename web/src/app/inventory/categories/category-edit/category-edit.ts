@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { InventoryService, InventoryCategory } from '../../inventory.service';
@@ -7,48 +7,55 @@ import { InventoryService, InventoryCategory } from '../../inventory.service';
 @Component({
   selector: 'app-category-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="category-edit-container">
       <header class="page-header">
         <h1>Edit Category</h1>
         <button class="btn-secondary" (click)="goBack()">Back to Categories</button>
       </header>
-
-      <div class="form-container" *ngIf="!loading">
-        <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
-          <div class="form-section">
-            <h2>Category Information</h2>
-            <div class="form-group">
-              <label for="name">Category Name *</label>
-              <input type="text" id="name" formControlName="name" placeholder="Enter category name">
-              <div class="error" *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
-                Category name is required and must be at least 2 characters
+    
+      @if (!loading) {
+        <div class="form-container">
+          <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+            <div class="form-section">
+              <h2>Category Information</h2>
+              <div class="form-group">
+                <label for="name">Category Name *</label>
+                <input type="text" id="name" formControlName="name" placeholder="Enter category name">
+                @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                  <div class="error">
+                    Category name is required and must be at least 2 characters
+                  </div>
+                }
+              </div>
+              <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" formControlName="description" rows="4" placeholder="Describe what items belong in this category"></textarea>
+                @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
+                  <div class="error">
+                    Description is required and must be at least 10 characters
+                  </div>
+                }
               </div>
             </div>
-            <div class="form-group">
-              <label for="description">Description *</label>
-              <textarea id="description" formControlName="description" rows="4" placeholder="Describe what items belong in this category"></textarea>
-              <div class="error" *ngIf="categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched">
-                Description is required and must be at least 10 characters
-              </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="categoryForm.invalid || saving">
+                {{ saving ? 'Saving...' : 'Update Category' }}
+              </button>
+              <button type="button" class="btn-secondary" (click)="goBack()">Cancel</button>
             </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" [disabled]="categoryForm.invalid || saving">
-              {{ saving ? 'Saving...' : 'Update Category' }}
-            </button>
-            <button type="button" class="btn-secondary" (click)="goBack()">Cancel</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading category...</p>
-      </div>
+          </form>
+        </div>
+      }
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading category...</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .category-edit-container {
       padding: 20px;

@@ -1,19 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { OrdersService } from '../services/orders.service';
 
 @Component({
   selector: 'app-check-availability',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="availability-container">
       <header class="page-header">
         <h1>Check Product Availability</h1>
         <p>Check if specific quantities are available</p>
       </header>
-
+    
       <div class="form-section">
         <div class="form-group">
           <label>Product ID:</label>
@@ -25,27 +25,35 @@ import { OrdersService } from '../services/orders.service';
         </div>
         <button (click)="checkAvailability()" [attr.data-testid]="'check-btn'">Check Availability</button>
       </div>
-
-      <div class="loading" *ngIf="loading" [attr.data-testid]="'loading-spinner'">
-        <p>Checking availability...</p>
-      </div>
-
-      <div class="result" *ngIf="result && !loading">
-        <div [class]="'status-' + (result.available ? 'available' : 'unavailable')" [attr.data-testid]="'availability-result'">
-          <h3>{{ result.available ? '✅ Available' : '❌ Unavailable' }}</h3>
-          <p>Quantity Available: <strong>{{ result.availableQuantity }}</strong></p>
-          <p>Quantity Needed: <strong>{{ quantity }}</strong></p>
-          <div *ngIf="!result.available" class="shortfall">
-            <p>Shortfall: {{ quantity - result.availableQuantity }} units</p>
+    
+      @if (loading) {
+        <div class="loading" [attr.data-testid]="'loading-spinner'">
+          <p>Checking availability...</p>
+        </div>
+      }
+    
+      @if (result && !loading) {
+        <div class="result">
+          <div [class]="'status-' + (result.available ? 'available' : 'unavailable')" [attr.data-testid]="'availability-result'">
+            <h3>{{ result.available ? '✅ Available' : '❌ Unavailable' }}</h3>
+            <p>Quantity Available: <strong>{{ result.availableQuantity }}</strong></p>
+            <p>Quantity Needed: <strong>{{ quantity }}</strong></p>
+            @if (!result.available) {
+              <div class="shortfall">
+                <p>Shortfall: {{ quantity - result.availableQuantity }} units</p>
+              </div>
+            }
           </div>
         </div>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-      </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .availability-container { padding: 20px; max-width: 600px; margin: 0 auto; }
     .page-header h1 { margin: 0 0 0.5rem; font-size: 2rem; }

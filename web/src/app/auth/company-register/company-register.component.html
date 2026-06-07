@@ -8,8 +8,8 @@
       </div>
 
       <form [formGroup]="companyRegisterForm" (ngSubmit)="onSubmit()" class="register-form">
-       <div class="section-label"><strong>Company Information</strong></div>
-        <div class="section"> 
+        <div class="section-label"><strong>Company Information</strong></div>
+        <div class="section">
           <mat-form-field appearance="outline" class="full">
             <mat-label>Company Name</mat-label>
             <input matInput formControlName="companyName" />
@@ -83,18 +83,24 @@
               <mat-label>Admin Password</mat-label>
               <input matInput type="password" formControlName="adminPassword" />
             </mat-form-field>
-          </div>  
+          </div>
         </div>
 
         <button mat-flat-button class="spotify-btn" type="submit" [disabled]="companyRegisterForm.invalid || isLoading">
-          <span *ngIf="!isLoading">Register</span>
+          @if (!isLoading) {
+            <span>Register</span>
+          }
         </button>
 
-        <div class="success" *ngIf="successMessage">
-          <span class="success-icon">✓</span> {{ successMessage }}
-        </div>
+        @if (successMessage) {
+          <div class="success">
+            <span class="success-icon">✓</span> {{ successMessage }}
+          </div>
+        }
 
-        <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        @if (errorMessage) {
+          <div class="error">{{ errorMessage }}</div>
+        }
       </form>
 
       <mat-card-actions class="card-actions">

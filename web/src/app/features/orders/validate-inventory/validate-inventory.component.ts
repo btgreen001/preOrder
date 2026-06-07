@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { OrdersService, AvailabilityCheckResponse } from '../services/orders.service';
 
@@ -12,85 +12,109 @@ interface OrderItem {
 @Component({
   selector: 'app-validate-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="validate-container">
       <header class="page-header">
         <h1>Validate Order Inventory</h1>
         <p>Check if inventory is available for order items before placement</p>
       </header>
-
+    
       <!-- Manual Entry Mode (always show when not in modal) -->
-      <div *ngIf="!isModalMode" class="form-section">
-        <h2>Add Order Items</h2>
-        <div class="item-form">
-          <input type="text" placeholder="Product ID (UUID)" [(ngModel)]="newProductId" [attr.data-testid]="'product-id-input'">
-          <input type="number" placeholder="Quantity" [(ngModel)]="newQuantity" [attr.data-testid]="'quantity-input'">
-          <button (click)="addItem()" [attr.data-testid]="'add-item-btn'">Add Item</button>
+      @if (!isModalMode) {
+        <div class="form-section">
+          <h2>Add Order Items</h2>
+          <div class="item-form">
+            <input type="text" placeholder="Product ID (UUID)" [(ngModel)]="newProductId" [attr.data-testid]="'product-id-input'">
+            <input type="number" placeholder="Quantity" [(ngModel)]="newQuantity" [attr.data-testid]="'quantity-input'">
+            <button (click)="addItem()" [attr.data-testid]="'add-item-btn'">Add Item</button>
+          </div>
         </div>
-      </div>
-
+      }
+    
       <!-- Items Display (manual or from input) -->
-      <div class="items-section" *ngIf="items.length > 0">
-        <h2>Order Items ({{ items.length }})</h2>
-        <table [attr.data-testid]="'items-table'">
-          <thead>
-            <tr>
-              <th>Product ID</th>
-              <th>Quantity</th>
-              <th *ngIf="!isModalMode">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of items; let idx = index">
-              <td>{{ item.sellableProductExternalId }}</td>
-              <td>{{ item.quantity }}</td>
-              <td *ngIf="!isModalMode"><button (click)="removeItem(idx)" [attr.data-testid]="'remove-item-' + idx">Remove</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
+      @if (items.length > 0) {
+        <div class="items-section">
+          <h2>Order Items ({{ items.length }})</h2>
+          <table [attr.data-testid]="'items-table'">
+            <thead>
+              <tr>
+                <th>Product ID</th>
+                <th>Quantity</th>
+                @if (!isModalMode) {
+                  <th>Action</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items; track item; let idx = $index) {
+                <tr>
+                  <td>{{ item.sellableProductExternalId }}</td>
+                  <td>{{ item.quantity }}</td>
+                  @if (!isModalMode) {
+                    <td><button (click)="removeItem(idx)" [attr.data-testid]="'remove-item-' + idx">Remove</button></td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    
       <!-- Validation Controls -->
       <div class="validation-section">
         <button (click)="validateInventory()" [attr.data-testid]="'validate-btn'" [disabled]="items.length === 0">
           Validate Inventory
         </button>
-        <button *ngIf="isModalMode && validationResult" (click)="onProceed()" [attr.data-testid]="'proceed-btn'" [disabled]="!validationResult.allItemsAvailable">
-          Proceed with Order
-        </button>
-        <button *ngIf="isModalMode" (click)="onCancel()" [attr.data-testid]="'cancel-btn'" class="secondary-btn">
-          Go Back
-        </button>
+        @if (isModalMode && validationResult) {
+          <button (click)="onProceed()" [attr.data-testid]="'proceed-btn'" [disabled]="!validationResult.allItemsAvailable">
+            Proceed with Order
+          </button>
+        }
+        @if (isModalMode) {
+          <button (click)="onCancel()" [attr.data-testid]="'cancel-btn'" class="secondary-btn">
+            Go Back
+          </button>
+        }
       </div>
-
+    
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading" [attr.data-testid]="'loading-spinner'">
-        <p>Validating inventory...</p>
-      </div>
-
+      @if (isLoading) {
+        <div class="loading" [attr.data-testid]="'loading-spinner'">
+          <p>Validating inventory...</p>
+        </div>
+      }
+    
       <!-- Validation Result -->
-      <div class="result" *ngIf="validationResult && !isLoading">
-        <div [class]="'result-' + (validationResult.allItemsAvailable ? 'valid' : 'invalid')" [attr.data-testid]="'validation-result'">
-          <h3>{{ validationResult.allItemsAvailable ? '✅ Valid' : '❌ Invalid' }}</h3>
-          <p>{{ validationResult.message }}</p>
-          <div *ngIf="validationResult.items && validationResult.items.length > 0">
-            <p><strong>Item Details:</strong></p>
-            <ul>
-              <li *ngFor="let item of validationResult.items">
-                {{ item.productName }}: Requested {{ item.requestedQuantity }}, Available {{ item.availableQuantity }}
-              </li>
-            </ul>
+      @if (validationResult && !isLoading) {
+        <div class="result">
+          <div [class]="'result-' + (validationResult.allItemsAvailable ? 'valid' : 'invalid')" [attr.data-testid]="'validation-result'">
+            <h3>{{ validationResult.allItemsAvailable ? '✅ Valid' : '❌ Invalid' }}</h3>
+            <p>{{ validationResult.message }}</p>
+            @if (validationResult.items && validationResult.items.length > 0) {
+              <div>
+                <p><strong>Item Details:</strong></p>
+                <ul>
+                  @for (item of validationResult.items; track item) {
+                    <li>
+                      {{ item.productName }}: Requested {{ item.requestedQuantity }}, Available {{ item.availableQuantity }}
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
           </div>
         </div>
-      </div>
-
+      }
+    
       <!-- Error State -->
-      <div class="error" *ngIf="errorMessage">
-        <p>{{ errorMessage }}</p>
-      </div>
+      @if (errorMessage) {
+        <div class="error">
+          <p>{{ errorMessage }}</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .validate-container {
       padding: 20px;

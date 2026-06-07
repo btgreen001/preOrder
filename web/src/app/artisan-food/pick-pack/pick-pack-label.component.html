@@ -1,6 +1,6 @@
 <div class="pick-pack-label">
   <h1>Pick, Pack & Label Orders</h1>
-  
+
   <!-- Step Progress Indicator -->
   <div class="step-progress">
     <div class="step" [class.active]="currentStep === 'pick'" [class.completed]="selectedOrder?.status !== 'picking'">
@@ -22,150 +22,173 @@
   </div>
 
   <!-- Order Selection -->
-  <div *ngIf="!selectedOrder" class="order-selection">
-    <h2>Select Order to Fulfill</h2>
-    <div class="order-list">
-      <div *ngFor="let order of availableOrders" class="order-card" 
-           tabindex="0"
-           (click)="selectOrder(order)"
-           (keydown.enter)="selectOrder(order)">
-        <div class="order-header">
-          <strong>{{ order.id }}</strong> - {{ order.customerName }}
-        </div>
-        <div class="order-items">
-          {{ order.items.length }} items
-          <ul>
-            <li *ngFor="let item of order.items">{{ item.name }} ({{ item.quantity }})</li>
-          </ul>
-        </div>
+  @if (!selectedOrder) {
+    <div class="order-selection">
+      <h2>Select Order to Fulfill</h2>
+      <div class="order-list">
+        @for (order of availableOrders; track order) {
+          <div class="order-card"
+            tabindex="0"
+            (click)="selectOrder(order)"
+            (keydown.enter)="selectOrder(order)">
+            <div class="order-header">
+              <strong>{{ order.id }}</strong> - {{ order.customerName }}
+            </div>
+            <div class="order-items">
+              {{ order.items.length }} items
+              <ul>
+                @for (item of order.items; track item) {
+                  <li>{{ item.name }} ({{ item.quantity }})</li>
+                }
+              </ul>
+            </div>
+          </div>
+        }
       </div>
     </div>
-  </div>
+  }
 
   <!-- Step 1: Picking -->
-  <div *ngIf="selectedOrder && currentStep === 'pick'" class="step-content picking">
-    <div class="step-header">
-      <h2>Picking Items - {{ selectedOrder.id }}</h2>
-      <p>Customer: {{ selectedOrder.customerName }}</p>
-    </div>
-    
-    <div class="item-list">
-      <div *ngFor="let item of selectedOrder.items" class="item-row" [class.picked]="item.picked">
-        <div class="item-info">
-          <strong>{{ item.name }}</strong> - Quantity: {{ item.quantity }}
-          <div *ngIf="item.substitution" class="substitution">
-            Substitution: {{ item.substitution }}
+  @if (selectedOrder && currentStep === 'pick') {
+    <div class="step-content picking">
+      <div class="step-header">
+        <h2>Picking Items - {{ selectedOrder.id }}</h2>
+        <p>Customer: {{ selectedOrder.customerName }}</p>
+      </div>
+      <div class="item-list">
+        @for (item of selectedOrder.items; track item) {
+          <div class="item-row" [class.picked]="item.picked">
+            <div class="item-info">
+              <strong>{{ item.name }}</strong> - Quantity: {{ item.quantity }}
+              @if (item.substitution) {
+                <div class="substitution">
+                  Substitution: {{ item.substitution }}
+                </div>
+              }
+            </div>
+            <div class="item-actions">
+              @if (!item.picked) {
+                <button class="btn btn-primary" (click)="pickItem(item)">Pick</button>
+              }
+              @if (item.picked) {
+                <button class="btn btn-secondary" (click)="unpickItem(item)">Unpick</button>
+              }
+              @if (!item.picked) {
+                <input type="text" placeholder="Substitution"
+                  (keyup.enter)="addSubstitution(item, $any($event.target).value)" />
+              }
+            </div>
           </div>
-        </div>
-        <div class="item-actions">
-          <button *ngIf="!item.picked" class="btn btn-primary" (click)="pickItem(item)">Pick</button>
-          <button *ngIf="item.picked" class="btn btn-secondary" (click)="unpickItem(item)">Unpick</button>
-          <input *ngIf="!item.picked" type="text" placeholder="Substitution" 
-                 (keyup.enter)="addSubstitution(item, $any($event.target).value)" />
-        </div>
+        }
+      </div>
+      <div class="step-navigation">
+        <button (click)="selectedOrder = null" class="btn btn-secondary">Back to Orders</button>
+        @if (canProceedToPack()) {
+          <button (click)="proceedToPacking()" class="btn btn-primary">Proceed to Packing</button>
+        }
+        @if (!canProceedToPack()) {
+          <div class="warning">All items must be picked before proceeding</div>
+        }
       </div>
     </div>
-    
-    <div class="step-navigation">
-      <button (click)="selectedOrder = null" class="btn btn-secondary">Back to Orders</button>
-      <button *ngIf="canProceedToPack()" (click)="proceedToPacking()" class="btn btn-primary">Proceed to Packing</button>
-      <div *ngIf="!canProceedToPack()" class="warning">All items must be picked before proceeding</div>
-    </div>
-  </div>
+  }
 
   <!-- Step 2: Packing -->
-  <div *ngIf="selectedOrder && currentStep === 'pack'" class="step-content packing">
-    <div class="step-header">
-      <h2>Packing Order - {{ selectedOrder.id }}</h2>
-      <p>Customer: {{ selectedOrder.customerName }}</p>
-    </div>
-    
-    <div class="packing-summary">
-      <h3>Items to Pack:</h3>
-      <ul>
-        <li *ngFor="let item of selectedOrder.items">
-          {{ item.name }} ({{ item.quantity }})
-          <span *ngIf="item.substitution" class="substitution"> - Sub: {{ item.substitution }}</span>
-        </li>
-      </ul>
-      
-      <div class="packing-notes">
-        <label>
-          Packing Notes:
-          <textarea [(ngModel)]="selectedOrder.packingNotes" rows="3" placeholder="Add any packing notes..."></textarea>
-        </label>
+  @if (selectedOrder && currentStep === 'pack') {
+    <div class="step-content packing">
+      <div class="step-header">
+        <h2>Packing Order - {{ selectedOrder.id }}</h2>
+        <p>Customer: {{ selectedOrder.customerName }}</p>
+      </div>
+      <div class="packing-summary">
+        <h3>Items to Pack:</h3>
+        <ul>
+          @for (item of selectedOrder.items; track item) {
+            <li>
+              {{ item.name }} ({{ item.quantity }})
+              @if (item.substitution) {
+                <span class="substitution"> - Sub: {{ item.substitution }}</span>
+              }
+            </li>
+          }
+        </ul>
+        <div class="packing-notes">
+          <label>
+            Packing Notes:
+            <textarea [(ngModel)]="selectedOrder.packingNotes" rows="3" placeholder="Add any packing notes..."></textarea>
+          </label>
+        </div>
+      </div>
+      <div class="step-navigation">
+        <button (click)="goToStep('pick')" class="btn btn-secondary">Back to Picking</button>
+        <button (click)="proceedToLabeling()" class="btn btn-primary">Proceed to Labeling</button>
       </div>
     </div>
-    
-    <div class="step-navigation">
-      <button (click)="goToStep('pick')" class="btn btn-secondary">Back to Picking</button>
-      <button (click)="proceedToLabeling()" class="btn btn-primary">Proceed to Labeling</button>
-    </div>
-  </div>
+  }
 
   <!-- Step 3: Labeling -->
-  <div *ngIf="selectedOrder && currentStep === 'label'" class="step-content labeling">
-    <div class="step-header">
-      <h2>Labeling Order - {{ selectedOrder.id }}</h2>
-      <p>Customer: {{ selectedOrder.customerName }}</p>
-    </div>
-    
-    <div class="label-info">
-      <div class="label-section">
-        <h3>Order Summary</h3>
-        <p><strong>Total Weight:</strong> {{ selectedOrder.totalWeight }} lbs</p>
-        <p><strong>Items:</strong> {{ selectedOrder.items.length }}</p>
-        <p *ngIf="hasSubstitutions" class="warning">⚠ This order contains substitutions</p>
+  @if (selectedOrder && currentStep === 'label') {
+    <div class="step-content labeling">
+      <div class="step-header">
+        <h2>Labeling Order - {{ selectedOrder.id }}</h2>
+        <p>Customer: {{ selectedOrder.customerName }}</p>
       </div>
-      
-      <div class="label-section">
-        <h3>Auto-Generated Label Info</h3>
-        <p><strong>Internal Tracking:</strong> {{ selectedOrder.internalTrackingLabel }}</p>
-        <p><strong>Allergens:</strong> {{ selectedOrder.allergens?.join(', ') }}</p>
-        <p><strong>Expiration:</strong> {{ selectedOrder.expirationDate }}</p>
+      <div class="label-info">
+        <div class="label-section">
+          <h3>Order Summary</h3>
+          <p><strong>Total Weight:</strong> {{ selectedOrder.totalWeight }} lbs</p>
+          <p><strong>Items:</strong> {{ selectedOrder.items.length }}</p>
+          @if (hasSubstitutions) {
+            <p class="warning">⚠ This order contains substitutions</p>
+          }
+        </div>
+        <div class="label-section">
+          <h3>Auto-Generated Label Info</h3>
+          <p><strong>Internal Tracking:</strong> {{ selectedOrder.internalTrackingLabel }}</p>
+          <p><strong>Allergens:</strong> {{ selectedOrder.allergens?.join(', ') }}</p>
+          <p><strong>Expiration:</strong> {{ selectedOrder.expirationDate }}</p>
+        </div>
+        <div class="label-notes">
+          <label>
+            Additional Label Notes:
+            <textarea [(ngModel)]="selectedOrder.packingNotes" rows="2" placeholder="Add notes for the label..."></textarea>
+          </label>
+        </div>
       </div>
-      
-      <div class="label-notes">
-        <label>
-          Additional Label Notes:
-          <textarea [(ngModel)]="selectedOrder.packingNotes" rows="2" placeholder="Add notes for the label..."></textarea>
-        </label>
+      <div class="step-navigation">
+        <button (click)="goToStep('pack')" class="btn btn-secondary">Back to Packing</button>
+        <button (click)="proceedToConfirm()" class="btn btn-primary">Generate Label</button>
       </div>
     </div>
-    
-    <div class="step-navigation">
-      <button (click)="goToStep('pack')" class="btn btn-secondary">Back to Packing</button>
-      <button (click)="proceedToConfirm()" class="btn btn-primary">Generate Label</button>
-    </div>
-  </div>
+  }
 
   <!-- Step 4: Confirm -->
-  <div *ngIf="selectedOrder && currentStep === 'confirm'" class="step-content confirm">
-    <div class="step-header">
-      <h2>Order Complete - {{ selectedOrder.id }}</h2>
-      <p>Customer: {{ selectedOrder.customerName }}</p>
-    </div>
-    
-    <div class="completion-summary">
-      <div class="success-message">✅ Order successfully processed!</div>
-      
-      <div class="final-details">
-        <h3>Final Details:</h3>
-        <p><strong>Items:</strong> {{ selectedOrder.items.length }} picked and packed</p>
-        <p><strong>Weight:</strong> {{ selectedOrder.totalWeight }} lbs</p>
-        <p><strong>Tracking:</strong> {{ selectedOrder.internalTrackingLabel }}</p>
-        <p *ngIf="hasSubstitutions">⚠ Contains substitutions - customer follow-up required</p>
+  @if (selectedOrder && currentStep === 'confirm') {
+    <div class="step-content confirm">
+      <div class="step-header">
+        <h2>Order Complete - {{ selectedOrder.id }}</h2>
+        <p>Customer: {{ selectedOrder.customerName }}</p>
       </div>
-      
-      <div class="label-actions">
-        <button (click)="printLabel()" class="btn btn-primary">Print Label</button>
-        <button (click)="printLabel()" class="btn btn-secondary">Reprint Label</button>
+      <div class="completion-summary">
+        <div class="success-message">✅ Order successfully processed!</div>
+        <div class="final-details">
+          <h3>Final Details:</h3>
+          <p><strong>Items:</strong> {{ selectedOrder.items.length }} picked and packed</p>
+          <p><strong>Weight:</strong> {{ selectedOrder.totalWeight }} lbs</p>
+          <p><strong>Tracking:</strong> {{ selectedOrder.internalTrackingLabel }}</p>
+          @if (hasSubstitutions) {
+            <p>⚠ Contains substitutions - customer follow-up required</p>
+          }
+        </div>
+        <div class="label-actions">
+          <button (click)="printLabel()" class="btn btn-primary">Print Label</button>
+          <button (click)="printLabel()" class="btn btn-secondary">Reprint Label</button>
+        </div>
+      </div>
+      <div class="step-navigation">
+        <button (click)="goToStep('label')" class="btn btn-secondary">Back to Labeling</button>
+        <button (click)="completeOrder()" class="btn btn-success">Complete Order</button>
       </div>
     </div>
-    
-    <div class="step-navigation">
-      <button (click)="goToStep('label')" class="btn btn-secondary">Back to Labeling</button>
-      <button (click)="completeOrder()" class="btn btn-success">Complete Order</button>
-    </div>
-  </div>
+  }
 </div>

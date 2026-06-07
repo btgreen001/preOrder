@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InventoryService } from '../inventory.service';
@@ -7,7 +7,7 @@ import { InventoryService } from '../inventory.service';
 @Component({
   selector: 'app-batch-add',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule],
   template: `
     <div class="batch-add-container">
       <header class="page-header">

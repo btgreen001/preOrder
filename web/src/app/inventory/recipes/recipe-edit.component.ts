@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service';
@@ -7,7 +7,7 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
 @Component({
   selector: 'app-recipe-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule],
   template: `
     <div class="recipe-edit-container">
       <header class="page-header">
@@ -19,131 +19,136 @@ import { InventoryService, Recipe, RecipeIngredient } from '../inventory.service
           </button>
         </div>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading recipe...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="goBack()">Go Back</button>
-      </div>
-
-      <form [formGroup]="recipeForm" class="recipe-form" *ngIf="!loading && !error">
-        <div class="form-section">
-          <h2>Basic Information</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="name">Recipe Name *</label>
-              <input type="text" id="name" formControlName="name" placeholder="e.g., Chocolate Chip Cookies">
-            </div>
-            <div class="form-group">
-              <label for="category">Category *</label>
-              <select id="category" formControlName="category">
-                <option value="">Select Category</option>
-                <option value="bread">Bread</option>
-                <option value="pastry">Pastry</option>
-                <option value="cake">Cake</option>
-                <option value="cookies">Cookies</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" formControlName="description" rows="3"
-                      placeholder="Brief description of the recipe"></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="yield">Yield *</label>
-              <input type="number" id="yield" formControlName="yield" min="1" step="0.1">
-            </div>
-            <div class="form-group">
-              <label for="yieldUnit">Unit *</label>
-              <select id="yieldUnit" formControlName="yieldUnit">
-                <option value="pieces">Pieces</option>
-                <option value="loaves">Loaves</option>
-                <option value="dozen">Dozen</option>
-                <option value="cups">Cups</option>
-                <option value="lbs">Pounds</option>
-                <option value="kg">Kilograms</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="prepTime">Prep Time (minutes)</label>
-              <input type="number" id="prepTime" formControlName="prepTime" min="0">
-            </div>
-            <div class="form-group">
-              <label for="cookTime">Cook Time (minutes)</label>
-              <input type="number" id="cookTime" formControlName="cookTime" min="0">
-            </div>
-          </div>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading recipe...</p>
         </div>
-
-        <div class="form-section">
-          <h2>Ingredients</h2>
-          <div formArrayName="ingredients" class="ingredients-list">
-            <div *ngFor="let ingredient of ingredients.controls; let i = index"
-                 [formGroupName]="i" class="ingredient-item">
-              <div class="ingredient-row">
-                <div class="form-group">
-                  <label>Ingredient Name *</label>
-                  <input type="text" formControlName="itemName" placeholder="e.g., All-Purpose Flour"
-                         (input)="onIngredientNameChange(i)">
-                </div>
-                <div class="form-group">
-                  <label>Quantity *</label>
-                  <input type="number" formControlName="quantity" min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                  <label>Unit *</label>
-                  <select formControlName="unit">
-                    <option value="cups">Cups</option>
-                    <option value="tbsp">Tablespoons</option>
-                    <option value="tsp">Teaspoons</option>
-                    <option value="lbs">Pounds</option>
-                    <option value="oz">Ounces</option>
-                    <option value="kg">Kilograms</option>
-                    <option value="g">Grams</option>
-                    <option value="ml">Milliliters</option>
-                    <option value="l">Liters</option>
-                    <option value="pieces">Pieces</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Cost ($)</label>
-                  <input type="number" formControlName="cost" min="0" step="0.01" readonly>
-                </div>
-                <button type="button" class="btn-remove" (click)="removeIngredient(i)">Remove</button>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="goBack()">Go Back</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <form [formGroup]="recipeForm" class="recipe-form">
+          <div class="form-section">
+            <h2>Basic Information</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name">Recipe Name *</label>
+                <input type="text" id="name" formControlName="name" placeholder="e.g., Chocolate Chip Cookies">
+              </div>
+              <div class="form-group">
+                <label for="category">Category *</label>
+                <select id="category" formControlName="category">
+                  <option value="">Select Category</option>
+                  <option value="bread">Bread</option>
+                  <option value="pastry">Pastry</option>
+                  <option value="cake">Cake</option>
+                  <option value="cookies">Cookies</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea id="description" formControlName="description" rows="3"
+              placeholder="Brief description of the recipe"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="yield">Yield *</label>
+                <input type="number" id="yield" formControlName="yield" min="1" step="0.1">
+              </div>
+              <div class="form-group">
+                <label for="yieldUnit">Unit *</label>
+                <select id="yieldUnit" formControlName="yieldUnit">
+                  <option value="pieces">Pieces</option>
+                  <option value="loaves">Loaves</option>
+                  <option value="dozen">Dozen</option>
+                  <option value="cups">Cups</option>
+                  <option value="lbs">Pounds</option>
+                  <option value="kg">Kilograms</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prepTime">Prep Time (minutes)</label>
+                <input type="number" id="prepTime" formControlName="prepTime" min="0">
+              </div>
+              <div class="form-group">
+                <label for="cookTime">Cook Time (minutes)</label>
+                <input type="number" id="cookTime" formControlName="cookTime" min="0">
               </div>
             </div>
           </div>
-          <button type="button" class="btn-add-ingredient" (click)="addIngredient()">+ Add Ingredient</button>
-        </div>
-
-        <div class="form-section">
-          <h2>Instructions</h2>
-          <div formArrayName="instructions" class="instructions-list">
-            <div *ngFor="let instruction of instructions.controls; let i = index" class="instruction-item">
-              <div class="instruction-row">
-                <span class="step-number">{{ i + 1 }}.</span>
-                <textarea formControlName="instruction" rows="2"
-                          placeholder="Describe this step..." class="instruction-text"></textarea>
-                <button type="button" class="btn-remove" (click)="removeInstruction(i)">Remove</button>
+          <div class="form-section">
+            <h2>Ingredients</h2>
+            <div formArrayName="ingredients" class="ingredients-list">
+              @for (ingredient of ingredients.controls; track ingredient; let i = $index) {
+                <div
+                  [formGroupName]="i" class="ingredient-item">
+                  <div class="ingredient-row">
+                    <div class="form-group">
+                      <label>Ingredient Name *</label>
+                      <input type="text" formControlName="itemName" placeholder="e.g., All-Purpose Flour"
+                        (input)="onIngredientNameChange(i)">
+                      </div>
+                      <div class="form-group">
+                        <label>Quantity *</label>
+                        <input type="number" formControlName="quantity" min="0" step="0.01">
+                      </div>
+                      <div class="form-group">
+                        <label>Unit *</label>
+                        <select formControlName="unit">
+                          <option value="cups">Cups</option>
+                          <option value="tbsp">Tablespoons</option>
+                          <option value="tsp">Teaspoons</option>
+                          <option value="lbs">Pounds</option>
+                          <option value="oz">Ounces</option>
+                          <option value="kg">Kilograms</option>
+                          <option value="g">Grams</option>
+                          <option value="ml">Milliliters</option>
+                          <option value="l">Liters</option>
+                          <option value="pieces">Pieces</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label>Cost ($)</label>
+                        <input type="number" formControlName="cost" min="0" step="0.01" readonly>
+                      </div>
+                      <button type="button" class="btn-remove" (click)="removeIngredient(i)">Remove</button>
+                    </div>
+                  </div>
+                }
               </div>
+              <button type="button" class="btn-add-ingredient" (click)="addIngredient()">+ Add Ingredient</button>
             </div>
-          </div>
-          <button type="button" class="btn-add-instruction" (click)="addInstruction()">+ Add Step</button>
-        </div>
-      </form>
-    </div>
-  `,
+            <div class="form-section">
+              <h2>Instructions</h2>
+              <div formArrayName="instructions" class="instructions-list">
+                @for (instruction of instructions.controls; track instruction; let i = $index) {
+                  <div class="instruction-item">
+                    <div class="instruction-row">
+                      <span class="step-number">{{ i + 1 }}.</span>
+                      <textarea formControlName="instruction" rows="2"
+                      placeholder="Describe this step..." class="instruction-text"></textarea>
+                      <button type="button" class="btn-remove" (click)="removeInstruction(i)">Remove</button>
+                    </div>
+                  </div>
+                }
+              </div>
+              <button type="button" class="btn-add-instruction" (click)="addInstruction()">+ Add Step</button>
+            </div>
+          </form>
+        }
+      </div>
+    `,
   styles: [`
     .recipe-edit-container {
       padding: 20px;

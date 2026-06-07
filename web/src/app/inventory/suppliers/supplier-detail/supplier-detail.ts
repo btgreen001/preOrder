@@ -16,62 +16,68 @@ import { InventoryService, Supplier } from '../../inventory.service';
           <button class="btn-secondary" (click)="goBack()">Back to Suppliers</button>
         </div>
       </header>
-
-      <div class="detail-container" *ngIf="!loading && supplier">
-        <div class="detail-card">
-          <div class="detail-section">
-            <h2>{{ supplier.name }}</h2>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <label>Contact Name</label>
-                <p>{{ supplier.contactName }}</p>
-              </div>
-              <div class="detail-item">
-                <label>Email</label>
-                <p><a [href]="'mailto:' + supplier.email">{{ supplier.email }}</a></p>
-              </div>
-              <div class="detail-item">
-                <label>Phone</label>
-                <p><a [href]="'tel:' + supplier.phone">{{ supplier.phone }}</a></p>
-              </div>
-              <div class="detail-item">
-                <label>Address</label>
-                <p>{{ supplier.address }}</p>
-              </div>
-              <div class="detail-item">
-                <label>Payment Terms</label>
-                <p>{{ supplier.paymentTerms }}</p>
-              </div>
-              <div class="detail-item">
-                <label>Lead Time</label>
-                <p>{{ supplier.leadTime }} days</p>
-              </div>
-              <div class="detail-item">
-                <label>Status</label>
-                <p>
-                  <span class="status-badge" [class.active]="supplier.active" [class.inactive]="!supplier.active">
-                    {{ supplier.active ? 'Active' : 'Inactive' }}
-                  </span>
-                </p>
-              </div>
-              <div class="detail-item">
-                <label>Created</label>
-                <p>{{ supplier.createdDate | date:'medium' }}</p>
+    
+      @if (!loading && supplier) {
+        <div class="detail-container">
+          <div class="detail-card">
+            <div class="detail-section">
+              <h2>{{ supplier.name }}</h2>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Contact Name</label>
+                  <p>{{ supplier.contactName }}</p>
+                </div>
+                <div class="detail-item">
+                  <label>Email</label>
+                  <p><a [href]="'mailto:' + supplier.email">{{ supplier.email }}</a></p>
+                </div>
+                <div class="detail-item">
+                  <label>Phone</label>
+                  <p><a [href]="'tel:' + supplier.phone">{{ supplier.phone }}</a></p>
+                </div>
+                <div class="detail-item">
+                  <label>Address</label>
+                  <p>{{ supplier.address }}</p>
+                </div>
+                <div class="detail-item">
+                  <label>Payment Terms</label>
+                  <p>{{ supplier.paymentTerms }}</p>
+                </div>
+                <div class="detail-item">
+                  <label>Lead Time</label>
+                  <p>{{ supplier.leadTime }} days</p>
+                </div>
+                <div class="detail-item">
+                  <label>Status</label>
+                  <p>
+                    <span class="status-badge" [class.active]="supplier.active" [class.inactive]="!supplier.active">
+                      {{ supplier.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </p>
+                </div>
+                <div class="detail-item">
+                  <label>Created</label>
+                  <p>{{ supplier.createdDate | date:'medium' }}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading supplier details...</p>
-      </div>
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="reload()">Retry</button>
-      </div>
+      }
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading supplier details...</p>
+        </div>
+      }
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="reload()">Retry</button>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .supplier-detail-container { padding: 20px; background: var(--bakery-bg); color: var(--bakery-text-emph); min-height: 100vh; max-width: 900px; margin: 0 auto; }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--bakery-accent); }

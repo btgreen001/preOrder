@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-reports-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="reports-container">
       <h2>Inventory Reports</h2>

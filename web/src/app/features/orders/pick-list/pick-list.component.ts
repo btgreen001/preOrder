@@ -1,67 +1,73 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { OrdersService } from '../services/orders.service';
 
 @Component({
   selector: 'app-pick-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="pick-list-container">
       <header class="page-header">
         <h1>Order Pick Lists</h1>
         <p>Generate and manage pick lists for order fulfillment</p>
       </header>
-
+    
       <div class="order-selector">
         <label>Select Order:</label>
         <input type="text" placeholder="Enter Order ID" [(ngModel)]="orderId" [attr.data-testid]="'order-id-input'">
         <button (click)="generatePickList()" [attr.data-testid]="'generate-btn'">Generate Pick List</button>
       </div>
-
-      <div class="loading" *ngIf="loading" [attr.data-testid]="'loading-spinner'">
-        <p>Generating pick list...</p>
-      </div>
-
-      <div class="pick-list-result" *ngIf="pickList && !loading">
-        <div class="header" [attr.data-testid]="'pick-list-result'">
-          <h2>Pick List for Order {{ pickList.orderId }} for {{ pickList.customerName }}</h2>
-          <p>Priority: <strong>{{ pickList.priority }}</strong></p>
-          <p>Total Items: <strong>{{ pickList.totalQuantity }}</strong></p>
+    
+      @if (loading) {
+        <div class="loading" [attr.data-testid]="'loading-spinner'">
+          <p>Generating pick list...</p>
         </div>
-
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>SKU</th>
-              <th>Quantity</th>
-              <th>Location</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of pickList.items" [attr.data-testid]="'pick-item-' + item.id">
-              <td>{{ item.productName }}</td>
-              <td>{{ item.sku }}</td>
-              <td>{{ item.quantity }} {{ item.unitOfMeasure }}</td>
-              <td>{{ item.location || 'N/A' }}</td>
-              <td>{{ item.notes || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="actions">
-          <button (click)="printPickList()" [attr.data-testid]="'print-btn'" class="print-btn">Print Pick List</button>
+      }
+    
+      @if (pickList && !loading) {
+        <div class="pick-list-result">
+          <div class="header" [attr.data-testid]="'pick-list-result'">
+            <h2>Pick List for Order {{ pickList.orderId }} for {{ pickList.customerName }}</h2>
+            <p>Priority: <strong>{{ pickList.priority }}</strong></p>
+            <p>Total Items: <strong>{{ pickList.totalQuantity }}</strong></p>
+          </div>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>SKU</th>
+                <th>Quantity</th>
+                <th>Location</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of pickList.items; track item) {
+                <tr [attr.data-testid]="'pick-item-' + item.id">
+                  <td>{{ item.productName }}</td>
+                  <td>{{ item.sku }}</td>
+                  <td>{{ item.quantity }} {{ item.unitOfMeasure }}</td>
+                  <td>{{ item.location || 'N/A' }}</td>
+                  <td>{{ item.notes || '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="actions">
+            <button (click)="printPickList()" [attr.data-testid]="'print-btn'" class="print-btn">Print Pick List</button>
+          </div>
         </div>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-      </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .pick-list-container { padding: 20px; }
     .page-header h1 { margin: 0 0 0.5rem; font-size: 2rem; }

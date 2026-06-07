@@ -12,58 +12,69 @@ import { InventoryService, InventoryAlert } from '../inventory.service';
         <h1>Inventory Alerts</h1>
         <p>Monitor critical inventory conditions and take action</p>
       </header>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading alerts...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadAlerts()">Retry</button>
-      </div>
-
-      <div class="alerts-summary" *ngIf="!loading && !error">
-        <div class="summary-card">
-          <h3>Total Alerts</h3>
-          <span class="count">{{ alerts.length }}</span>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading alerts...</p>
         </div>
-        <div class="summary-card high">
-          <h3>High Priority</h3>
-          <span class="count">{{ getAlertCount('high') }}</span>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadAlerts()">Retry</button>
         </div>
-        <div class="summary-card medium">
-          <h3>Medium Priority</h3>
-          <span class="count">{{ getAlertCount('medium') }}</span>
-        </div>
-        <div class="summary-card low">
-          <h3>Low Priority</h3>
-          <span class="count">{{ getAlertCount('low') }}</span>
-        </div>
-      </div>
-
-      <div class="alerts-list" *ngIf="!loading && !error">
-        <div class="alert-item" *ngFor="let alert of alerts" [class]="alert.severity">
-          <div class="alert-header">
-            <span class="alert-type">{{ alert.type | titlecase }}</span>
-            <span class="alert-severity" [class]="alert.severity">{{ alert.severity | titlecase }}</span>
+      }
+    
+      @if (!loading && !error) {
+        <div class="alerts-summary">
+          <div class="summary-card">
+            <h3>Total Alerts</h3>
+            <span class="count">{{ alerts.length }}</span>
           </div>
-          <div class="alert-content">
-            <h4>{{ alert.itemName }}</h4>
-            <p>{{ alert.message }}</p>
-            <small>Created: {{ alert.createdDate | date:'short' }}</small>
+          <div class="summary-card high">
+            <h3>High Priority</h3>
+            <span class="count">{{ getAlertCount('high') }}</span>
           </div>
-          <div class="alert-actions">
-            <button class="btn-view" (click)="viewItem(alert.itemId)">View Item</button>
-            <button class="btn-resolve" (click)="resolveAlert(alert.id)">Mark Resolved</button>
+          <div class="summary-card medium">
+            <h3>Medium Priority</h3>
+            <span class="count">{{ getAlertCount('medium') }}</span>
+          </div>
+          <div class="summary-card low">
+            <h3>Low Priority</h3>
+            <span class="count">{{ getAlertCount('low') }}</span>
           </div>
         </div>
-
-        <div class="no-alerts" *ngIf="alerts.length === 0">
-          <p>🎉 No alerts at this time. All inventory is within normal parameters.</p>
+      }
+    
+      @if (!loading && !error) {
+        <div class="alerts-list">
+          @for (alert of alerts; track alert) {
+            <div class="alert-item" [class]="alert.severity">
+              <div class="alert-header">
+                <span class="alert-type">{{ alert.type | titlecase }}</span>
+                <span class="alert-severity" [class]="alert.severity">{{ alert.severity | titlecase }}</span>
+              </div>
+              <div class="alert-content">
+                <h4>{{ alert.itemName }}</h4>
+                <p>{{ alert.message }}</p>
+                <small>Created: {{ alert.createdDate | date:'short' }}</small>
+              </div>
+              <div class="alert-actions">
+                <button class="btn-view" (click)="viewItem(alert.itemId)">View Item</button>
+                <button class="btn-resolve" (click)="resolveAlert(alert.id)">Mark Resolved</button>
+              </div>
+            </div>
+          }
+          @if (alerts.length === 0) {
+            <div class="no-alerts">
+              <p>🎉 No alerts at this time. All inventory is within normal parameters.</p>
+            </div>
+          }
         </div>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .alerts-container {
       padding: 20px;

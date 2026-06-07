@@ -16,7 +16,7 @@ import { InventoryService, Batch } from '../inventory.service';
           <button class="btn-primary" (click)="addBatch()">Add Batch</button>
         </div>
       </header>
-
+    
       <div class="filters">
         <input type="text" placeholder="Search batches..." [(ngModel)]="searchTerm" (input)="filterBatches()">
         <select [(ngModel)]="statusFilter" (change)="filterBatches()">
@@ -27,64 +27,73 @@ import { InventoryService, Batch } from '../inventory.service';
         </select>
         <input type="date" [(ngModel)]="dateFilter" (change)="filterBatches()" placeholder="Filter by date">
       </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading batches...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadBatches()">Retry</button>
-      </div>
-
-      <div class="batches-table" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>Batch Number</th>
-              <th>Item</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Cost/Unit</th>
-              <th>Supplier</th>
-              <th>Received Date</th>
-              <th>Expires</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let batch of filteredBatches"
-                [class.expired]="batch.status === 'expired'"
-                [class.used]="batch.status === 'used'">
-              <td>{{ batch.batchNumber }}</td>
-              <td>{{ batch.itemName }}</td>
-              <td>{{ batch.quantity }}</td>
-              <td>{{ batch.unit }}</td>
-              <td>\${{ batch.costPerUnit.toFixed(2) }}</td>
-              <td>{{ batch.supplier }}</td>
-              <td>{{ batch.receivedDate | date:'shortDate' }}</td>
-              <td>{{ batch.expirationDate ? (batch.expirationDate | date:'shortDate') : 'N/A' }}</td>
-              <td>
-                <span class="status-badge" [class]="batch.status">
-                  {{ batch.status | titlecase }}
-                </span>
-              </td>
-              <td>
-                <button class="btn-view" (click)="viewBatch(batch.id)">View</button>
-                <button class="btn-edit" (click)="editBatch(batch.id)">Edit</button>
-                <button class="btn-trace" (click)="traceBatch(batch.id)">Trace</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-batches" *ngIf="filteredBatches.length === 0">
-          <p>No batches found matching your criteria.</p>
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading batches...</p>
         </div>
-      </div>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadBatches()">Retry</button>
+        </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="batches-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Batch Number</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Cost/Unit</th>
+                <th>Supplier</th>
+                <th>Received Date</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (batch of filteredBatches; track batch) {
+                <tr
+                  [class.expired]="batch.status === 'expired'"
+                  [class.used]="batch.status === 'used'">
+                  <td>{{ batch.batchNumber }}</td>
+                  <td>{{ batch.itemName }}</td>
+                  <td>{{ batch.quantity }}</td>
+                  <td>{{ batch.unit }}</td>
+                  <td>\${{ batch.costPerUnit.toFixed(2) }}</td>
+                  <td>{{ batch.supplier }}</td>
+                  <td>{{ batch.receivedDate | date:'shortDate' }}</td>
+                  <td>{{ batch.expirationDate ? (batch.expirationDate | date:'shortDate') : 'N/A' }}</td>
+                  <td>
+                    <span class="status-badge" [class]="batch.status">
+                      {{ batch.status | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn-view" (click)="viewBatch(batch.id)">View</button>
+                    <button class="btn-edit" (click)="editBatch(batch.id)">Edit</button>
+                    <button class="btn-trace" (click)="traceBatch(batch.id)">Trace</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (filteredBatches.length === 0) {
+            <div class="no-batches">
+              <p>No batches found matching your criteria.</p>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .batch-container {
       padding: 20px;

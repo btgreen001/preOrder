@@ -13,116 +13,131 @@ import { InventoryService, ReconciliationRecord, InventoryItem } from '../invent
         <h1>Inventory Reconciliation</h1>
         <p>Physical count vs. system verification for accuracy</p>
       </header>
-
+    
       <div class="actions">
         <button class="btn-primary" (click)="showReconcileForm = !showReconcileForm">
           {{ showReconcileForm ? 'Cancel' : 'Start Reconciliation' }}
         </button>
       </div>
-
-      <div class="reconcile-form" *ngIf="showReconcileForm">
-        <h3>Record Physical Count</h3>
-        <form (ngSubmit)="addReconciliationRecord()" #reconcileForm="ngForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="itemSelect">Item:</label>
-              <select id="itemSelect" [(ngModel)]="newReconciliation.itemId" name="itemId" required (change)="onItemChange()">
-                <option value="">Select an item...</option>
-                <option *ngFor="let item of allItems" [value]="item.externalId">
-                  {{ item.name }} (System: {{ item.quantityOnHand }} {{ item.unitOfMeasure }})
-                </option>
-              </select>
+    
+      @if (showReconcileForm) {
+        <div class="reconcile-form">
+          <h3>Record Physical Count</h3>
+          <form (ngSubmit)="addReconciliationRecord()" #reconcileForm="ngForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="itemSelect">Item:</label>
+                <select id="itemSelect" [(ngModel)]="newReconciliation.itemId" name="itemId" required (change)="onItemChange()">
+                  <option value="">Select an item...</option>
+                  @for (item of allItems; track item) {
+                    <option [value]="item.externalId">
+                      {{ item.name }} (System: {{ item.quantityOnHand }} {{ item.unitOfMeasure }})
+                    </option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="physicalCount">Physical Count:</label>
+                <input type="number" id="physicalCount" [(ngModel)]="newReconciliation.physicalCount" name="physicalCount" min="0" step="0.01" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="physicalCount">Physical Count:</label>
-              <input type="number" id="physicalCount" [(ngModel)]="newReconciliation.physicalCount" name="physicalCount" min="0" step="0.01" required>
+            <div class="form-row">
+              <div class="form-group">
+                <label>System Count:</label>
+                <input type="number" [value]="selectedItem?.quantityOnHand || 0" readonly>
+              </div>
+              <div class="form-group">
+                <label>Variance:</label>
+                <input type="number" [value]="getVariance()" readonly [class]="getVarianceClass()">
+              </div>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>System Count:</label>
-              <input type="number" [value]="selectedItem?.quantityOnHand || 0" readonly>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reconciledBy">Reconciled By:</label>
+                <input type="text" id="reconciledBy" [(ngModel)]="newReconciliation.reconciledBy" name="reconciledBy" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Variance:</label>
-              <input type="number" [value]="getVariance()" readonly [class]="getVarianceClass()">
+            <div class="form-group full-width">
+              <label for="notes">Notes:</label>
+              <textarea id="notes" [(ngModel)]="newReconciliation.notes" name="notes" rows="3" placeholder="Explain any discrepancies..."></textarea>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="reconciledBy">Reconciled By:</label>
-              <input type="text" id="reconciledBy" [(ngModel)]="newReconciliation.reconciledBy" name="reconciledBy" required>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="!reconcileForm.valid">Save Reconciliation</button>
+              <button type="button" class="btn-secondary" (click)="cancelReconcile()">Cancel</button>
             </div>
-          </div>
-          <div class="form-group full-width">
-            <label for="notes">Notes:</label>
-            <textarea id="notes" [(ngModel)]="newReconciliation.notes" name="notes" rows="3" placeholder="Explain any discrepancies..."></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" [disabled]="!reconcileForm.valid">Save Reconciliation</button>
-            <button type="button" class="btn-secondary" (click)="cancelReconcile()">Cancel</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="reconciliation-summary" *ngIf="!loading && !error">
-        <div class="summary-card">
-          <h3>Total Reconciliations</h3>
-          <span class="count">{{ reconciliationRecords.length }}</span>
+          </form>
         </div>
-        <div class="summary-card">
-          <h3>Items with Variance</h3>
-          <span class="count">{{ getItemsWithVariance() }}</span>
+      }
+    
+      @if (!loading && !error) {
+        <div class="reconciliation-summary">
+          <div class="summary-card">
+            <h3>Total Reconciliations</h3>
+            <span class="count">{{ reconciliationRecords.length }}</span>
+          </div>
+          <div class="summary-card">
+            <h3>Items with Variance</h3>
+            <span class="count">{{ getItemsWithVariance() }}</span>
+          </div>
+          <div class="summary-card">
+            <h3>Perfect Matches</h3>
+            <span class="count">{{ getPerfectMatches() }}</span>
+          </div>
         </div>
-        <div class="summary-card">
-          <h3>Perfect Matches</h3>
-          <span class="count">{{ getPerfectMatches() }}</span>
+      }
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading reconciliation records...</p>
         </div>
-      </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading reconciliation records...</p>
-      </div>
-
-      <div class="error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="btn-secondary" (click)="loadReconciliationRecords()">Retry</button>
-      </div>
-
-      <div class="reconciliation-records" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>System Count</th>
-              <th>Physical Count</th>
-              <th>Variance</th>
-              <th>Reconciled By</th>
-              <th>Date</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let record of reconciliationRecords" [class]="getVarianceRowClass(record)">
-              <td>{{ record.itemName }}</td>
-              <td>{{ record.systemCount }} {{ record.unit }}</td>
-              <td>{{ record.physicalCount }} {{ record.unit }}</td>
-              <td [class]="getVarianceClassForRecord(record)">
-                {{ record.variance > 0 ? '+' : '' }}{{ record.variance }} {{ record.unit }}
-              </td>
-              <td>{{ record.reconciledBy }}</td>
-              <td>{{ record.reconciledDate | date:'short' }}</td>
-              <td>{{ record.notes || 'N/A' }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="no-records" *ngIf="reconciliationRecords.length === 0">
-          <p>No reconciliation records found. Start your first inventory count!</p>
+      }
+    
+      @if (error) {
+        <div class="error">
+          <p>{{ error }}</p>
+          <button class="btn-secondary" (click)="loadReconciliationRecords()">Retry</button>
         </div>
-      </div>
+      }
+    
+      @if (!loading && !error) {
+        <div class="reconciliation-records">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>System Count</th>
+                <th>Physical Count</th>
+                <th>Variance</th>
+                <th>Reconciled By</th>
+                <th>Date</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (record of reconciliationRecords; track record) {
+                <tr [class]="getVarianceRowClass(record)">
+                  <td>{{ record.itemName }}</td>
+                  <td>{{ record.systemCount }} {{ record.unit }}</td>
+                  <td>{{ record.physicalCount }} {{ record.unit }}</td>
+                  <td [class]="getVarianceClassForRecord(record)">
+                    {{ record.variance > 0 ? '+' : '' }}{{ record.variance }} {{ record.unit }}
+                  </td>
+                  <td>{{ record.reconciledBy }}</td>
+                  <td>{{ record.reconciledDate | date:'short' }}</td>
+                  <td>{{ record.notes || 'N/A' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (reconciliationRecords.length === 0) {
+            <div class="no-records">
+              <p>No reconciliation records found. Start your first inventory count!</p>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .reconcile-container {
       padding: 20px;

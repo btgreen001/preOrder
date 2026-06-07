@@ -12,31 +12,39 @@
     </button>
   </div>
 
-  <div *ngIf="loading" class="loading-spinner">
-    <mat-spinner diameter="50"></mat-spinner>
-  </div>
+  @if (loading) {
+    <div class="loading-spinner">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+  }
 
-  <div *ngIf="!loading && depletionHistory.length === 0" class="empty-state">
-    <p>No depletion history found.</p>
-  </div>
+  @if (!loading && depletionHistory.length === 0) {
+    <div class="empty-state">
+      <p>No depletion history found.</p>
+    </div>
+  }
 
-  <mat-card *ngIf="!loading && depletionHistory.length > 0" class="history-card">
-    <mat-card-header>
-      <mat-card-title>Depletion History ({{depletionHistory.length}} records)</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="depletion-list">
-        <div *ngFor="let record of depletionHistory" class="depletion-item">
-          <div class="item-header">
-            <strong>{{record.depletionDate | date:'short'}}</strong> - Cost: <span class="cost">${{formatCost(record.depletionCost)}}</span>
-          </div>
-          <div class="item-details">
-            <p>Batch: {{record.batchExternalId | slice:0:8}}...</p>
-            <p>Depleted By: {{record.depletedBy}}</p>
-            <p>Details: {{record.details}}</p>
-          </div>
+  @if (!loading && depletionHistory.length > 0) {
+    <mat-card class="history-card">
+      <mat-card-header>
+        <mat-card-title>Depletion History ({{depletionHistory.length}} records)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="depletion-list">
+          @for (record of depletionHistory; track record) {
+            <div class="depletion-item">
+              <div class="item-header">
+                <strong>{{record.depletionDate | date:'short'}}</strong> - Cost: <span class="cost">${{formatCost(record.depletionCost)}}</span>
+              </div>
+              <div class="item-details">
+                <p>Batch: {{record.batchExternalId | slice:0:8}}...</p>
+                <p>Depleted By: {{record.depletedBy}}</p>
+                <p>Details: {{record.details}}</p>
+              </div>
+            </div>
+          }
         </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
+  }
 </div>

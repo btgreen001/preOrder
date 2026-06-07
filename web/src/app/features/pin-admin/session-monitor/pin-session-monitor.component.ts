@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -33,7 +33,6 @@ interface SessionMetrics {
   selector: 'app-pin-session-monitor',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatCardModule,
     MatTableModule,
@@ -43,7 +42,7 @@ interface SessionMetrics {
     MatProgressSpinnerModule,
     MatDialogModule,
     MatChipsModule
-  ],
+],
   templateUrl: './pin-session-monitor.component.html',
   styleUrls: ['./pin-session-monitor.component.css']
 })
@@ -227,7 +226,7 @@ export class PinSessionMonitorComponent implements OnInit {
 @Component({
   selector: 'app-confirm-force-logout-dialog',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatDialogModule],
+  imports: [MatButtonModule, MatDialogModule],
   template: `
     <h2 mat-dialog-title>Confirm Force Logout</h2>
     <mat-dialog-content>

@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { UpdateCompanyProfileRequest } from '../../core/models/auth.model';
@@ -9,9 +9,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   selector: 'app-company-profile',
   standalone: true,
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-  ],
+    ReactiveFormsModule
+],
   templateUrl: './company-profile.component.html',
   styleUrls: ['./company-profile.component.scss']
 })

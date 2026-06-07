@@ -1,31 +1,45 @@
 import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LicenseService } from './license.service';
 
 @Component({
   selector: 'app-trial-banner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
-    <div *ngIf="shouldShow" class="trial-banner" [class.expired]="isExpired">
-      <div class="banner-content">
-        <div class="banner-icon">⚠️</div>
-        <div class="banner-text">
-          <strong *ngIf="!isExpired">Trial Version</strong>
-          <strong *ngIf="isExpired">License Expired</strong>
-          <span *ngIf="!isExpired">{{ daysLeft }} days remaining in your trial.</span>
-          <span *ngIf="isExpired">Your license has expired. Some features are now restricted.</span>
-        </div>
-        <div class="banner-actions">
-          <button *ngIf="!isExpired" class="btn btn-trial" (click)="tryNow()">Try Now</button>
-          <button class="btn btn-upgrade" (click)="upgrade()">
-            {{ isExpired ? 'Renew License' : 'Upgrade' }}
-          </button>
-          <button *ngIf="!dismissed" class="btn btn-close" (click)="dismiss()">×</button>
+    @if (shouldShow) {
+      <div class="trial-banner" [class.expired]="isExpired">
+        <div class="banner-content">
+          <div class="banner-icon">⚠️</div>
+          <div class="banner-text">
+            @if (!isExpired) {
+              <strong>Trial Version</strong>
+            }
+            @if (isExpired) {
+              <strong>License Expired</strong>
+            }
+            @if (!isExpired) {
+              <span>{{ daysLeft }} days remaining in your trial.</span>
+            }
+            @if (isExpired) {
+              <span>Your license has expired. Some features are now restricted.</span>
+            }
+          </div>
+          <div class="banner-actions">
+            @if (!isExpired) {
+              <button class="btn btn-trial" (click)="tryNow()">Try Now</button>
+            }
+            <button class="btn btn-upgrade" (click)="upgrade()">
+              {{ isExpired ? 'Renew License' : 'Upgrade' }}
+            </button>
+            @if (!dismissed) {
+              <button class="btn btn-close" (click)="dismiss()">×</button>
+            }
+          </div>
         </div>
       </div>
-    </div>
-  `,
+    }
+    `,
   styles: [`
     .trial-banner {
       background: linear-gradient(135deg, #fff3cd, #ffeeba);

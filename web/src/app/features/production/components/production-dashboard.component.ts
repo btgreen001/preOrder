@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,14 +12,13 @@ import { ProductionDashboardService, DashboardMetrics, DashboardAlertsSummary, D
   selector: 'app-production-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
     MatTabsModule,
     MatProgressBarModule,
     MatSnackBarModule
-  ],
+],
   templateUrl: './production-dashboard.component.html',
   styleUrls: ['./production-dashboard.component.css']
 })

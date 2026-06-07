@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -18,7 +18,6 @@ import { BatchService } from '../services/batch.service';
   selector: 'app-batch-editor',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -31,7 +30,7 @@ import { BatchService } from '../services/batch.service';
     MatNativeDateModule,
     MatIconModule,
     RouterModule
-  ],
+],
   templateUrl: './batch-editor.component.html',
   styleUrls: ['./batch-editor.component.css']
 })

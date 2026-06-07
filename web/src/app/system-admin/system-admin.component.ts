@@ -1,12 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AdminService, Organization, SystemUser } from './admin.service';
 
 @Component({
   selector: 'app-system-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './system-admin.component.html',
   styleUrls: ['./system-admin.component.scss'],
   providers: [AdminService]

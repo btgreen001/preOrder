@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-order-builder',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './order-builder.html',
   styleUrl: './order-builder.scss'
 })

@@ -1,7 +1,7 @@
 
 import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, NavigationEnd, ActivatedRouteSnapshot } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { RoleService, UserRole } from '../shared-data-services/role.service';
@@ -39,7 +39,7 @@ export type NavItem =
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, LoadingOverlayComponent, MatIconModule, MatMenuModule],
+  imports: [RouterOutlet, RouterLink, LoadingOverlayComponent, MatIconModule, MatMenuModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

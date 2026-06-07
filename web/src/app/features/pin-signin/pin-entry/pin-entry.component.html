@@ -2,10 +2,10 @@
   <mat-card class="pin-entry-card" data-testid="pin-entry-card">
     <mat-card-content>
       <div class="header">
-        <button 
-          mat-icon-button 
-          (click)="onCancel()" 
-          data-testid="back-button" 
+        <button
+          mat-icon-button
+          (click)="onCancel()"
+          data-testid="back-button"
           title="Back to User List">
           <mat-icon>arrow_back</mat-icon>
         </button>
@@ -14,7 +14,7 @@
           <p class="user-name" data-testid="user-name-header">{{ userName }}</p>
         </div>
       </div>
-      
+
       <div class="change-user-link">
         <button mat-button (click)="onCancel()" data-testid="change-user-link" color="primary">
           <mat-icon>person_outline</mat-icon>
@@ -23,29 +23,33 @@
       </div>
 
       <div class="pin-dots" data-testid="pin-dots">
-        <div 
-          *ngFor="let dot of pin; let i = index" 
-          class="pin-dot"
-          [class.filled]="isPinDotFilled(i)"
-          [attr.data-testid]="'pin-dot'">
-        </div>
+        @for (dot of pin; track dot; let i = $index) {
+          <div
+            class="pin-dot"
+            [class.filled]="isPinDotFilled(i)"
+            [attr.data-testid]="'pin-dot'">
+          </div>
+        }
       </div>
 
-      <div class="error-message" *ngIf="showError" data-testid="error-message">
-        <mat-icon>error</mat-icon>
-        Invalid PIN. Please try again.
-      </div>
+      @if (showError) {
+        <div class="error-message" data-testid="error-message">
+          <mat-icon>error</mat-icon>
+          Invalid PIN. Please try again.
+        </div>
+      }
 
       <div class="number-pad" data-testid="pin-keypad">
-        <button 
-          *ngFor="let num of numberPad"
-          mat-raised-button
-          class="number-button"
-          (click)="onNumberClick(num)"
-          [attr.data-testid]="'pin-button-' + num">
-          {{ num }}
-        </button>
-        <button 
+        @for (num of numberPad; track num) {
+          <button
+            mat-raised-button
+            class="number-button"
+            (click)="onNumberClick(num)"
+            [attr.data-testid]="'pin-button-' + num">
+            {{ num }}
+          </button>
+        }
+        <button
           mat-raised-button
           class="action-button"
           (click)="onClear()"
@@ -53,7 +57,7 @@
           <mat-icon>clear</mat-icon>
           Clear
         </button>
-        <button 
+        <button
           mat-raised-button
           class="action-button"
           (click)="onBackspace()"

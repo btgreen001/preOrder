@@ -3,7 +3,7 @@
     <div class="brand">BakeAhead™</div>
     <div class="promo">Welcome to BakeAhead™ Pre-Order Manager — where every order is a promise of something delicious.
 
-</div>
+    </div>
   </div>
   <div class="login-area">
     <mat-card class="spotify-card" data-testid="login-card">
@@ -14,10 +14,12 @@
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" data-testid="login-form">
         <!-- Error message display -->
-        <div *ngIf="errorMessage" class="error-message" data-testid="error-message">
-          {{ errorMessage }}
-        </div>
-        
+        @if (errorMessage) {
+          <div class="error-message" data-testid="error-message">
+            {{ errorMessage }}
+          </div>
+        }
+
         <mat-form-field appearance="outline" class="full" data-testid="username-field">
           <mat-label>Username</mat-label>
           <input matInput formControlName="username" data-testid="username-input" />

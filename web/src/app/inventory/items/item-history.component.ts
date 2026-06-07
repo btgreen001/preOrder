@@ -9,43 +9,55 @@ import { InventoryService, InventoryMovement, InventoryItem } from '../inventory
 	imports: [CommonModule],
 	template: `
 		<div class="history-container">
-			<h2>Item History</h2>
-			<p *ngIf="itemName">{{ itemName }}</p>
-
-			<div class="error" *ngIf="error">{{ error }}</div>
-
-			<div class="loading" *ngIf="loading">Loading movement history...</div>
-
-			<table *ngIf="!loading && !error && movements.length > 0">
-				<thead>
-					<tr>
-						<th>Type</th>
-						<th>Quantity Delta</th>
-						<th>Reason</th>
-						<th>Timestamp</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr *ngFor="let movement of movements">
-						<td>{{ movement.movementType }}</td>
-						<td [class.negative]="movement.quantityChange < 0" [class.positive]="movement.quantityChange > 0">
-							{{ movement.quantityChange > 0 ? '+' : '' }}{{ movement.quantityChange }}
-						</td>
-						<td>{{ movement.reason || 'N/A' }}</td>
-						<td>{{ movement.createdAt | date:'short' }}</td>
-					</tr>
-				</tbody>
-			</table>
-
-			<div class="empty" *ngIf="!loading && !error && movements.length === 0">
-				No movement history found for this item.
-			</div>
-
-			<div class="actions">
-				<button class="btn-secondary" (click)="goBack()">Back to Items</button>
-			</div>
+		  <h2>Item History</h2>
+		  @if (itemName) {
+		    <p>{{ itemName }}</p>
+		  }
+		
+		  @if (error) {
+		    <div class="error">{{ error }}</div>
+		  }
+		
+		  @if (loading) {
+		    <div class="loading">Loading movement history...</div>
+		  }
+		
+		  @if (!loading && !error && movements.length > 0) {
+		    <table>
+		      <thead>
+		        <tr>
+		          <th>Type</th>
+		          <th>Quantity Delta</th>
+		          <th>Reason</th>
+		          <th>Timestamp</th>
+		        </tr>
+		      </thead>
+		      <tbody>
+		        @for (movement of movements; track movement) {
+		          <tr>
+		            <td>{{ movement.movementType }}</td>
+		            <td [class.negative]="movement.quantityChange < 0" [class.positive]="movement.quantityChange > 0">
+		              {{ movement.quantityChange > 0 ? '+' : '' }}{{ movement.quantityChange }}
+		            </td>
+		            <td>{{ movement.reason || 'N/A' }}</td>
+		            <td>{{ movement.createdAt | date:'short' }}</td>
+		          </tr>
+		        }
+		      </tbody>
+		    </table>
+		  }
+		
+		  @if (!loading && !error && movements.length === 0) {
+		    <div class="empty">
+		      No movement history found for this item.
+		    </div>
+		  }
+		
+		  <div class="actions">
+		    <button class="btn-secondary" (click)="goBack()">Back to Items</button>
+		  </div>
 		</div>
-	`,
+		`,
 	styles: [`
 		.history-container {
 			padding: 20px;

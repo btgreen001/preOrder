@@ -16,34 +16,38 @@ import { InventoryService, InventoryCategory } from '../../inventory.service';
           <button class="btn-secondary" (click)="goBack()">Back to Categories</button>
         </div>
       </header>
-
-      <div class="detail-container" *ngIf="!loading">
-        <div class="detail-card">
-          <div class="detail-section">
-            <h2>{{ category?.name }}</h2>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <label>Description</label>
-                <p>{{ category?.description }}</p>
-              </div>
-              <div class="detail-item">
-                <label>Items in Category</label>
-                <p>{{ category?.itemCount }} items</p>
-              </div>
-              <div class="detail-item">
-                <label>Created Date</label>
-                <p>{{ category?.createdDate | date:'mediumDate' }}</p>
+    
+      @if (!loading) {
+        <div class="detail-container">
+          <div class="detail-card">
+            <div class="detail-section">
+              <h2>{{ category?.name }}</h2>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Description</label>
+                  <p>{{ category?.description }}</p>
+                </div>
+                <div class="detail-item">
+                  <label>Items in Category</label>
+                  <p>{{ category?.itemCount }} items</p>
+                </div>
+                <div class="detail-item">
+                  <label>Created Date</label>
+                  <p>{{ category?.createdDate | date:'mediumDate' }}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="loading" *ngIf="loading">
-        <p>Loading category details...</p>
-      </div>
+      }
+    
+      @if (loading) {
+        <div class="loading">
+          <p>Loading category details...</p>
+        </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .category-detail-container {
       padding: 20px;
