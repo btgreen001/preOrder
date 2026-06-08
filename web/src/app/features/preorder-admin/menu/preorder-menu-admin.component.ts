@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 
 import {
   PreorderAdminService,
@@ -318,7 +319,9 @@ export class PreorderMenuAdminComponent implements OnInit {
       return;
     }
 
-    if (form.maxPerOrder !== null && form.maxPerOrder < 1) {
+    const max = form.maxPerOrder;
+
+    if (max != null && max < 1) {
       this.snackBar.open('Max-per-order must be at least 1.', 'Close', {
         duration: 3000,
         panelClass: ['info-snackbar']
