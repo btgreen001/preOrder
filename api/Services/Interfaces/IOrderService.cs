@@ -23,6 +23,8 @@ namespace PreOrderApp.Services.Interfaces
         Task<OrderDetailDto?> CancelOrderAsync(Guid externalId);
         Task<OrderDetailDto?> ChangePickupSlotAsync(Guid externalId, Guid pickupSlotExternalId);
         Task<List<OrderDto>> GetOrdersByStatusAsync(Guid organizationId, string status);
+        Task<OrderSummary> ResolveOrderSummaryAsync(Guid orderId, string orderType, string? requestedReturnUrl);
+
     }
 
     public class OrderDto
@@ -161,4 +163,16 @@ namespace PreOrderApp.Services.Interfaces
         public DateTime? ExpirationDate { get; set; }
         public string? Customizations { get; set; }
     }
+
+    public class OrderSummary
+    {
+        public Guid OrderId { get; set; }
+        public string OrderType { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public long AmountInCents { get; set; }
+        public string Currency { get; set; } = "usd";
+        public string ReturnUrl { get; set; } = string.Empty;
+    }
+
 }

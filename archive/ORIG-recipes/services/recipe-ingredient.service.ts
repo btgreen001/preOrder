@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface RecipeIngredientDto {
   externalId: string;
@@ -65,11 +64,11 @@ export class RecipeIngredientService {
   constructor(private http: HttpClient) {}
 
   getIngredients(recipeExternalId: string): Observable<RecipeIngredientDto[]> {
-    return this.http.get<RecipeIngredientDto[]>(`${this.apiUrl}/recipe/${recipeExternalId}`);
+    return this.http.get<RecipeIngredientDto[]>(`${import.meta.env['NG_APP_API_URL']}/recipe/${recipeExternalId}`);
   }
 
   getIngredient(externalId: string): Observable<RecipeIngredientDto> {
-    return this.http.get<RecipeIngredientDto>(`${this.apiUrl}/${externalId}`);
+    return this.http.get<RecipeIngredientDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 
   addIngredient(recipeExternalId: string, request: CreateRecipeIngredientRequest): Observable<RecipeIngredientDto> {
@@ -83,14 +82,14 @@ export class RecipeIngredientService {
   }
 
   updateIngredient(externalId: string, request: UpdateRecipeIngredientRequest): Observable<RecipeIngredientDto> {
-    return this.http.put<RecipeIngredientDto>(`${this.apiUrl}/${externalId}`, request);
+    return this.http.put<RecipeIngredientDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`, request);
   }
 
   removeIngredient(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${externalId}`);
+    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 
   reorderIngredients(recipeExternalId: string, request: ReorderIngredientsRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/recipe/${recipeExternalId}/reorder`, request);
+    return this.http.put<void>(`${import.meta.env['NG_APP_API_URL']}/recipe/${recipeExternalId}/reorder`, request);
   }
 }

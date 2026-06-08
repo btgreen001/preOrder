@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface WasteEvent {
   externalId: string;
@@ -70,7 +69,7 @@ export class WasteService {
    * Get a specific waste event by external ID
    */
   getWasteEventById(externalId: string): Observable<WasteEvent> {
-    return this.http.get<WasteEvent>(`${this.apiUrl}/${externalId}`);
+    return this.http.get<WasteEvent>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 
   /**
@@ -88,6 +87,6 @@ export class WasteService {
     if (startDate) params = params.set('startDate', startDate.toISOString());
     if (endDate) params = params.set('endDate', endDate.toISOString());
 
-    return this.http.get<WasteAnalytics>(`${this.apiUrl}/analytics`, { params });
+    return this.http.get<WasteAnalytics>(`${import.meta.env['NG_APP_API_URL']}/analytics`, { params });
   }
 }

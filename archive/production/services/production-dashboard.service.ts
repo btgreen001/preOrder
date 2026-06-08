@@ -53,15 +53,15 @@ export class ProductionDashboardService {
   constructor(private http: HttpClient) { }
 
   getTodayMetrics(): Observable<DashboardMetrics> {
-    return this.http.get<DashboardMetrics>(`${this.apiUrl}/today`);
+    return this.http.get<DashboardMetrics>(`${import.meta.env['NG_APP_API_URL']}/today`);
   }
 
   getUpcomingTasks(days: number = 7): Observable<DashboardTaskCard[]> {
-    return this.http.get<DashboardTaskCard[]>(`${this.apiUrl}/upcoming-tasks?days=${days}`);
+    return this.http.get<DashboardTaskCard[]>(`${import.meta.env['NG_APP_API_URL']}/upcoming-tasks?days=${days}`);
   }
 
   getProductivityMetrics(startDate?: string, endDate?: string): Observable<ProductivityMetrics> {
-    let url = `${this.apiUrl}/productivity`;
+    let url = `${import.meta.env['NG_APP_API_URL']}/productivity`;
     if (startDate && endDate) {
       url += `?startDate=${startDate}&endDate=${endDate}`;
     }
@@ -69,10 +69,10 @@ export class ProductionDashboardService {
   }
 
   getBatchTrends(days: number = 30): Observable<BatchTrend[]> {
-    return this.http.get<BatchTrend[]>(`${this.apiUrl}/batch-trends?days=${days}`);
+    return this.http.get<BatchTrend[]>(`${import.meta.env['NG_APP_API_URL']}/batch-trends?days=${days}`);
   }
 
   getAlerts(): Observable<DashboardAlertsSummary> {
-    return this.http.get<DashboardAlertsSummary>(`${this.apiUrl}/alerts`);
+    return this.http.get<DashboardAlertsSummary>(`${import.meta.env['NG_APP_API_URL']}/alerts`);
   }
 }

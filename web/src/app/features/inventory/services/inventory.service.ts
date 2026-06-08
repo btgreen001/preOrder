@@ -19,7 +19,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
 
 // Backend API response interface (matches backend InventoryItemDto)
 export interface InventoryItemApi {
@@ -109,7 +108,7 @@ export interface ReceiveGoodsRequest {
   providedIn: 'root'
 })
 export class InventoryService {
-  private readonly apiUrl = `${environment.apiUrl}/inventory`;
+  private readonly apiUrl = `import.meta.env['NG_APP_API_URL']/inventory`;
 
   constructor(private http: HttpClient) {}
 
@@ -127,7 +126,7 @@ export class InventoryService {
    * Get composite inventory items (inventory + recipe components)
    */
   getCompositeInventory(): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItemApi[]>(`${this.apiUrl}/composite-list`).pipe(
+    return this.http.get<InventoryItemApi[]>(`${import.meta.env['NG_APP_API_URL']}/composite-list`).pipe(
       map(items => items.map(item => this.mapApiToFrontend(item)))
     );
   }
@@ -136,7 +135,7 @@ export class InventoryService {
    * Get a specific inventory item by ID
    */
   getInventoryItemById(id: string): Observable<InventoryItem> {
-    return this.http.get<InventoryItemApi>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<InventoryItemApi>(`${import.meta.env['NG_APP_API_URL']}/${id}`).pipe(
       map(item => this.mapApiToFrontend(item))
     );
   }
@@ -145,7 +144,7 @@ export class InventoryService {
    * Get inventory items for a specific supplier
    */
   getInventoryBySupplier(supplierId: string): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItemApi[]>(`${this.apiUrl}/supplier/${supplierId}`).pipe(
+    return this.http.get<InventoryItemApi[]>(`${import.meta.env['NG_APP_API_URL']}/supplier/${supplierId}`).pipe(
       map(items => items.map(item => this.mapApiToFrontend(item)))
     );
   }
@@ -154,7 +153,7 @@ export class InventoryService {
    * Get inventory categories (for inventory items)
    */
   getItemCategories(): Observable<InventoryCategory[]> {
-    return this.http.get<InventoryCategoryApi[]>(`${this.apiUrl}/item-categories`).pipe(
+    return this.http.get<InventoryCategoryApi[]>(`${import.meta.env['NG_APP_API_URL']}/item-categories`).pipe(
       map(categories => categories.map(category => this.mapCategoryApiToFrontend(category)))
     );
   }
@@ -163,7 +162,7 @@ export class InventoryService {
    * Get all categories (InventoryCategory + ProductCategory) for dropdowns
    */
   getAllCategories(): Observable<InventoryCategory[]> {
-    return this.http.get<InventoryCategoryApi[]>(`${this.apiUrl}/item-categories`).pipe(
+    return this.http.get<InventoryCategoryApi[]>(`${import.meta.env['NG_APP_API_URL']}/item-categories`).pipe(
       switchMap(itemCategories =>
         this.getProductCategories().pipe(
           map(productCategories => [
@@ -185,7 +184,7 @@ export class InventoryService {
    * Get product categories (for recipe components)
    */
   getProductCategories(): Observable<ProductCategory[]> {
-    return this.http.get<ProductCategoryApi[]>(`${this.apiUrl}/product-categories`).pipe(
+    return this.http.get<ProductCategoryApi[]>(`${import.meta.env['NG_APP_API_URL']}/product-categories`).pipe(
       map(categories => categories.map(category => ({
         id: category.id,
         name: String(category.categoryName ?? ''),
@@ -211,14 +210,14 @@ export class InventoryService {
    */
   getRecipeComponents(productCategories?: ProductCategory[]): Observable<InventoryItem[]> {
     if (productCategories) {
-      return this.http.get<InventoryRecipeComponentApi[]>(`${this.apiUrl}/recipe-components`).pipe(
+      return this.http.get<InventoryRecipeComponentApi[]>(`${import.meta.env['NG_APP_API_URL']}/recipe-components`).pipe(
         map(components => components.map(component => this.mapRecipeComponentToInventoryItem(component, productCategories)))
       );
     } else {
       // Fetch product categories first, then map
       return this.getProductCategories().pipe(
         switchMap(productCategoryList =>
-          this.http.get<InventoryRecipeComponentApi[]>(`${this.apiUrl}/recipe-components`).pipe(
+          this.http.get<InventoryRecipeComponentApi[]>(`${import.meta.env['NG_APP_API_URL']}/recipe-components`).pipe(
             map(components => components.map(component => this.mapRecipeComponentToInventoryItem(component, productCategoryList)))
           )
         )
@@ -241,7 +240,7 @@ export class InventoryService {
    * Get low stock items (below reorder point)
    */
   getLowStockItems(): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItemApi[]>(`${this.apiUrl}/low-stock`).pipe(
+    return this.http.get<InventoryItemApi[]>(`${import.meta.env['NG_APP_API_URL']}/low-stock`).pipe(
       map(items => items.map(item => this.mapApiToFrontend(item)))
     );
   }
@@ -250,7 +249,7 @@ export class InventoryService {
    * Get items expiring soon
    */
   getExpiringItems(daysUntilExpiration: number = 7): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItemApi[]>(`${this.apiUrl}/expiring-soon`, {
+    return this.http.get<InventoryItemApi[]>(`${import.meta.env['NG_APP_API_URL']}/expiring-soon`, {
       params: { daysUntilExpiration: daysUntilExpiration.toString() }
     }).pipe(
       map(items => items.map(item => this.mapApiToFrontend(item)))
@@ -262,7 +261,7 @@ export class InventoryService {
    */
   reserveInventory(inventoryItemId: string, quantity: number, referenceId: string): Observable<AvailabilityResponse> {
     const request = { quantity, referenceId };
-    return this.http.post<AvailabilityResponse>(`${this.apiUrl}/${inventoryItemId}/reserve`, request);
+    return this.http.post<AvailabilityResponse>(`${import.meta.env['NG_APP_API_URL']}/${inventoryItemId}/reserve`, request);
   }
 
   /**

@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { TerminalContextService, TerminalContext } from '../../core/services/terminal-context.service';
 import { AuthService } from '../../core/services/auth.service';
 import { TerminalService } from '../../features/terminals/services/terminal.service';
@@ -42,7 +41,7 @@ export class TerminalSelectionComponent implements OnInit {
   availableTerminals: TerminalDto[] = [];
   isLoading = true;
   error: string | null = null;
-  private apiUrl = `${environment.apiUrl}/terminal`;
+  private apiUrl = `${import.meta.env['NG_APP_API_URL']}/terminal`;
 
   constructor(
     private http: HttpClient,
@@ -51,6 +50,7 @@ export class TerminalSelectionComponent implements OnInit {
     private terminalService: TerminalService,
     private router: Router
   ) {}
+
 
   ngOnInit(): void {
     // APP_INITIALIZER already rehydrated TerminalContextService from the device_token cookie.
@@ -73,7 +73,7 @@ export class TerminalSelectionComponent implements OnInit {
     this.error = null;
 
     // Call backend API to get available terminals
-    this.http.get<TerminalDto[]>(`${this.apiUrl}/available`, {
+    this.http.get<TerminalDto[]>(`${import.meta.env['NG_APP_API_URL']}/available`, {
       withCredentials: true
     }).subscribe({
       next: (terminals) => {

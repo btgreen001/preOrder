@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface RegistrationCode {
   codeId: string;
@@ -25,7 +24,7 @@ export interface CreateCodeRequest {
 })
 export class InviteCodesService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/organization`;
+  private readonly baseUrl = `${import.meta.env['NG_APP_API_URL']}/organization`;
 
   getCodes(orgId: string): Observable<RegistrationCode[]> {
     return this.http.get<RegistrationCode[]>(`${this.baseUrl}/${orgId}/registration-codes`);

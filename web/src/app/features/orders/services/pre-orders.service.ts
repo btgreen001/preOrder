@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface Order {
   id: number;
@@ -16,24 +15,25 @@ export interface Order {
   organizationId: string;
   specialInstructionTxt?: string;
   customerName?: string;
-  items?: OrderLineItem[];
+  items?: OrderLineItem[] | null;
   pickupSlot?: OrderPickupSlot | null;
-  organization?: OrganizationDtl; // Organization details including registration token
+  organization?: OrganizationDtl | null; // Organization details including registration token
 }
 
 export interface OrganizationDtl {
-  organizationId: string;
-  organizationName: string;
-  registrationToken?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-  contactEmail?: string;
-  contactPhone?: string;
+  organizationId?: string | null;
+  organizationName?: string | null;
+  registrationToken?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
 }
+
 
 export interface OrderLineItem {
   id: number;
@@ -90,7 +90,7 @@ export interface ChangePickupSlotRequest {
   providedIn: 'root'
 })
 export class OrdersService {
-  private readonly apiUrl = `${environment.apiUrl}/orders`;
+  private readonly apiUrl = `${import.meta.env['NG_APP_API_URL']}/orders`;
   private readonly http = inject(HttpClient);
 
   /**
@@ -98,7 +98,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   getOrderByExternalId(externalId: string): Observable<Order> {
-    return this.http.get<Order>(`${environment.apiUrl}/public/preorders/${externalId}`);
+    return this.http.get<Order>(`${import.meta.env['NG_APP_API_URL']}/public/preorders/${externalId}`);
   }
 
   /**
@@ -106,13 +106,13 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   updateOrderStatus(externalId: string, request: UpdateOrderStatusRequest): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${externalId}/status`, request);
+    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/status`, request);
   }
 
   // ===== Phase 2: Business Logic Methods =====
 
   getAvailablePickupSlots(organizationToken: string, holidayEventExternalId: string): Observable<AvailablePickupSlot[]> {
-    return this.http.get<AvailablePickupSlot[]>(`${environment.apiUrl}/public/preorders/pickup-slots`, {
+    return this.http.get<AvailablePickupSlot[]>(`${import.meta.env['NG_APP_API_URL']}/public/preorders/pickup-slots`, {
       params: {
         org: organizationToken,
         holidayEventExternalId
@@ -121,7 +121,7 @@ export class OrdersService {
   }
 
   changePickupSlot(externalId: string, request: ChangePickupSlotRequest): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${externalId}/pickup-slot`, request);
+    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/pickup-slot`, request);
   }
 
   /**
@@ -129,7 +129,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   cancelOrder(externalId: string): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${externalId}/cancel`, {});
+    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cancel`, {});
   }
 
 }

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface InventoryItemDto {
   id: string;
@@ -26,6 +25,6 @@ export class InventoryService {
   }
 
   getInventoryItem(externalId: string): Observable<InventoryItemDto> {
-    return this.http.get<InventoryItemDto>(`${this.apiUrl}/${externalId}`);
+    return this.http.get<InventoryItemDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 }

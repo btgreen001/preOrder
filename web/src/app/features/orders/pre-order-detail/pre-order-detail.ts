@@ -66,13 +66,13 @@ import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-order
             <h2>Pickup Location</h2>
             <p>{{ order.organization?.organizationName }}</p>
             <p>{{ order.organization?.addressLine1 }} {{ order.organization?.addressLine2 }}</p>
-            <p>{{ order.organization?.city }}@if (order.organization?.state) {,  {{ order.organization?.state }} }</p>
+            <p>{{ order.organization?.city }}@if (order.organization?.state) {,  {{ order.organization.state }} }</p>
             <p></p>
             @if (order.organization?.contactPhone) {
-              <p><strong>Phone:</strong> {{ order.organization?.contactPhone }}</p>
+              <p><strong>Phone:</strong> {{ order.organization.contactPhone }}</p>
             }
             @if (order.organization?.contactEmail) {
-              <p><strong>Email:</strong> {{ order.organization?.contactEmail }}</p>
+              <p><strong>Email:</strong> {{ order.organization.contactEmail }}</p>
             }
           </div>
         }
@@ -347,7 +347,7 @@ import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-order
   `]
 })
 export class OrderDetailComponent {
-  order: Order | undefined;
+  order: Order | null = null;
   availablePickupSlots: AvailablePickupSlot[] = [];
   selectedPickupSlotExternalId = '';
   isLoadingPickupSlots = false;

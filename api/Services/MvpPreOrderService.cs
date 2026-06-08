@@ -40,6 +40,7 @@ public class MvpPreOrderService : IMvpPreOrderService
             .AsNoTracking()
             .ToListAsync();
     }
+
     public async Task<List<HolidayEvent>> GetHolidayEventsAsync(Guid organizationId)
     {
         return await _context.HolidayEvents

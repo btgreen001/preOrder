@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 /**
  * DATETIME SEMANTICS for PreOrder Admin:
@@ -185,9 +184,9 @@ export interface PasswordConfirmRequest {
 })
 export class PreorderAdminService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/mvp`;
-  private readonly productsUrl = `${environment.apiUrl}/products`;
-  private readonly organizationsUrl = `${environment.apiUrl}/organization`;
+  private readonly baseUrl = `${import.meta.env['NG_APP_API_URL']}/mvp`;
+  private readonly productsUrl = `${import.meta.env['NG_APP_API_URL']}/products`;
+  private readonly organizationsUrl = `${import.meta.env['NG_APP_API_URL']}/organization`;
   private readonly selectedHolidayEventStorageKey = 'preorder-admin.selectedHolidayEventExternalId';
 
   setSelectedHolidayEventExternalId(externalId: string): void {

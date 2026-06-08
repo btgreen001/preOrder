@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { AuthResponse } from '../core/models/auth.model';
 
 export interface Organization {
@@ -44,7 +43,7 @@ export interface UpdateUserRequest {
 export class AdminService {
   private http = inject(HttpClient);
 
-  private apiUrl = environment.apiUrl + '/organization';
+  private apiUrl = import.meta.env['NG_APP_API_URL'] + '/organization';
 
   getAllOrganizations(): Observable<Organization[]> {
     return this.http.get<Organization[]>(`${this.apiUrl}`);

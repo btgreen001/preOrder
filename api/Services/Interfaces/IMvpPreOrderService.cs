@@ -23,6 +23,7 @@ public interface IMvpPreOrderService
     Task<string> ExportPreOrdersCsvAsync(Guid organizationId, Guid? holidayEventExternalId = null, DateTime? pickupDateUtc = null);
     Task<PreOrder> CreatePreOrderAsync(Guid organizationId, CreatePreOrderRequest request);
     Task<PreOrder> UpdatePreOrderStatusAsync(Guid organizationId, Guid preOrderExternalId, string nextStatus, Guid? changedByUserId = null, string? ipAddress = null, string? userAgent = null);
+
 }
 
 public class CreateHolidayEventRequest

@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface Terminal {
   terminalUid: string;     // UUID
@@ -82,7 +81,7 @@ export interface TerminalDeviceBinding {
   providedIn: 'root'
 })
 export class TerminalService {
-  private readonly apiUrl = `${environment.apiUrl}/terminal`;
+  private readonly apiUrl = `${import.meta.env['NG_APP_API_URL']}/terminal`;
   private http = inject(HttpClient);
 
   /**
@@ -96,14 +95,14 @@ export class TerminalService {
    * Get all active terminals for the organization
    */
   getAvailableTerminals(): Observable<Terminal[]> {
-    return this.http.get<Terminal[]>(`${this.apiUrl}/available`);
+    return this.http.get<Terminal[]>(`${import.meta.env['NG_APP_API_URL']}/available`);
   }
 
   /**
    * Get terminal currently bound to this device token (if any)
    */
   getCurrentBinding(): Observable<Terminal | null> {
-    return this.http.get<Terminal | null>(`${this.apiUrl}/current-binding`);
+    return this.http.get<Terminal | null>(`${import.meta.env['NG_APP_API_URL']}/current-binding`);
   }
 
   /**
@@ -111,7 +110,7 @@ export class TerminalService {
    * Used to rehydrate TerminalContextService after a hard page reload.
    */
   getDeviceContext(): Observable<DeviceContext | null> {
-    return this.http.get<DeviceContext | null>(`${this.apiUrl}/device-context`, { withCredentials: true });
+    return this.http.get<DeviceContext | null>(`${import.meta.env['NG_APP_API_URL']}/device-context`, { withCredentials: true });
   }
 
   /**
@@ -119,14 +118,14 @@ export class TerminalService {
    * Call on explicit logout so device-context returns null on next reload.
    */
   releaseDeviceContext(): Observable<{ released: boolean }> {
-    return this.http.delete<{ released: boolean }>(`${this.apiUrl}/device-context`, { withCredentials: true });
+    return this.http.delete<{ released: boolean }>(`${import.meta.env['NG_APP_API_URL']}/device-context`, { withCredentials: true });
   }
 
   /**
    * Get a specific terminal by UUID
    */
   getTerminal(terminalId: string): Observable<Terminal> {
-    return this.http.get<Terminal>(`${this.apiUrl}/${terminalId}`);
+    return this.http.get<Terminal>(`${import.meta.env['NG_APP_API_URL']}/${terminalId}`);
   }
 
   /**
@@ -140,21 +139,21 @@ export class TerminalService {
    * Update an existing terminal
    */
   updateTerminal(terminalId: string, request: UpdateTerminalRequest): Observable<Terminal> {
-    return this.http.put<Terminal>(`${this.apiUrl}/${terminalId}`, request);
+    return this.http.put<Terminal>(`${import.meta.env['NG_APP_API_URL']}/${terminalId}`, request);
   }
 
   /**
    * Deactivate a terminal
    */
   deactivateTerminal(terminalId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${terminalId}`);
+    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${terminalId}`);
   }
 
   /**
    * Reactivate a terminal
    */
   reactivateTerminal(terminalId: string): Observable<Terminal> {
-    return this.http.post<Terminal>(`${this.apiUrl}/${terminalId}/reactivate`, {});
+    return this.http.post<Terminal>(`${import.meta.env['NG_APP_API_URL']}/${terminalId}/reactivate`, {});
   }
 
   // ===== DEVICE BINDING METHODS =====
@@ -164,7 +163,7 @@ export class TerminalService {
    * Server sets HttpOnly cookie with device token
    */
   bindDevice(request: BindDeviceRequest): Observable<BindDeviceResponse> {
-    return this.http.post<BindDeviceResponse>(`${this.apiUrl}/bind-device`, request);
+    return this.http.post<BindDeviceResponse>(`${import.meta.env['NG_APP_API_URL']}/bind-device`, request);
   }
 
   /**
@@ -172,7 +171,7 @@ export class TerminalService {
    * Server clears HttpOnly cookie
    */
   unbindDevice(request: UnbindDeviceRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/unbind-device`, request);
+    return this.http.post<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/unbind-device`, request);
   }
 
   /**
@@ -180,20 +179,20 @@ export class TerminalService {
    * Uses HttpOnly cookie from server
    */
   checkBinding(request: CheckBindingRequest): Observable<CheckBindingResponse> {
-    return this.http.post<CheckBindingResponse>(`${this.apiUrl}/check-binding`, request);
+    return this.http.post<CheckBindingResponse>(`${import.meta.env['NG_APP_API_URL']}/check-binding`, request);
   }
 
   /**
    * Admin: Get all active bindings for a terminal
    */
   getActiveBindings(terminalCode: string): Observable<TerminalDeviceBinding[]> {
-    return this.http.get<TerminalDeviceBinding[]>(`${this.apiUrl}/bindings/${terminalCode}`);
+    return this.http.get<TerminalDeviceBinding[]>(`${import.meta.env['NG_APP_API_URL']}/bindings/${terminalCode}`);
   }
 
   /**
    * Admin: Force release a device binding
    */
   adminReleaseBinding(bindingId: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/bindings/${bindingId}`);
+    return this.http.delete<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/bindings/${bindingId}`);
   }
 }

@@ -10,6 +10,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { PinAdminService } from '../services/pin-admin.service';
+import { NgClass, NgStyle, UpperCasePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
+
+
 
 interface ActiveSession {
   sessionId: string;
@@ -33,6 +37,11 @@ interface SessionMetrics {
   selector: 'app-pin-session-monitor',
   standalone: true,
   imports: [
+    CommonModule,
+    NgClass,
+    NgStyle,
+    UpperCasePipe,
+    MatChipsModule,
     FormsModule,
     MatCardModule,
     MatTableModule,

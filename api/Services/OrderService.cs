@@ -584,6 +584,111 @@ namespace PreOrderApp.Services
             return MapToDetailDto(order);
         }
 
+
+        public async Task<OrderSummary> ResolveOrderSummaryAsync(
+            Guid orderId,
+            string orderType,
+            string? requestedReturnUrl)
+        {
+            if (orderId == Guid.Empty)
+            {
+                throw new ArgumentException("OrderId is required.", nameof(orderId));
+            }
+
+            var normalizedOrderType = NormalizeOrderType(orderType);
+            if (normalizedOrderType is null)
+            {
+                throw new ArgumentException("OrderType is required.", nameof(orderType));
+            }
+
+            return normalizedOrderType switch
+            {
+                "preorder" => await ResolvePreOrderAsync(orderId, normalizedOrderType, requestedReturnUrl),
+                "company-registration" => throw new NotSupportedException("Payment flow for order type 'company-registration' is not implemented yet."),
+                "event" => throw new NotSupportedException("Payment flow for order type 'event' is not implemented yet."),
+                "standalone" => throw new NotSupportedException("Payment flow for order type 'standalone' is not implemented yet."),
+                _ => throw new NotSupportedException($"Payment flow for order type '{orderType}' is not implemented yet.")
+            };
+        }
+
+
+
+        private async Task<OrderSummary> ResolvePreOrderAsync(
+            Guid orderId,
+            string normalizedOrderType,
+            string? requestedReturnUrl)
+        {
+            var order = await GetExternalOrderByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new KeyNotFoundException("Order not found.");
+            }
+
+            var totalAmount = order.TotalAmount;
+            var amountInCents = decimal.ToInt64(decimal.Round(totalAmount * 100m, 0, MidpointRounding.AwayFromZero));
+
+            return new OrderSummary
+            {
+                OrderId = order.ExternalId,
+                OrderType = normalizedOrderType,
+                DisplayName = order.EventName ?? "Pre-order",
+                TotalAmount = totalAmount,
+                AmountInCents = amountInCents,
+                Currency = "usd",
+                ReturnUrl = ResolveReturnUrl(normalizedOrderType, order.ExternalId, requestedReturnUrl)
+            };
+        }
+        private static bool IsSafeRelativeUrl(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            return value.StartsWith('/')
+                && !value.StartsWith("//")
+                && !Uri.IsWellFormedUriString(value, UriKind.Absolute);
+        }
+
+
+        private string ResolveReturnUrl(string normalizedOrderType, Guid orderId, string? requestedReturnUrl)
+        {
+            if (IsSafeRelativeUrl(requestedReturnUrl))
+            {
+                return requestedReturnUrl!;
+            }
+
+            return normalizedOrderType switch
+            {
+                "preorder" => $"/payments/complete/{orderId}",
+                _ => $"/payments/complete/{orderId}"
+            };
+        }
+
+
+        private static string? NormalizeOrderType(string? orderType)
+        {
+            if (string.IsNullOrWhiteSpace(orderType))
+            {
+                return null;
+            }
+
+            return orderType.Trim().ToLowerInvariant() switch
+            {
+                "preorder" => "preorder",
+                "pre-order" => "preorder",
+                "order" => "preorder",
+                "customer-preorder" => "preorder",
+                "customer_preorder" => "preorder",
+                "customerpreorder" => "preorder",
+                "company-registration" => "company-registration",
+                "companyregistration" => "company-registration",
+                "event" => "event",
+                "event-creation" => "event",
+                "standalone" => "standalone",
+                _ => orderType.Trim().ToLowerInvariant()
+            };
+        }
         public async Task<List<OrderDto>> GetOrdersByStatusAsync(Guid organizationId, string status)
         {
             var sanitizedStatus = StringSanitizer.SanitizeForLog(status);

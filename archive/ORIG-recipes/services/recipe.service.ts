@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface RecipeDetail {
   externalId: string;
@@ -242,7 +241,7 @@ export class RecipeService {
    * Get a specific recipe by external ID
    */
   getRecipeById(externalId: string): Observable<RecipeDetail> {
-    return this.http.get<RecipeDetail>(`${this.apiUrl}/${externalId}`);
+    return this.http.get<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 
   /**
@@ -257,60 +256,60 @@ export class RecipeService {
    * This is the preferred method for creating new recipes as it ensures atomicity
    */
   createRecipeWithDetails(request: CreateRecipeWithDetailsRequest): Observable<RecipeDetail> {
-    return this.http.post<RecipeDetail>(`${this.apiUrl}/with-details`, request);
+    return this.http.post<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/with-details`, request);
   }
 
   /**
    * Get computed cost-per-unit for a recipe
    */
   getRecipeCost(externalId: string) {
-    return this.http.get<{ recipeExternalId: string; totalIngredientCost: number; yieldServingCnt: number; yieldUnit: string; costPerUnit: number }>(`${this.apiUrl}/${externalId}/cost`);
+    return this.http.get<{ recipeExternalId: string; totalIngredientCost: number; yieldServingCnt: number; yieldUnit: string; costPerUnit: number }>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cost`);
   }
 
   /**
    * Get detailed cost breakdown for a recipe
    */
   getRecipeCostBreakdown(externalId: string) {
-    return this.http.get(`${this.apiUrl}/${externalId}/cost/breakdown`);
+    return this.http.get(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cost/breakdown`);
   }
 
   /**
    * Update an existing recipe
    */
   updateRecipe(externalId: string, request: UpdateRecipeRequest): Observable<RecipeDetail> {
-    return this.http.put<RecipeDetail>(`${this.apiUrl}/${externalId}`, request);
+    return this.http.put<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`, request);
   }
 
   updateRecipeWithDetails(request: UpdateRecipeWithDetailsRequest): Observable<RecipeDetail> {
-    return this.http.put<RecipeDetail>(`${this.apiUrl}/with-details`, request);
+    return this.http.put<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/with-details`, request);
   }
 
   /**
    * Update only the recipe's stored cost-per-unit (safe cost-only update)
    */
   updateRecipeCost(externalId: string, payload: { costPerUnit?: number | null; costPerUnitIsOverride?: boolean }): Observable<RecipeDetail> {
-    return this.http.patch<RecipeDetail>(`${this.apiUrl}/${externalId}/cost`, payload);
+    return this.http.patch<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cost`, payload);
   }
 
   /**
    * Delete a recipe
    */
   deleteRecipe(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${externalId}`);
+    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 
   /**
    * Check whether a product is used as a finished good by other recipes
    */
   checkProductUsageByRecipes(productExternalId: string): Observable<ProductUsageCheckDto> {
-    return this.http.get<ProductUsageCheckDto>(`${this.apiUrl}/check-product-usage/${productExternalId}`);
+    return this.http.get<ProductUsageCheckDto>(`${import.meta.env['NG_APP_API_URL']}/check-product-usage/${productExternalId}`);
   }
 
   /**
    * Get all versions of a recipe family
    */
   getRecipeVersions(externalId: string): Observable<RecipeVersionSummaryDto[]> {
-    return this.http.get<RecipeVersionSummaryDto[]>(`${this.apiUrl}/${externalId}/versions`);
+    return this.http.get<RecipeVersionSummaryDto[]>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/versions`);
   }
 
   /**
@@ -319,7 +318,7 @@ export class RecipeService {
    */
   createDraftFromRecipe(recipeExternalIdToClone: string): Observable<RecipeDetail> {
     const request: CreateDraftFromRecipeRequest = { recipeExternalIdToClone };
-    return this.http.post<RecipeDetail>(`${this.apiUrl}/draft-from-recipe`, request);
+    return this.http.post<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/draft-from-recipe`, request);
   }
 
   /**
@@ -327,7 +326,7 @@ export class RecipeService {
    * Unlike createDraftFromRecipe, this breaks lineage — the result is its own master.
    */
   forkRecipe(recipeExternalIdToClone: string): Observable<RecipeDetail> {
-    return this.http.post<RecipeDetail>(`${this.apiUrl}/clone`, { recipeExternalIdToClone });
+    return this.http.post<RecipeDetail>(`${import.meta.env['NG_APP_API_URL']}/clone`, { recipeExternalIdToClone });
   }
 
   // Ingredient management methods (Phase 3.2.1)
@@ -337,7 +336,7 @@ export class RecipeService {
    */
   addIngredient(recipeExternalId: string, request: AddRecipeIngredientRequest): Observable<RecipeIngredientDto> {
     return this.http.post<RecipeIngredientDto>(
-      `${this.apiUrl}/${recipeExternalId}/ingredients`,
+      `${import.meta.env['NG_APP_API_URL']}/${recipeExternalId}/ingredients`,
       request
     );
   }
@@ -347,7 +346,7 @@ export class RecipeService {
    */
   getIngredients(recipeExternalId: string): Observable<RecipeIngredientDto[]> {
     return this.http.get<RecipeIngredientDto[]>(
-      `${this.apiUrl}/${recipeExternalId}/ingredients`
+      `${import.meta.env['NG_APP_API_URL']}/${recipeExternalId}/ingredients`
     );
   }
 
@@ -356,7 +355,7 @@ export class RecipeService {
    */
   getIngredient(recipeExternalId: string, ingredientExternalId: string): Observable<RecipeIngredientDto> {
     return this.http.get<RecipeIngredientDto>(
-      `${this.apiUrl}/${recipeExternalId}/ingredients/${ingredientExternalId}`
+      `${import.meta.env['NG_APP_API_URL']}/${recipeExternalId}/ingredients/${ingredientExternalId}`
     );
   }
 
@@ -365,7 +364,7 @@ export class RecipeService {
    */
   updateIngredient(ingredientExternalId: string, request: UpdateRecipeIngredientRequest): Observable<RecipeIngredientDto> {
     return this.http.put<RecipeIngredientDto>(
-      `${this.apiUrl}/ingredients/${ingredientExternalId}`,
+      `${import.meta.env['NG_APP_API_URL']}/ingredients/${ingredientExternalId}`,
       request
     );
   }
@@ -375,7 +374,7 @@ export class RecipeService {
    */
   removeIngredient(ingredientExternalId: string): Observable<void> {
     return this.http.delete<void>(
-      `${this.apiUrl}/ingredients/${ingredientExternalId}`
+      `${import.meta.env['NG_APP_API_URL']}/ingredients/${ingredientExternalId}`
     );
   }
 }

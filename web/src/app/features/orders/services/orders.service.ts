@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 
 export interface Order {
   id: number;
@@ -38,7 +37,7 @@ export interface UpdateOrderStatusRequest {
   providedIn: 'root'
 })
 export class OrdersService {
-  private readonly apiUrl = `${environment.apiUrl}/orders`;
+  private readonly apiUrl = `${import.meta.env['NG_APP_API_URL']}/orders`;
   private readonly http = inject(HttpClient);
 
   /**
@@ -53,20 +52,20 @@ export class OrdersService {
      * Update order (CustomerId and SpecialInstructionTxt)
      */
     updateOrder(id: string, changes: UpdateOrderRequest): Observable<Order> {
-      return this.http.put<Order>(`${this.apiUrl}/${id}`, changes);
+      return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${id}`, changes);
     }
   /**
    * Get a specific order by ID
    */
   getOrder(id: string): Observable<Order> {
-    return this.http.get<Order>(`${this.apiUrl}/${id}`);
+    return this.http.get<Order>(`${import.meta.env['NG_APP_API_URL']}/${id}`);
   }
   /**
    * Get a specific order by external ID (UUID)
    * @param externalId - The UUID external_id from database
    */
   getOrderById(externalId: string): Observable<Order> {
-    return this.http.get<Order>(`${this.apiUrl}/${externalId}`);
+    return this.http.get<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
   }
 
   /**
@@ -81,7 +80,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   updateOrderStatus(externalId: string, request: UpdateOrderStatusRequest): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${externalId}/status`, request);
+    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/status`, request);
   }
 
   // ===== Phase 2: Business Logic Methods =====
@@ -90,7 +89,7 @@ export class OrdersService {
    * Validate order inventory before creation
    */
   validateOrderInventory(items: CreateOrderItemRequest[]): Observable<AvailabilityCheckResponse> {
-    return this.http.post<AvailabilityCheckResponse>(`${this.apiUrl}/validate-inventory`, items);
+    return this.http.post<AvailabilityCheckResponse>(`${import.meta.env['NG_APP_API_URL']}/validate-inventory`, items);
   }
 
   /**
@@ -99,7 +98,7 @@ export class OrdersService {
    */
   checkAvailability(inventoryItemId: string, quantity: number): Observable<AvailabilityCheckResponse> {
     const request = { inventoryItemExternalId: inventoryItemId, quantity };
-    return this.http.post<AvailabilityCheckResponse>(`${environment.apiUrl}/inventory/check-availability`, request);
+    return this.http.post<AvailabilityCheckResponse>(`${import.meta.env['NG_APP_API_URL']}/inventory/check-availability`, request);
   }
 
   /**
@@ -107,7 +106,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   generatePickList(externalId: string): Observable<PickListDto> {
-    return this.http.get<PickListDto>(`${this.apiUrl}/${externalId}/pick-list`);
+    return this.http.get<PickListDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/pick-list`);
   }
 
   /**
@@ -115,7 +114,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   completeOrder(externalId: string): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${externalId}/complete`, {});
+    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/complete`, {});
   }
 
   /**
@@ -123,14 +122,14 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   cancelOrder(externalId: string): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${externalId}/cancel`, {});
+    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cancel`, {});
   }
 
   /**
    * Get orders by status
    */
   getOrdersByStatus(status: string): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}/by-status/${status}`);
+    return this.http.get<Order[]>(`${import.meta.env['NG_APP_API_URL']}/by-status/${status}`);
   }
 }
 
