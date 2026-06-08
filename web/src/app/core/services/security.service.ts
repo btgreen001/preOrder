@@ -13,7 +13,7 @@ export class SecurityService {
    * Enforces HTTPS redirection in production environments
    */
   private enforceHttpsRedirection(): void {
-    if (import.meta.env['NG_APP_ENFORCE_HTTPS'] && !this.isSecureConnection()) {
+    if (import.meta.env.NG_APP_ENFORCE_HTTPS && !this.isSecureConnection()) {
       console.warn('Insecure connection detected. Redirecting to HTTPS...');
       this.redirectToHttps();
     }
@@ -38,7 +38,7 @@ export class SecurityService {
    * Validates that sensitive operations are performed over HTTPS
    */
   validateSecureContext(operationName: 'operation'): boolean {
-    if (import.meta.env['NG_APP_ENFORCE_HTTPS'] && !this.isSecureConnection()) {
+    if (import.meta.env.NG_APP_ENFORCE_HTTPS && !this.isSecureConnection()) {
       console.error(`${operationName} requires a secure connection (HTTPS)`);
       return false;
     }
@@ -88,7 +88,7 @@ export class SecurityService {
    * Logs security warnings for development
    */
   logSecurityWarning(message: string): void {
-    if (!import.meta.env['NG_APP_PRODUCTION']) {
+    if (!import.meta.env.NG_APP_PRODUCTION) {
       console.warn(`🔒 Security Warning: ${message}`);
     }
   }

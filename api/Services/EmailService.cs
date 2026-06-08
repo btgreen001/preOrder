@@ -67,7 +67,12 @@ public class EmailService : IEmailService
         var password = GetResolvedConfigValue("Emails:Smtp:Password", "SMTP_API_KEY", "SMTP_PASSWORD");
         var fromEmail = GetResolvedConfigValue("Emails:FromEmail") ?? username ?? "no-reply@example.com";
         var fromName = GetResolvedConfigValue("Emails:FromName") ?? "BakeAhead";
-        var registerBaseUrl = GetResolvedConfigValue("Emails:RegisterBaseUrl") ?? "https://localhost:4200/register";
+        var baseUrl = GetResolvedConfigValue("Emails:BaseUrl") ?? "https://localhost:4200";
+        var registerBaseUrl = GetResolvedConfigValue("Emails:RegisterBaseUrl") 
+                    ?? $"{baseUrl}/register";
+        var loginBaseUrl = GetResolvedConfigValue("Emails:LoginBaseUrl") 
+                   ?? $"{baseUrl}/login";
+
         var toEmailFingerprint = GetEmailFingerprint(toEmail);
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
@@ -547,13 +552,17 @@ private static string BuildPasswordResetHtmlBody(string firstName, string code, 
 </table>";
 }
 
-private static string BuildUsernameReminderHtmlBody(string firstName, IReadOnlyCollection<string> userNames)
+private string BuildUsernameReminderHtmlBody(string firstName, IReadOnlyCollection<string> userNames)
 {
     var safeFirstName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(firstName) ? "there" : firstName);
     var safeUserNames = userNames
         .Where(name => !string.IsNullOrWhiteSpace(name))
         .Select(WebUtility.HtmlEncode)
         .ToList();
+
+    var baseUrl = GetResolvedConfigValue("Emails:BaseUrl") ?? "https://localhost:4200";
+    var loginBaseUrl = GetResolvedConfigValue("Emails:LoginBaseUrl") 
+                   ?? $"{baseUrl}/login";
 
     var listHtml = string.Join(string.Empty, safeUserNames.Select(name => $"<li><strong>{name}</strong></li>"));
     if (string.IsNullOrWhiteSpace(listHtml))
@@ -562,18 +571,24 @@ private static string BuildUsernameReminderHtmlBody(string firstName, IReadOnlyC
     }
 
     return $@"
-<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-family: Arial, sans-serif; font-size: 14px; color: #333;"">
-    <tr>
-        <td>
-            <p>Hi {safeFirstName},</p>
-            <p>Here is the username associated with this email address:</p>
-            <ul>
-                {listHtml}
-            </ul>
-            <p>If you did not request this reminder, you can ignore this email.</p>
-        </td>
-    </tr>
-</table>";
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" 
+            style=""font-family: Arial, sans-serif; font-size: 14px; color: #333;"">
+            <tr>
+                <td>
+                    <p>Hi {safeFirstName},</p>
+                    <p>The username associated with this email address is: 
+                    <strong>{listHtml}</strong></p>
+                        
+                    <p>Use this to log into your account here: 
+                    <a href=""{loginBaseUrl}"" style=""color: #1a73e8;"">Login</a>
+                    </p>
+
+                    <p>If the link does not work, please visit BakeAhead as usual by following this link {loginBaseUrl} and click on the login button.</p>
+
+                    <p>If you did not request this reminder, you can ignore this email.</p>
+                </td>
+            </tr>
+        </table>";
 }
 
 }

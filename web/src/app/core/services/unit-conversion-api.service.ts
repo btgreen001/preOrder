@@ -84,7 +84,7 @@ export interface UpsertUnitConversionRequest {
   providedIn: 'root'
 })
 export class UnitConversionApiService {
-  private readonly apiUrl = `import.meta.env['NG_APP_API_URL']/unit-conversions`;
+  private readonly apiUrl = `import.meta.env.NG_APP_API_URL/unit-conversions`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -106,7 +106,7 @@ export class UnitConversionApiService {
       inventoryItemExternalId: request.inventoryItemExternalId
     };
 
-    return this.http.post<any>(`${import.meta.env['NG_APP_API_URL']}/convert`, payload).pipe(
+    return this.http.post<any>(`${import.meta.env.NG_APP_API_URL}/convert`, payload).pipe(
       map((response: any) => ({
         originalValue: Number(response?.originalValue ?? payload.value ?? 0),
         value: Number(response?.convertedValue ?? 0),
@@ -124,12 +124,12 @@ export class UnitConversionApiService {
   }
 
   scale(request: ScaleRequest): Observable<ScaleResponse> {
-    return this.http.post<ScaleResponse>(`${import.meta.env['NG_APP_API_URL']}/scale`, request);
+    return this.http.post<ScaleResponse>(`${import.meta.env.NG_APP_API_URL}/scale`, request);
   }
 
   parseFraction(input: string): Observable<FractionParseResponse> {
     const request: FractionParseRequest = { input };
-    return this.http.post<any>(`${import.meta.env['NG_APP_API_URL']}/fraction/parse`, request).pipe(
+    return this.http.post<any>(`${import.meta.env.NG_APP_API_URL}/fraction/parse`, request).pipe(
       map((response: any) => ({
         input: response?.input ?? input,
         decimalValue: Number(response?.decimalValue ?? response?.value ?? 0),
@@ -140,7 +140,7 @@ export class UnitConversionApiService {
 
   formatFraction(value: number, maxDenominator?: number): Observable<FractionFormatResponse> {
     const request: FractionFormatRequest = { value, maxDenominator };
-    return this.http.post<any>(`${import.meta.env['NG_APP_API_URL']}/fraction/format`, request).pipe(
+    return this.http.post<any>(`${import.meta.env.NG_APP_API_URL}/fraction/format`, request).pipe(
       map((response: any) => ({
         value: Number(response?.value ?? value),
         fractionDisplay: String(response?.fractionDisplay ?? response?.formatted ?? ''),
@@ -150,14 +150,14 @@ export class UnitConversionApiService {
   }
 
   upsertOrganizationConversion(request: UpsertUnitConversionRequest): Observable<UnitConversionDto> {
-    return this.http.put<UnitConversionDto>(`${import.meta.env['NG_APP_API_URL']}/organization`, request);
+    return this.http.put<UnitConversionDto>(`${import.meta.env.NG_APP_API_URL}/organization`, request);
   }
 
   upsertGlobalConversion(request: UpsertUnitConversionRequest): Observable<UnitConversionDto> {
-    return this.http.put<UnitConversionDto>(`${import.meta.env['NG_APP_API_URL']}/global`, request);
+    return this.http.put<UnitConversionDto>(`${import.meta.env.NG_APP_API_URL}/global`, request);
   }
 
   deactivateConversion(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 }

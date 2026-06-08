@@ -60,7 +60,7 @@ export class BatchService {
    * Get a specific batch by external ID
    */
   getBatchById(externalId: string): Observable<BatchDetail> {
-    return this.http.get<BatchDetail>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.get<BatchDetail>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
@@ -70,7 +70,7 @@ export class BatchService {
     let params = new HttpParams();
     if (daysUntilExpiration !== undefined) params = params.set('daysUntilExpiration', daysUntilExpiration.toString());
 
-    return this.http.get<BatchDetail[]>(`${import.meta.env['NG_APP_API_URL']}/expiring`, { params });
+    return this.http.get<BatchDetail[]>(`${import.meta.env.NG_APP_API_URL}/expiring`, { params });
   }
 
   /**
@@ -84,14 +84,14 @@ export class BatchService {
    * Mark batch as completed
    */
   completeBatch(externalId: string): Observable<BatchDetail> {
-    return this.http.put<BatchDetail>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/complete`, {});
+    return this.http.put<BatchDetail>(`${import.meta.env.NG_APP_API_URL}/${externalId}/complete`, {});
   }
 
   /**
    * Cancel a batch
    */
   cancelBatch(externalId: string): Observable<BatchDetail> {
-    return this.http.put<BatchDetail>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cancel`, {});
+    return this.http.put<BatchDetail>(`${import.meta.env.NG_APP_API_URL}/${externalId}/cancel`, {});
   }
 
   /**
@@ -101,7 +101,7 @@ export class BatchService {
     let params = new HttpParams()
       .set('productId', productId)
       .set('quantityNeeded', quantityNeeded.toString());
-    return this.http.get<any[]>(`${import.meta.env['NG_APP_API_URL']}/fifo`, { params });
+    return this.http.get<any[]>(`${import.meta.env.NG_APP_API_URL}/fifo`, { params });
   }
 
   /**
@@ -109,13 +109,13 @@ export class BatchService {
    */
   rotateBatchesFIFO(productId: string, quantityNeeded: number): Observable<any[]> {
     const request = { productId, quantityNeeded };
-    return this.http.post<any[]>(`${import.meta.env['NG_APP_API_URL']}/fifo-rotate`, request);
+    return this.http.post<any[]>(`${import.meta.env.NG_APP_API_URL}/fifo-rotate`, request);
   }
 
   /**
    * Get detailed expiration information for a batch
    */
   getExpirationInfo(batchExternalId: string): Observable<any> {
-    return this.http.get<any>(`${import.meta.env['NG_APP_API_URL']}/${batchExternalId}/expiration-info`);
+    return this.http.get<any>(`${import.meta.env.NG_APP_API_URL}/${batchExternalId}/expiration-info`);
   }
 }

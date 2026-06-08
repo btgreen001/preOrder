@@ -27,8 +27,7 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              "src/environments"
+              }
             ],
             "styles": [
               "src/styles.scss"
@@ -45,12 +44,6 @@
           "configurations": {
             "production": {
               "sourceMap": false,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
-                }
-              ],
               "budgets": [
                 {
                   "type": "initial",

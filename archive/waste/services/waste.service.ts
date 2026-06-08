@@ -69,7 +69,7 @@ export class WasteService {
    * Get a specific waste event by external ID
    */
   getWasteEventById(externalId: string): Observable<WasteEvent> {
-    return this.http.get<WasteEvent>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.get<WasteEvent>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
@@ -87,6 +87,6 @@ export class WasteService {
     if (startDate) params = params.set('startDate', startDate.toISOString());
     if (endDate) params = params.set('endDate', endDate.toISOString());
 
-    return this.http.get<WasteAnalytics>(`${import.meta.env['NG_APP_API_URL']}/analytics`, { params });
+    return this.http.get<WasteAnalytics>(`${import.meta.env.NG_APP_API_URL}/analytics`, { params });
   }
 }

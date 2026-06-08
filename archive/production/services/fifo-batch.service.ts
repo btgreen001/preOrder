@@ -64,20 +64,20 @@ export class FIFOBatchService {
     params = params.set('productId', productExternalId);
     params = params.set('quantityNeeded', quantityNeeded.toString());
 
-    return this.http.get<FIFOBatchDto[]>(`${import.meta.env['NG_APP_API_URL']}/fifo`, { params });
+    return this.http.get<FIFOBatchDto[]>(`${import.meta.env.NG_APP_API_URL}/fifo`, { params });
   }
 
   /**
    * Apply FIFO rotation to select batches for production
    */
   rotateBatchesForProduction(request: FIFORotationRequest): Observable<FIFOBatchSelectionDto[]> {
-    return this.http.post<FIFOBatchSelectionDto[]>(`${import.meta.env['NG_APP_API_URL']}/fifo-rotate`, request);
+    return this.http.post<FIFOBatchSelectionDto[]>(`${import.meta.env.NG_APP_API_URL}/fifo-rotate`, request);
   }
 
   /**
    * Get detailed expiration information for a batch
    */
   getBatchExpirationInfo(batchExternalId: string): Observable<BatchExpirationInfoDto> {
-    return this.http.get<BatchExpirationInfoDto>(`${import.meta.env['NG_APP_API_URL']}/${batchExternalId}/expiration-info`);
+    return this.http.get<BatchExpirationInfoDto>(`${import.meta.env.NG_APP_API_URL}/${batchExternalId}/expiration-info`);
   }
 }

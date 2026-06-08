@@ -1,23 +1,39 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  inject,
+  signal,
+  computed,
+  effect,
+} from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { extractErrorMessage } from '../../../shared/utils/error-extractor';
-import { PreorderAdminService, AdminHolidayEvent, SaveHolidayEventRequest } from '../services/preorder-admin.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
+import {
+  PreorderAdminService,
+  AdminHolidayEvent,
+  SaveHolidayEventRequest,
+} from '../services/preorder-admin.service';
+import { extractErrorMessage } from '../../../shared/utils/error-extractor';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
-
 
 @Component({
   selector: 'app-preorder-events-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './preorder-events-admin.component.html',
-  styleUrl: './preorder-events-admin.component.scss'
-  
+  styleUrl: './preorder-events-admin.component.scss',
 })
-
 export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   private static readonly FORCE_TOUR_KEY = 'preorder.forceTour';
   private static readonly FORCE_TOUR_DEBUG_KEY = 'preorder.forceTourDebug';
@@ -29,60 +45,98 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly document = inject(DOCUMENT);
-  
-  events: AdminHolidayEvent[] = [];
-  isLoading = false;
-  isSaving = false;
-  errorMessage = '';
-  successMessage = '';
-  editingExternalId: string | null = null;
-  anchoredEventExternalId: string | null = null;
-  autoSyncEnabled = true;
-  allDayEnabled = true;
-  showOnboardingTour = false;
-  currentTourStepIndex = 0;
-  tourCardStyle: Record<string, string> = {};
-  tourSteps: readonly { targetSelector: string; title: string; description: string }[] = [];
+  private readonly fb = inject(NonNullableFormBuilder);
+
+  // --- Reactive form ---
+  form = this.fb.group({
+    name: ['', [Validators.required]],
+    description: [''],
+    opensAt: ['', [Validators.required]],
+    closesAt: ['', [Validators.required]],
+    pickupStartDt: ['', [Validators.required]],
+    pickupEndDt: ['', [Validators.required]],
+    isActive: [true],
+  });
+
+  // Signal reflecting form value (not strictly required, but handy)
+  formSig = toSignal(this.form.valueChanges, {
+    initialValue: this.form.getRawValue(),
+  });
+
+  // --- Signals for UI state ---
+  events = signal<AdminHolidayEvent[]>([]);
+  isLoading = signal(false);
+  isSaving = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
+  editingExternalId = signal<string | null>(null);
+  anchoredEventExternalId = signal<string | null>(null);
+
+  autoSyncEnabled = signal(true);
+  allDayEnabled = signal(true);
+
+  showOnboardingTour = signal(false);
+  currentTourStepIndex = signal(0);
+  tourCardStyle = signal<Record<string, string>>({});
+  tourSteps = signal<
+    readonly { title: string; description: string; key: 'welcome' | 'nav' | 'editor' | 'continue' }[]
+  >([]);
 
   private closesAtManuallyEdited = false;
   private pickupStartDtManuallyEdited = false;
   private pickupEndDtManuallyEdited = false;
-  private focusedTourTarget: HTMLElement | null = null;
+
   private tourEligibilitySubscription?: Subscription;
   private onboardingLaunchScheduled = false;
-  private pendingTourPositionTimeout: ReturnType<typeof setTimeout> | null = null;
   private pendingNavigationTimeout: ReturnType<typeof setTimeout> | null = null;
   private quickTourDebugEnabled = false;
+
   private readonly quickTourEventHandler = () => {
     this.quickTourDebugEnabled = true;
     this.scheduleTourLaunch();
   };
 
-  form: SaveHolidayEventRequest = {
-    name: '',
-    description: '',
-    opensAt: '',
-    closesAt: '',
-    pickupStartDt: '',
-    pickupEndDt: '',
-    isActive: true
-  };
+  // --- Tour targets via ViewChild ---
+  @ViewChild('welcomeStep') welcomeStep!: ElementRef<HTMLElement>;
+  @ViewChild('eventsNav') eventsNav!: ElementRef<HTMLElement>;
+  @ViewChild('eventEditorTitle') eventEditorTitle!: ElementRef<HTMLElement>;
+  @ViewChild('continueButton') continueButton!: ElementRef<HTMLElement>;
+
+  // Inputs for focusing/scrolling
+  @ViewChild('nameInput') nameInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('opensAtInput') opensAtInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('closesAtInput') closesAtInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('pickupStartDtInput') pickupStartDtInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('pickupEndDtInput') pickupEndDtInput!: ElementRef<HTMLInputElement>;
+
+  constructor() {
+    // Effect to reposition tour card whenever step changes or viewport changes
+    effect(() => {
+      if (!this.showOnboardingTour()) return;
+      this.applyTourStepPositioning();
+    });
+  }
 
   ngOnInit(): void {
     this.startCreate();
     this.loadEvents(true);
 
     if (typeof window !== 'undefined') {
-      window.addEventListener(PreorderEventsAdminComponent.QUICK_TOUR_EVENT, this.quickTourEventHandler);
+      window.addEventListener(
+        PreorderEventsAdminComponent.QUICK_TOUR_EVENT,
+        this.quickTourEventHandler
+      );
     }
 
-    const forceTour = sessionStorage.getItem(PreorderEventsAdminComponent.FORCE_TOUR_KEY) === '1';
-    this.quickTourDebugEnabled = sessionStorage.getItem(PreorderEventsAdminComponent.FORCE_TOUR_DEBUG_KEY) === '1';
+    const forceTour =
+      sessionStorage.getItem(PreorderEventsAdminComponent.FORCE_TOUR_KEY) === '1';
+    this.quickTourDebugEnabled =
+      sessionStorage.getItem(PreorderEventsAdminComponent.FORCE_TOUR_DEBUG_KEY) === '1';
     sessionStorage.removeItem(PreorderEventsAdminComponent.FORCE_TOUR_KEY);
     sessionStorage.removeItem(PreorderEventsAdminComponent.FORCE_TOUR_DEBUG_KEY);
 
     const currentUser = this.authService.currentUserValue;
-    this.tourSteps = this.buildTourSteps(currentUser?.role);
+    this.tourSteps.set(this.buildTourSteps(currentUser?.role));
 
     if (forceTour) {
       this.scheduleTourLaunch();
@@ -96,25 +150,25 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
       if (
         !user ||
         user.hasCompletedOnboarding === true ||
-        this.showOnboardingTour ||
+        this.showOnboardingTour() ||
         this.onboardingLaunchScheduled
       ) {
         return;
       }
 
-      this.tourSteps = this.buildTourSteps(user.role);
+      this.tourSteps.set(this.buildTourSteps(user.role));
       this.scheduleTourLaunch();
     });
 
     this.authService.getMyProfile().subscribe({
       next: (profile) => {
         if (profile.role) {
-          this.tourSteps = this.buildTourSteps(profile.role);
+          this.tourSteps.set(this.buildTourSteps(profile.role));
         }
 
         if (
           profile.hasCompletedOnboarding !== true &&
-          !this.showOnboardingTour &&
+          !this.showOnboardingTour() &&
           !this.onboardingLaunchScheduled
         ) {
           this.scheduleTourLaunch();
@@ -122,33 +176,39 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
       },
       error: () => {
         if (this.quickTourDebugEnabled) {
-          this.snackBar.open('Quick Tour debug: profile check failed, but trigger still available.', 'Close', {
-            duration: 3000,
-            panelClass: ['error-snackbar']
-          });
+          this.snackBar.open(
+            'Quick Tour debug: profile check failed, but trigger still available.',
+            'Close',
+            {
+              duration: 3000,
+              panelClass: ['error-snackbar'],
+            }
+          );
         }
-      }
+      },
     });
   }
 
   ngOnDestroy(): void {
     this.tourEligibilitySubscription?.unsubscribe();
-    this.focusedTourTarget?.classList.remove('tour-focus');
-    if (this.pendingTourPositionTimeout) {
-      clearTimeout(this.pendingTourPositionTimeout);
-      this.pendingTourPositionTimeout = null;
-    }
+
     if (this.pendingNavigationTimeout) {
       clearTimeout(this.pendingNavigationTimeout);
       this.pendingNavigationTimeout = null;
     }
+
     if (typeof window !== 'undefined') {
-      window.removeEventListener(PreorderEventsAdminComponent.QUICK_TOUR_EVENT, this.quickTourEventHandler);
+      window.removeEventListener(
+        PreorderEventsAdminComponent.QUICK_TOUR_EVENT,
+        this.quickTourEventHandler
+      );
     }
   }
 
+  // --- Tour building & control ---
+
   private scheduleTourLaunch(): void {
-    if (this.showOnboardingTour || this.onboardingLaunchScheduled) {
+    if (this.showOnboardingTour() || this.onboardingLaunchScheduled) {
       return;
     }
 
@@ -159,9 +219,14 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     }, 250);
   }
 
-  private buildTourSteps(role?: string): readonly { targetSelector: string; title: string; description: string }[] {
+  private buildTourSteps(role?: string): readonly {
+    title: string;
+    description: string;
+    key: 'welcome' | 'nav' | 'editor' | 'continue';
+  }[] {
     const normalizedRole = (role ?? '').toLowerCase();
-    const isCompanyAdmin = normalizedRole === 'companyadmin' || normalizedRole === 'systemadmin';
+    const isCompanyAdmin =
+      normalizedRole === 'companyadmin' || normalizedRole === 'systemadmin';
 
     const navDescription = isCompanyAdmin
       ? 'Use these tabs for Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar also includes Profile Management, Store Preview, and Access Management.'
@@ -169,63 +234,117 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
 
     return [
       {
-        targetSelector: '[data-tour="welcome-step"]',
+        key: 'welcome',
         title: 'Welcome to BakeAhead',
-        description: 'We are excited to have you here. In just a few quick steps, you will see how BakeAhead enables you to create delightful experiences for your customers for all of your pre-order events. Let start the short tour together!'
+        description:
+          'We are excited to have you here. In just a few quick steps, you will see how BakeAhead enables you to create delightful experiences for your customers for all of your pre-order events. Let start the short tour together!',
       },
       {
-        targetSelector: '[data-tour="events-nav"]',
+        key: 'nav',
         title: 'Step 1: Navigation',
-        description: navDescription
+        description: navDescription,
       },
       {
-        targetSelector: '[data-tour="event-editor-title"]',
+        key: 'editor',
         title: 'Step 2: Create Your Event',
-        description: 'Create your event and set pickup dates here before opening pre-orders.'
+        description: 'Create your event and set pickup dates here before opening pre-orders.',
       },
       {
-        targetSelector: '[data-tour="continue-button"]',
+        key: 'continue',
         title: 'Step 3: Save and Continue',
-        description: 'Use this action to save and move to items when your event is ready after which create pickup time slots.'
-      }
+        description:
+          'Use this action to save and move to items when your event is ready after which create pickup time slots.',
+      },
     ] as const;
   }
 
   private startOnboardingTour(): void {
-    this.showOnboardingTour = true;
-    this.currentTourStepIndex = 0;
-    this.focusedTourTarget?.classList.remove('tour-focus');
-    this.focusedTourTarget = null;
+    this.showOnboardingTour.set(true);
+    this.currentTourStepIndex.set(0);
     this.applyTourStepPositioning();
   }
 
-  private applyTourStepPositioning(skipAutoScroll = false): void {
-    const step = this.tourSteps[this.currentTourStepIndex];
-    if (!step) {
+  get activeTourStep() {
+    const steps = this.tourSteps();
+    const idx = this.currentTourStepIndex();
+    return steps[idx];
+  }
+
+  previousTourStep(): void {
+    const idx = this.currentTourStepIndex();
+    if (idx === 0) return;
+    this.currentTourStepIndex.set(idx - 1);
+  }
+
+  nextTourStep(): void {
+    const idx = this.currentTourStepIndex();
+    const steps = this.tourSteps();
+    if (idx >= steps.length - 1) {
+      this.completeTour();
       return;
     }
+    this.currentTourStepIndex.set(idx + 1);
+  }
 
-    this.focusedTourTarget?.classList.remove('tour-focus');
-    const target = this.document.querySelector(step.targetSelector) as HTMLElement | null;
-    this.focusedTourTarget = target;
+  skipTour(): void {
+    this.completeTour();
+  }
 
+  private completeTour(): void {
+    this.showOnboardingTour.set(false);
+    this.currentTourStepIndex.set(0);
+
+    this.authService.markOnboardingComplete().subscribe({
+      next: () => {
+        this.snackBar.open(
+          'Thank you!  Quick Tour complete. You can view Quick Tour later from the sidebar.',
+          'Close',
+          {
+            duration: 3500,
+            panelClass: ['info-snackbar'],
+          }
+        );
+      },
+      error: () => {
+        this.snackBar.open(
+          'Could not save onboarding status. Quick Tour may appear again next login.',
+          'Close',
+          {
+            duration: 4000,
+            panelClass: ['error-snackbar'],
+          }
+        );
+      },
+    });
+  }
+
+  private getCurrentTourTarget(): HTMLElement | null {
+    const step = this.activeTourStep;
+    if (!step) return null;
+
+    switch (step.key) {
+      case 'welcome':
+        return this.welcomeStep?.nativeElement ?? null;
+      case 'nav':
+        return this.eventsNav?.nativeElement ?? null;
+      case 'editor':
+        return this.eventEditorTitle?.nativeElement ?? null;
+      case 'continue':
+        return this.continueButton?.nativeElement ?? null;
+      default:
+        return null;
+    }
+  }
+
+  private applyTourStepPositioning(): void {
+    const target = this.getCurrentTourTarget();
     if (!target) {
-      this.tourCardStyle = { top: '24px', left: '24px' };
+      this.tourCardStyle.set({ top: '24px', left: '24px' });
       return;
     }
 
-    target.classList.add('tour-focus');
-
-    if (!skipAutoScroll && this.ensureStepTargetInView(target)) {
-      if (this.pendingTourPositionTimeout) {
-        clearTimeout(this.pendingTourPositionTimeout);
-      }
-
-      this.pendingTourPositionTimeout = setTimeout(() => {
-        this.pendingTourPositionTimeout = null;
-        this.applyTourStepPositioning(true);
-      }, 420);
-      return;
+    if (this.ensureStepTargetInView(target)) {
+      // After scroll, we’ll be called again by effect when layout settles
     }
 
     const rect = target.getBoundingClientRect();
@@ -251,10 +370,10 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     }
     top = Math.min(maxTop, Math.max(minTop, top));
 
-    this.tourCardStyle = {
+    this.tourCardStyle.set({
       top: `${Math.round(top)}px`,
-      left: `${Math.round(left)}px`
-    };
+      left: `${Math.round(left)}px`,
+    });
   }
 
   private ensureStepTargetInView(target: HTMLElement): boolean {
@@ -270,264 +389,92 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     target.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
-      inline: 'nearest'
+      inline: 'nearest',
     });
 
     return true;
   }
 
-  get activeTourStep() {
-    return this.tourSteps[this.currentTourStepIndex];
-  }
-
-  previousTourStep(): void {
-    if (this.currentTourStepIndex === 0) {
-      return;
-    }
-
-    this.currentTourStepIndex -= 1;
-    this.applyTourStepPositioning();
-  }
-
-  nextTourStep(): void {
-    if (this.currentTourStepIndex >= this.tourSteps.length - 1) {
-      this.completeTour();
-      return;
-    }
-
-    this.currentTourStepIndex += 1;
-    this.applyTourStepPositioning();
-  }
-
-  skipTour(): void {
-    this.completeTour();
-  }
-
-  private completeTour(): void {
-    this.showOnboardingTour = false;
-    this.currentTourStepIndex = 0;
-    this.focusedTourTarget?.classList.remove('tour-focus');
-    this.focusedTourTarget = null;
-
-    this.authService.markOnboardingComplete().subscribe({
-      next: () => {
-        this.snackBar.open('Thank you!  Quick Tour complete. You can view Quick Tour later from the sidebar.', 'Close', {
-          duration: 3500,
-          panelClass: ['info-snackbar']
-        });
-      },
-      error: () => {
-        this.snackBar.open('Could not save onboarding status. Quick Tour may appear again next login.', 'Close', {
-          duration: 4000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    });
-  }
+  // --- Events loading & editing ---
 
   loadEvents(restoreAnchor = false): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     this.preorderAdminService.getAllHolidayEvents().subscribe({
-      next: events => {
-        this.events = events;
-        this.anchoredEventExternalId = this.preorderAdminService.getSelectedHolidayEventExternalId();
+      next: (events) => {
+        this.events.set(events);
+        const anchor =
+          this.preorderAdminService.getSelectedHolidayEventExternalId();
+        this.anchoredEventExternalId.set(anchor);
 
-        if (restoreAnchor && this.anchoredEventExternalId) {
-          const anchoredEvent = events.find(event => event.externalId === this.anchoredEventExternalId);
+        if (restoreAnchor && anchor) {
+          const anchoredEvent = events.find((e) => e.externalId === anchor);
           if (anchoredEvent && this.canEditEvent(anchoredEvent)) {
             this.startEdit(anchoredEvent);
           }
         }
 
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage = 'Could not load pre-order events.';
-        this.isLoading = false;
-      }
+        this.errorMessage.set('Could not load pre-order events.');
+        this.isLoading.set(false);
+      },
     });
   }
 
   startCreate(): void {
-    this.editingExternalId = null;
-    this.successMessage = '';
-    this.allDayEnabled = true;
+    this.editingExternalId.set(null);
+    this.successMessage.set('');
+    this.allDayEnabled.set(true);
     this.resetAutoSyncTracking(true);
-    this.form = {
-      name: '',
-      description: '',
-      opensAt: '',
-      closesAt: '',
-      pickupStartDt: '',
-      pickupEndDt: '',
-      isActive: true
-    };
+
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(-4, 0, 0, 0);
-    this.form.opensAt = tomorrow.toISOString().slice(0, 16);
-    this.form.closesAt = tomorrow.toISOString().slice(0, 16);
-    if (this.allDayEnabled) {
+    const opens = tomorrow.toISOString().slice(0, 16);
+    const closes = tomorrow.toISOString().slice(0, 16);
+
+    this.form.reset({
+      name: '',
+      description: '',
+      opensAt: opens,
+      closesAt: closes,
+      pickupStartDt: '',
+      pickupEndDt: '',
+      isActive: true,
+    });
+
+    if (this.allDayEnabled()) {
       this.applyAllDayTimes();
     }
-
-  }
-
-  onAllDayToggle(enabled: boolean): void {
-    this.allDayEnabled = enabled;
-    if (enabled) {
-      this.applyAllDayTimes();
-      if (this.autoSyncEnabled) {
-        this.syncPickup();
-      }
-    }
-  }
-
-  onAutoSyncToggle(enabled: boolean): void {
-    this.autoSyncEnabled = enabled;
-    if (enabled) {
-      // Re-arm downstream sync behavior, but do not immediately overwrite
-      // already-entered values. Sync happens on the next user date change.
-      this.resetAutoSyncTracking(true);
-    }
-  }
-
-  syncNow(): void {
-    this.resetAutoSyncTracking(true);
-
-    if (this.allDayEnabled) {
-      this.form.opensAt = this.setTimePart(this.form.opensAt, '00:00');
-      this.form.closesAt = this.setTimePart(this.form.opensAt, '23:59');
-      this.syncPickup();
-      return;
-    }
-
-    this.syncClose();
-  }
-
-  onOpensAtChanged(): void {
-    if (this.allDayEnabled) {
-      this.form.opensAt = this.setTimePart(this.form.opensAt, '00:00');
-    }
-
-    if (this.autoSyncEnabled) {
-      this.syncClose();
-    }
-  }
-
-  onClosesAtChanged(): void {
-    if (this.allDayEnabled) {
-      this.form.closesAt = this.setTimePart(this.form.closesAt, '23:59');
-    }
-
-    this.closesAtManuallyEdited = true;
-    if (this.autoSyncEnabled) {
-      this.syncPickup();
-    }
-  }
-
-  onPickupStartChanged(): void {
-    this.pickupStartDtManuallyEdited = true;
-    if (this.autoSyncEnabled) {
-      this.syncPickupEnd();
-    }
-  }
-
-  onPickupEndChanged(): void {
-    this.pickupEndDtManuallyEdited = true;
-  }
-
-  setOpensMidnight(): void {
-    const currentOpensAt = this.opensAtInput?.nativeElement?.value || this.form.opensAt;
-    this.form.opensAt = this.setTimePart(currentOpensAt, '00:00');
-    this.opensAtInput.nativeElement.value = this.form.opensAt;
-    this.onOpensAtChanged();
-  }
-
-  setClosesEndOfDay(): void {
-    const currentClosesAt = this.closesAtInput?.nativeElement?.value || this.form.closesAt;
-    this.form.closesAt = this.setTimePart(currentClosesAt, '23:59');
-    this.closesAtInput.nativeElement.value = this.form.closesAt;
-    this.onClosesAtChanged();
-  }
-
-  syncClose() {
-    // If opensAt is empty, do nothing
-    if (!this.form.opensAt) return;
-
-    if (!this.closesAtManuallyEdited && !this.autoSyncEnabled) {
-      this.form.closesAt = this.allDayEnabled
-        ? this.setTimePart(this.form.opensAt, '23:59')
-        : this.form.opensAt;
-    }
-    if (this.autoSyncEnabled){
-      this.form.closesAt = this.allDayEnabled
-        ? this.setTimePart(this.form.opensAt, '23:59')
-        : this.form.opensAt;
-      this.syncPickup();
-    }
-
-    this.syncPickup();
-
-  }
-
-  syncPickup() {
-    // If closesAt is empty, do nothing
-    if (!this.form.closesAt) return;
-
-    const pickupDate = this.form.closesAt?.split('T')[0] ?? '';
-
-    if (!this.pickupStartDtManuallyEdited) {
-      this.form.pickupStartDt = pickupDate;
-    }
-
-    if (!this.pickupEndDtManuallyEdited) {
-      this.form.pickupEndDt = pickupDate;
-    }
-
-  }
-
-  syncPickupEnd() {
-    // If pickupStartDt is empty, do nothing
-    if (!this.form.pickupStartDt) return;
-
-    if (!this.pickupEndDtManuallyEdited) {
-      this.form.pickupEndDt = this.form.pickupStartDt;
-    }
-
   }
 
   canEditEvent(event: AdminHolidayEvent): boolean {
-    if (!event.opensAt) {
-      return false;
-    }
-
+    if (!event.opensAt) return false;
     const opensAt = new Date(event.opensAt);
-    if (Number.isNaN(opensAt.getTime())) {
-      return false;
-    }
-
+    if (Number.isNaN(opensAt.getTime())) return false;
     return opensAt.getTime() > Date.now();
   }
 
   startEdit(event: AdminHolidayEvent): void {
-    this.editingExternalId = event.externalId;
-    this.anchoredEventExternalId = event.externalId;
-    this.successMessage = '';
-    this.allDayEnabled = false;
+    this.editingExternalId.set(event.externalId);
+    this.anchoredEventExternalId.set(event.externalId);
+    this.successMessage.set('');
+    this.allDayEnabled.set(false);
     this.resetAutoSyncTracking(false);
     this.preorderAdminService.setSelectedHolidayEventExternalId(event.externalId);
-    this.form = {
+
+    this.form.setValue({
       name: event.name,
       description: event.description ?? '',
       opensAt: this.toDateTimeInput(event.opensAt),
       closesAt: this.toDateTimeInput(event.closesAt),
       pickupStartDt: this.toDateInput(event.pickupStartDt),
       pickupEndDt: this.toDateInput(event.pickupEndDt),
-      isActive: event.isActive
-    };
+      isActive: event.isActive,
+    });
 
     this.scrollToEditorStart();
   }
@@ -537,7 +484,10 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     const deactivateMessage = `Deactivating ${event.name} will hide it from customers and prevent new pre-orders, but existing pre-orders will not be affected.`;
     const activateMessage = `Activating ${event.name} will make it visible to customers and allow new pre-orders.`;
     if (!confirm(event.isActive ? deactivateMessage : activateMessage)) {
-      this.snackBar.open('Action cancelled.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+      this.snackBar.open('Action cancelled.', 'Close', {
+        duration: 3000,
+        panelClass: ['info-snackbar'],
+      });
       return;
     }
 
@@ -548,85 +498,246 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
       closesAt: event.closesAt,
       pickupStartDt: event.pickupStartDt,
       pickupEndDt: event.pickupEndDt,
-      isActive: !event.isActive
+      isActive: !event.isActive,
     };
 
-    this.isSaving = true;
-    this.errorMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set('');
 
     this.preorderAdminService.updateHolidayEvent(event.externalId, request).subscribe({
       next: () => {
-        this.isSaving = false;
+        this.isSaving.set(false);
         this.loadEvents();
-        this.snackBar.open(`Event ${action}d.`, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+        this.snackBar.open(`Event ${action}d.`, 'Close', {
+          duration: 3000,
+          panelClass: ['info-snackbar'],
+        });
       },
       error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, `Could not ${action} event.`);
-      }
+        this.isSaving.set(false);
+        this.errorMessage.set(
+          extractErrorMessage(error, `Could not ${action} event.`)
+        );
+      },
     });
   }
 
+  // --- Form helpers & sync logic ---
+
+  onAllDayToggle(enabled: boolean): void {
+    this.allDayEnabled.set(enabled);
+    if (enabled) {
+      this.applyAllDayTimes();
+      if (this.autoSyncEnabled()) {
+        this.syncPickup();
+      }
+    }
+  }
+
+  onAutoSyncToggle(enabled: boolean): void {
+    this.resetAutoSyncTracking(enabled);
+  }
+
+  syncNow(): void {
+    this.resetAutoSyncTracking(true);
+
+    const opensAt = this.form.controls.opensAt.value;
+    if (!opensAt) return;
+
+    if (this.allDayEnabled()) {
+      const normalizedOpens = this.setTimePart(opensAt, '00:00');
+      this.form.controls.opensAt.setValue(normalizedOpens);
+      this.form.controls.closesAt.setValue(
+        this.setTimePart(normalizedOpens, '23:59')
+      );
+      this.syncPickup();
+      return;
+    }
+
+    this.syncClose();
+  }
+
+  onOpensAtChanged(): void {
+    const opensAt = this.form.controls.opensAt.value;
+    if (!opensAt) return;
+
+    if (this.allDayEnabled()) {
+      this.form.controls.opensAt.setValue(
+        this.setTimePart(opensAt, '00:00')
+      );
+    }
+
+    if (this.autoSyncEnabled()) {
+      this.syncClose();
+    }
+  }
+
+  onClosesAtChanged(): void {
+    const closesAt = this.form.controls.closesAt.value;
+    if (!closesAt) return;
+
+    if (this.allDayEnabled()) {
+      this.form.controls.closesAt.setValue(
+        this.setTimePart(closesAt, '23:59')
+      );
+    }
+
+    this.closesAtManuallyEdited = true;
+    if (this.autoSyncEnabled()) {
+      this.syncPickup();
+    }
+  }
+
+  onPickupStartChanged(): void {
+    this.pickupStartDtManuallyEdited = true;
+    if (this.autoSyncEnabled()) {
+      this.syncPickupEnd();
+    }
+  }
+
+  onPickupEndChanged(): void {
+    this.pickupEndDtManuallyEdited = true;
+  }
+
+  setOpensMidnight(): void {
+    const current = this.form.controls.opensAt.value;
+    if (!current) return;
+    const updated = this.setTimePart(current, '00:00');
+    this.form.controls.opensAt.setValue(updated);
+    this.onOpensAtChanged();
+  }
+
+  setClosesEndOfDay(): void {
+    const current = this.form.controls.closesAt.value;
+    if (!current) return;
+    const updated = this.setTimePart(current, '23:59');
+    this.form.controls.closesAt.setValue(updated);
+    this.onClosesAtChanged();
+  }
+
+  syncClose(): void {
+    const opensAt = this.form.controls.opensAt.value;
+    if (!opensAt) return;
+
+    if (!this.closesAtManuallyEdited && !this.autoSyncEnabled()) {
+      this.form.controls.closesAt.setValue(
+        this.allDayEnabled()
+          ? this.setTimePart(opensAt, '23:59')
+          : opensAt
+      );
+    }
+
+    if (this.autoSyncEnabled()) {
+      this.form.controls.closesAt.setValue(
+        this.allDayEnabled()
+          ? this.setTimePart(opensAt, '23:59')
+          : opensAt
+      );
+      this.syncPickup();
+    }
+  }
+
+  syncPickup(): void {
+    const closesAt = this.form.controls.closesAt.value;
+    if (!closesAt) return;
+
+    const pickupDate = closesAt.split('T')[0] ?? '';
+
+    if (!this.pickupStartDtManuallyEdited) {
+      this.form.controls.pickupStartDt.setValue(pickupDate);
+    }
+
+    if (!this.pickupEndDtManuallyEdited) {
+      this.form.controls.pickupEndDt.setValue(pickupDate);
+    }
+  }
+
+  syncPickupEnd(): void {
+    const pickupStart = this.form.controls.pickupStartDt.value;
+    if (!pickupStart) return;
+
+    if (!this.pickupEndDtManuallyEdited) {
+      this.form.controls.pickupEndDt.setValue(pickupStart);
+    }
+  }
 
   saveEvent(nextRoute?: string): void {
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
-    // Validate all required fields
-    if (!this.form.name || !this.form.name.trim()) {
-      this.snackBar.open('Event name is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-      this.focusValidationField(this.nameInput);
-      return;
+    if (this.form.invalid) {
+      if (this.form.controls.name.invalid) {
+        this.snackBar.open('Event name is required.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        this.focusValidationField(this.nameInput);
+        return;
+      }
+      if (this.form.controls.opensAt.invalid) {
+        this.snackBar.open('Event Open date/time is required.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        this.focusValidationField(this.opensAtInput);
+        return;
+      }
+      if (this.form.controls.closesAt.invalid) {
+        this.snackBar.open('Event Close date/time is required.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        this.focusValidationField(this.closesAtInput);
+        return;
+      }
+      if (this.form.controls.pickupStartDt.invalid) {
+        this.snackBar.open('Pickup start date is required.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        this.focusValidationField(this.pickupStartDtInput);
+        return;
+      }
+      if (this.form.controls.pickupEndDt.invalid) {
+        this.snackBar.open('Pickup end date is required.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        this.focusValidationField(this.pickupEndDtInput);
+        return;
+      }
     }
 
-    if (!this.form.opensAt || this.form.opensAt.trim() === '') {
-      this.snackBar.open('Event Open date/time is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-      this.focusValidationField(this.opensAtInput);
-      return;
-    }
+    this.isSaving.set(true);
 
-    if (!this.form.closesAt || this.form.closesAt.trim() === '') {
-      this.snackBar.open('Event Close date/time is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-      this.focusValidationField(this.closesAtInput);
-      return;
-    }
-
-    if (!this.form.pickupStartDt || this.form.pickupStartDt.trim() === '') {
-      this.snackBar.open('Pickup start date is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-      this.focusValidationField(this.pickupStartDtInput);
-      return;
-    }
-
-    if (!this.form.pickupEndDt || this.form.pickupEndDt.trim() === '') {
-      this.snackBar.open('Pickup end date is required.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-      this.focusValidationField(this.pickupEndDtInput);
-      return;
-    }
-
-    this.isSaving = true;
-
+    const raw = this.form.getRawValue();
     const request: SaveHolidayEventRequest = {
-      name: this.form.name.trim(),
-      description: this.form.description?.trim() || undefined,
-      // Keep wall-clock values as entered; do not force UTC conversion in UI.
-      opensAt: this.form.opensAt,
-      closesAt: this.form.closesAt,
-      pickupStartDt: this.form.pickupStartDt,
-      pickupEndDt: this.form.pickupEndDt,
-      isActive: this.form.isActive ?? true
+      name: raw.name.trim(),
+      description: raw.description?.trim() || undefined,
+      opensAt: raw.opensAt,
+      closesAt: raw.closesAt,
+      pickupStartDt: raw.pickupStartDt,
+      pickupEndDt: raw.pickupEndDt,
+      isActive: raw.isActive ?? true,
     };
 
-    const save$ = this.editingExternalId
-      ? this.preorderAdminService.updateHolidayEvent(this.editingExternalId, request)
+    const editingId = this.editingExternalId();
+    const save$ = editingId
+      ? this.preorderAdminService.updateHolidayEvent(editingId, request)
       : this.preorderAdminService.createHolidayEvent(request);
 
     save$.subscribe({
-      next: savedEvent => {
-        this.isSaving = false;
-        const successMessage = this.editingExternalId ? 'Event updated.' : 'Event created.';
-        this.successMessage = successMessage;
-        this.preorderAdminService.setSelectedHolidayEventExternalId(savedEvent.externalId);
-        this.snackBar.open(successMessage, 'Close', { duration: 3000 , panelClass: ['info-snackbar'] });
+      next: (savedEvent) => {
+        this.isSaving.set(false);
+        const successMessage = editingId ? 'Event updated.' : 'Event created.';
+        this.successMessage.set(successMessage);
+        this.preorderAdminService.setSelectedHolidayEventExternalId(
+          savedEvent.externalId
+        );
+        this.snackBar.open(successMessage, 'Close', {
+          duration: 3000,
+          panelClass: ['info-snackbar'],
+        });
 
         if (nextRoute) {
           this.navigateWithDelay(nextRoute);
@@ -637,9 +748,11 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
         this.loadEvents();
       },
       error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not save pre-order event.');
-      }
+        this.isSaving.set(false);
+        this.errorMessage.set(
+          extractErrorMessage(error, 'Could not save pre-order event.')
+        );
+      },
     });
   }
 
@@ -658,39 +771,35 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     }, PreorderEventsAdminComponent.SAVE_CONTINUE_NAV_DELAY_MS);
   }
 
-  private toDateTimeInput(value: string): string {
-    if (!value) {
-      return '';
-    }
+  // --- Date helpers ---
 
+  private toDateTimeInput(value: string): string {
+    if (!value) return '';
     return value.replace(' ', 'T').slice(0, 16);
   }
 
   private toDateInput(value: string): string {
-    if (!value) {
-      return '';
-    }
-
+    if (!value) return '';
     return value.slice(0, 10);
   }
 
-  private toLocalDateTimeInput(isoValue: string): string {
-    return this.toDateTimeInput(isoValue);
-  }
-
-  private toLocalDateInput(isoValue: string): string {
-    return this.toDateInput(isoValue);
-  }
-
   private applyAllDayTimes(): void {
-    this.form.opensAt = this.setTimePart(this.form.opensAt, '00:00');
-    this.form.closesAt = this.setTimePart(this.form.closesAt, '23:59');
+    const opensAt = this.form.controls.opensAt.value;
+    const closesAt = this.form.controls.closesAt.value;
+    if (opensAt) {
+      this.form.controls.opensAt.setValue(
+        this.setTimePart(opensAt, '00:00')
+      );
+    }
+    if (closesAt) {
+      this.form.controls.closesAt.setValue(
+        this.setTimePart(closesAt, '23:59')
+      );
+    }
   }
 
   private setTimePart(value: string, time: string): string {
-    if (!value) {
-      return value;
-    }
+    if (!value) return value;
 
     const normalizedValue = value.replace(' ', 'T');
     const datePart = normalizedValue.split('T')[0] ?? '';
@@ -721,9 +830,7 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
 
   private toIsoDateFromUsDate(value: string): string | null {
     const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (!match) {
-      return null;
-    }
+    if (!match) return null;
 
     const [, monthRaw, dayRaw, year] = match;
     const month = monthRaw.padStart(2, '0');
@@ -732,7 +839,7 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   }
 
   private resetAutoSyncTracking(autoSyncEnabled: boolean): void {
-    this.autoSyncEnabled = autoSyncEnabled;
+    this.autoSyncEnabled.set(autoSyncEnabled);
     this.closesAtManuallyEdited = false;
     this.pickupStartDtManuallyEdited = false;
     this.pickupEndDtManuallyEdited = false;
@@ -740,9 +847,7 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
 
   private focusValidationField(inputRef: ElementRef<HTMLInputElement>): void {
     const input = inputRef?.nativeElement;
-    if (!input) {
-      return;
-    }
+    if (!input) return;
 
     if (this.isMobileViewport()) {
       input.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -754,14 +859,12 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
 
   private scrollToEditorStart(): void {
     const input = this.nameInput?.nativeElement;
-    if (!input) {
-      return;
-    }
+    if (!input) return;
 
     input.scrollIntoView({
       behavior: 'smooth',
       block: this.isMobileViewport() ? 'center' : 'start',
-      inline: 'nearest'
+      inline: 'nearest',
     });
 
     if (!this.isMobileViewport()) {
@@ -770,17 +873,7 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   }
 
   private isMobileViewport(): boolean {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
+    if (typeof window === 'undefined') return false;
     return window.matchMedia('(max-width: 768px)').matches;
   }
-
-@ViewChild('nameInput') nameInput!: ElementRef<HTMLInputElement>;
-@ViewChild('opensAtInput') opensAtInput!: ElementRef<HTMLInputElement>;
-@ViewChild('closesAtInput') closesAtInput!: ElementRef<HTMLInputElement>;
-@ViewChild('pickupStartDtInput') pickupStartDtInput!: ElementRef<HTMLInputElement>;
-@ViewChild('pickupEndDtInput') pickupEndDtInput!: ElementRef<HTMLInputElement>;
-
 }

@@ -27,8 +27,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private terminalContext = inject(TerminalContextService);
-
-  private apiUrl = `${import.meta.env['NG_APP_API_URL']}/auth`;
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private apiUrl!: string;
   private currentUserSubject: BehaviorSubject<AuthResponse | null>;
   public currentUser: Observable<AuthResponse | null>;
   
@@ -46,6 +46,8 @@ export class AuthService {
   }
 
   constructor() {
+    this.apiUrl = this.apiBaseUrl + '/auth';
+
     // Initialize with null - no persistence across browser sessions
     this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
     this.currentUser = this.currentUserSubject.asObservable();
@@ -87,7 +89,7 @@ export class AuthService {
       terminalId
     };
 
-    return this.http.post<AuthResponse>(`${import.meta.env['NG_APP_API_URL']}/login`, loginRequest, {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, loginRequest, {
       withCredentials: true // Enable cookies for refresh token
     }).pipe(
       tap((userProfile: AuthResponse) => {
@@ -122,7 +124,7 @@ export class AuthService {
   }
 
   registerUser(userData: RegisterUserRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${import.meta.env['NG_APP_API_URL']}/register-user`, userData, {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register-user`, userData, {
       withCredentials: true // Enable cookies
     }).pipe(
         tap(response => {
@@ -139,7 +141,7 @@ export class AuthService {
   }
 
   registerCompany(companyData: RegisterCompanyRequest): Observable<CompanyRegistrationResponse> {
-    return this.http.post<CompanyRegistrationResponse>(`${import.meta.env['NG_APP_API_URL']}/register-company`, companyData, {
+    return this.http.post<CompanyRegistrationResponse>(`${this.apiUrl}/register-company`, companyData, {
       withCredentials: true // Enable cookies
     }).pipe(
         tap(response => {
@@ -161,11 +163,11 @@ export class AuthService {
   }
 
   getMyProfile(): Observable<MyProfileResponse> {
-    return this.http.get<MyProfileResponse>(`${import.meta.env['NG_APP_API_URL']}/me`);
+    return this.http.get<MyProfileResponse>(`${this.apiUrl}/me`);
   }
 
   updateMyProfile(request: UpdateMyProfileRequest): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/me/profile`, request).pipe(
+    return this.http.put<{ message: string }>(`${this.apiUrl}/me/profile`, request).pipe(
       tap(() => {
         const current = this.currentUserValue;
         if (!current) {
@@ -183,11 +185,11 @@ export class AuthService {
   }
 
   getMyCompanyProfile(): Observable<CompanyProfile> {
-    return this.http.get<CompanyProfile>(`${import.meta.env['NG_APP_API_URL']}/organization/my-profile`);
+    return this.http.get<CompanyProfile>(`${this.apiBaseUrl}/organization/my-profile`);
   }
 
   updateMyCompanyProfile(request: UpdateCompanyProfileRequest): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/organization/my-profile`, request).pipe(
+    return this.http.put<{ message: string }>(`${this.apiBaseUrl}/organization/my-profile`, request).pipe(
       tap(() => {
         const current = this.currentUserValue;
         if (!current) {
@@ -203,7 +205,7 @@ export class AuthService {
   }
 
   markOnboardingComplete(): Observable<{ message: string; hasCompletedOnboarding: boolean }> {
-    return this.http.post<{ message: string; hasCompletedOnboarding: boolean }>(`${import.meta.env['NG_APP_API_URL']}/me/onboarding-complete`, {}).pipe(
+    return this.http.post<{ message: string; hasCompletedOnboarding: boolean }>(`${this.apiUrl}/me/onboarding-complete`, {}).pipe(
       tap((response) => {
         const current = this.currentUserValue;
         if (!current) {
@@ -219,19 +221,19 @@ export class AuthService {
   }
 
   requestPasswordResetCode(request: ForgotPasswordCodeRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/forgot-password/code`, request);
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password/code`, request);
   }
 
   requestUsernameReminder(request: ForgotUsernameRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/forgot-username`, request);
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-username`, request);
   }
 
   resetPasswordWithCode(request: ResetPasswordWithCodeRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/forgot-password/reset`, request);
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password/reset`, request);
   }
 
   checkUsernameAvailability(username: string): Observable<boolean> {
-    return this.http.get<boolean>(`${import.meta.env['NG_APP_API_URL']}/check-username/${username}`)
+    return this.http.get<boolean>(`${this.apiUrl}/check-username/${username}`)
       .pipe(
         catchError(error => {
           return throwError(() => error);
@@ -267,7 +269,7 @@ export class AuthService {
     const headers: Record<string, string> = {};
     if (tokenSnapshot) headers['Authorization'] = `Bearer ${tokenSnapshot}`;
     headers['X-Logout-Redirect'] = redirectTo;
-    this.http.post(`${import.meta.env['NG_APP_API_URL']}/${endpoint}`, {}, { withCredentials: true, headers }).subscribe({
+    this.http.post(`${this.apiUrl}/${endpoint}`, {}, { withCredentials: true, headers }).subscribe({
       next: () => { /* Session revoked server-side */ },
       error: (err) => {
         console.debug('Logout backend call failed (already logged out?):', err.status);
@@ -289,7 +291,7 @@ export class AuthService {
     // If a valid refresh token exists in the cookie, it will return a new access token
     // If no refresh token cookie exists, the backend will reject with "No refresh token provided"
     // which is expected for first-time users who haven't logged in yet
-    return this.http.post<AuthResponse>(`${import.meta.env['NG_APP_API_URL']}/refresh-token`, {}, {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}, {
       withCredentials: true // Send refresh token cookie (if it exists)
     }).pipe(
       tap((response: AuthResponse) => {
@@ -357,7 +359,7 @@ export class AuthService {
     this.refreshInProgress.next(true);
 
     // Refresh token is sent automatically via HttpOnly cookie
-    return this.http.post<AuthResponse>(`${import.meta.env['NG_APP_API_URL']}/refresh-token`, {}, {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}, {
       withCredentials: true // Send refresh token cookie
     }).pipe(
       tap((response: AuthResponse) => {
@@ -464,7 +466,7 @@ export class AuthService {
 
   // Revoke refresh token using HttpOnly cookie
   revokeRefreshToken(): Observable<void> {
-    return this.http.post<void>(`${import.meta.env['NG_APP_API_URL']}/revoke-token`, {}, {
+    return this.http.post<void>(`${this.apiUrl}/revoke-token`, {}, {
       withCredentials: true // Send refresh token cookie
     }).pipe(
       tap(() => {
@@ -480,7 +482,7 @@ export class AuthService {
 
   // HTTPS enforcement methods
   enforceHttps(): void {
-    if (import.meta.env['NG_APP_ENFORCE_HTTPS'] && !this.isHttps()) {
+    if (import.meta.env.NG_APP_ENFORCE_HTTPS && !this.isHttps()) {
       console.warn('Redirecting to HTTPS for security');
       window.location.href = window.location.href.replace('http://', 'https://');
     }
@@ -491,10 +493,10 @@ export class AuthService {
   }
 
   getApiUrl(): string {
-    if (import.meta.env['NG_APP_ENFORCE_HTTPS'] && import.meta.env['NG_APP_HTTPS_API_URL']) {
-      return import.meta.env['NG_APP_HTTPS_API_URL'];
+    if (import.meta.env.NG_APP_ENFORCE_HTTPS && import.meta.env.NG_APP_HTTPS_API_URL) {
+      return import.meta.env.NG_APP_HTTPS_API_URL;
     }
-    return import.meta.env['NG_APP_API_URL'];
+    return this.apiBaseUrl;
   }
 
 }

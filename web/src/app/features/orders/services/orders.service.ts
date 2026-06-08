@@ -37,7 +37,12 @@ export interface UpdateOrderStatusRequest {
   providedIn: 'root'
 })
 export class OrdersService {
-  private readonly apiUrl = `${import.meta.env['NG_APP_API_URL']}/orders`;
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private apiUrl: string;
+
+  constructor() {
+    this.apiUrl = `${this.apiBaseUrl}/orders`;
+  }
   private readonly http = inject(HttpClient);
 
   /**
@@ -52,20 +57,20 @@ export class OrdersService {
      * Update order (CustomerId and SpecialInstructionTxt)
      */
     updateOrder(id: string, changes: UpdateOrderRequest): Observable<Order> {
-      return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${id}`, changes);
+      return this.http.put<Order>(`${this.apiUrl}/${id}`, changes);
     }
   /**
    * Get a specific order by ID
    */
   getOrder(id: string): Observable<Order> {
-    return this.http.get<Order>(`${import.meta.env['NG_APP_API_URL']}/${id}`);
+    return this.http.get<Order>(`${this.apiUrl}/${id}`);
   }
   /**
    * Get a specific order by external ID (UUID)
    * @param externalId - The UUID external_id from database
    */
   getOrderById(externalId: string): Observable<Order> {
-    return this.http.get<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.get<Order>(`${this.apiUrl}/${externalId}`);
   }
 
   /**
@@ -80,7 +85,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   updateOrderStatus(externalId: string, request: UpdateOrderStatusRequest): Observable<Order> {
-    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/status`, request);
+    return this.http.put<Order>(`${this.apiUrl}/${externalId}/status`, request);
   }
 
   // ===== Phase 2: Business Logic Methods =====
@@ -89,7 +94,7 @@ export class OrdersService {
    * Validate order inventory before creation
    */
   validateOrderInventory(items: CreateOrderItemRequest[]): Observable<AvailabilityCheckResponse> {
-    return this.http.post<AvailabilityCheckResponse>(`${import.meta.env['NG_APP_API_URL']}/validate-inventory`, items);
+    return this.http.post<AvailabilityCheckResponse>(`${this.apiUrl}/validate-inventory`, items);
   }
 
   /**
@@ -98,7 +103,7 @@ export class OrdersService {
    */
   checkAvailability(inventoryItemId: string, quantity: number): Observable<AvailabilityCheckResponse> {
     const request = { inventoryItemExternalId: inventoryItemId, quantity };
-    return this.http.post<AvailabilityCheckResponse>(`${import.meta.env['NG_APP_API_URL']}/inventory/check-availability`, request);
+    return this.http.post<AvailabilityCheckResponse>(`${this.apiUrl}/inventory/check-availability`, request);
   }
 
   /**
@@ -106,7 +111,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   generatePickList(externalId: string): Observable<PickListDto> {
-    return this.http.get<PickListDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/pick-list`);
+    return this.http.get<PickListDto>(`${this.apiUrl}/${externalId}/pick-list`);
   }
 
   /**
@@ -114,7 +119,7 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   completeOrder(externalId: string): Observable<Order> {
-    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/complete`, {});
+    return this.http.put<Order>(`${this.apiUrl}/${externalId}/complete`, {});
   }
 
   /**
@@ -122,14 +127,14 @@ export class OrdersService {
    * @param externalId - The UUID external_id from database
    */
   cancelOrder(externalId: string): Observable<Order> {
-    return this.http.put<Order>(`${import.meta.env['NG_APP_API_URL']}/${externalId}/cancel`, {});
+    return this.http.put<Order>(`${this.apiUrl}/${externalId}/cancel`, {});
   }
 
   /**
    * Get orders by status
    */
   getOrdersByStatus(status: string): Observable<Order[]> {
-    return this.http.get<Order[]>(`${import.meta.env['NG_APP_API_URL']}/by-status/${status}`);
+    return this.http.get<Order[]>(`${this.apiUrl}/by-status/${status}`);
   }
 }
 

@@ -40,8 +40,9 @@ export interface TerminalDto {
 export class TerminalSelectionComponent implements OnInit {
   availableTerminals: TerminalDto[] = [];
   isLoading = true;
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private apiUrl: string;
   error: string | null = null;
-  private apiUrl = `${import.meta.env['NG_APP_API_URL']}/terminal`;
 
   constructor(
     private http: HttpClient,
@@ -49,7 +50,10 @@ export class TerminalSelectionComponent implements OnInit {
     private authService: AuthService,
     private terminalService: TerminalService,
     private router: Router
-  ) {}
+  ) {
+  this.apiUrl = `${this.apiBaseUrl}/auth`;
+
+  }
 
 
   ngOnInit(): void {
@@ -73,7 +77,7 @@ export class TerminalSelectionComponent implements OnInit {
     this.error = null;
 
     // Call backend API to get available terminals
-    this.http.get<TerminalDto[]>(`${import.meta.env['NG_APP_API_URL']}/available`, {
+    this.http.get<TerminalDto[]>(`${this.apiBaseUrl}/available`, {
       withCredentials: true
     }).subscribe({
       next: (terminals) => {

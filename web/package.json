@@ -37,6 +37,7 @@
     "@angular/build": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
+    "@angular/language-service": "^22.0.0",
     "@cypress/angular": "^4.0.0",
     "@types/jasmine": "~5.1.0",
     "angular-eslint": "20.3.0",

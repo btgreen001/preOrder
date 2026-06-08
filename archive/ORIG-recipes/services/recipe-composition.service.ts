@@ -50,14 +50,14 @@ export class RecipeCompositionService {
    * Get all compositions for a recipe
    */
   getCompositions(recipeExternalId: string): Observable<RecipeCompositionDto[]> {
-    return this.http.get<RecipeCompositionDto[]>(`${import.meta.env['NG_APP_API_URL']}/recipe/${recipeExternalId}`);
+    return this.http.get<RecipeCompositionDto[]>(`${import.meta.env.NG_APP_API_URL}/recipe/${recipeExternalId}`);
   }
 
   /**
    * Get a specific composition
    */
   getComposition(externalId: string): Observable<RecipeCompositionDto> {
-    return this.http.get<RecipeCompositionDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.get<RecipeCompositionDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
@@ -71,20 +71,20 @@ export class RecipeCompositionService {
    * Update a composition
    */
   updateComposition(externalId: string, request: UpdateRecipeCompositionRequest): Observable<RecipeCompositionDto> {
-    return this.http.put<RecipeCompositionDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`, request);
+    return this.http.put<RecipeCompositionDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`, request);
   }
 
   /**
    * Delete a composition
    */
   deleteComposition(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
    * Reorder compositions (batch update sequence numbers)
    */
   reorderCompositions(recipeExternalId: string, compositionUpdates: UpdateCompositionSequenceRequest[]): Observable<void> {
-    return this.http.put<void>(`${import.meta.env['NG_APP_API_URL']}/reorder/${recipeExternalId}`, compositionUpdates);
+    return this.http.put<void>(`${import.meta.env.NG_APP_API_URL}/reorder/${recipeExternalId}`, compositionUpdates);
   }
 }

@@ -1,12 +1,21 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  effect,
+  signal,
+  inject,
+  OnInit,
+  OnDestroy,
+  computed
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
+
 import {
   AdminOrganizationMember,
   AdminRegistrationCode,
   PreorderAdminService
 } from '../services/preorder-admin.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 
 @Component({
@@ -20,27 +29,32 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
   private readonly preorderAdminService = inject(PreorderAdminService);
   private readonly authService = inject(AuthService);
 
-  codes: AdminRegistrationCode[] = [];
-  members: AdminOrganizationMember[] = [];
-  isLoading = false;
-  isMembersLoading = false;
-  isSaving = false;
-  isResending = false;
-  isConfirmingAction = false;
-  errorMessage = '';
-  successMessage = '';
+  // --- Signals replacing component state ---
+  codes = signal<AdminRegistrationCode[]>([]);
+  members = signal<AdminOrganizationMember[]>([]);
 
-  newCodeEmail = '';
-  newCodeExpiryDays = 7;
-  copiedCodeId: string | null = null;
+  isLoading = signal(false);
+  isMembersLoading = signal(false);
+  isSaving = signal(false);
+  isResending = signal(false);
+  isConfirmingAction = signal(false);
 
-  passwordPromptOpen = false;
-  confirmPassword = '';
-  confirmCompanyName = '';
-  requiredCompanyName = '';
-  requiresCompanyNameConfirmation = false;
-  pendingActionDescription = '';
-  private pendingAction: (() => void) | null = null;
+  errorMessage = signal('');
+  successMessage = signal('');
+
+  newCodeEmail = signal('');
+  newCodeExpiryDays = signal(7);
+  copiedCodeId = signal<string | null>(null);
+
+  passwordPromptOpen = signal(false);
+  confirmPassword = signal('');
+  confirmCompanyName = signal('');
+  requiredCompanyName = signal('');
+  requiresCompanyNameConfirmation = signal(false);
+
+  pendingActionDescription = signal('');
+  pendingAction = signal<(() => void) | null>(null);
+
   private refreshTimerId: ReturnType<typeof setInterval> | null = null;
 
   private get orgId(): string {
@@ -51,7 +65,7 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
     this.loadCodes();
     this.loadMembers();
 
-    // Keep status/used-on fresh while admin stays on this screen.
+    // Auto-refresh using signals cleanup
     this.refreshTimerId = setInterval(() => {
       this.loadCodes(true);
       this.loadMembers(true);
@@ -65,107 +79,86 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
     }
   }
 
+  // --- Methods updated to use signals ---
+
+  loadMembers(isRefresh = false): void {
+    if (!isRefresh) this.isMembersLoading.set(true);
+
+    this.preorderAdminService.getOrganizationMembers(this.orgId).subscribe({
+      next: members => {
+        this.members.set(members);
+        this.isMembersLoading.set(false);
+      },
+      error: err => {
+        this.errorMessage.set(extractErrorMessage(err));
+        this.isMembersLoading.set(false);
+      }
+    });
+  }
+
+
   loadCodes(silent = false): void {
     if (!this.orgId) return;
-    this.isLoading = !silent;
+
+    this.isLoading.set(!silent);
     if (!silent) {
-      this.errorMessage = '';
+      this.errorMessage.set('');
     }
 
     this.preorderAdminService.getRegistrationCodes(this.orgId).subscribe({
       next: (codes: AdminRegistrationCode[]) => {
-        this.codes = codes;
-        this.isLoading = false;
+        this.codes.set(codes);
+        this.isLoading.set(false);
       },
       error: (err: unknown) => {
         if (!silent) {
-          this.errorMessage = extractErrorMessage(err, 'Could not load invite codes.');
+          this.errorMessage.set(
+            extractErrorMessage(err, 'Could not load invite codes.')
+          );
         }
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }
-
-  loadMembers(silent = false): void {
-    if (!this.orgId) return;
-    this.isMembersLoading = !silent;
-    if (!silent) {
-      this.errorMessage = '';
-    }
-
-    this.preorderAdminService.getOrganizationMembers(this.orgId).subscribe({
-      next: (members: AdminOrganizationMember[]) => {
-        this.members = members;
-        this.isMembersLoading = false;
-      },
-      error: (err: unknown) => {
-        if (!silent) {
-          this.errorMessage = extractErrorMessage(err, 'Could not load organization members.');
-        }
-        this.isMembersLoading = false;
-      }
-    });
-  }
-
-  generateCode(): void {
-    if (!this.orgId) return;
-    this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    this.preorderAdminService.createRegistrationCode(this.orgId, {
-      email: this.newCodeEmail || undefined,
-      expiryDays: this.newCodeExpiryDays
-    }).subscribe({
-      next: (newCode: AdminRegistrationCode) => {
-        this.newCodeEmail = '';
-        this.newCodeExpiryDays = 7;
-        this.successMessage = newCode.emailSent
-          ? `Invite code created and email sent: ${newCode.code}`
-          : `Invite code created: ${newCode.code}`;
-        this.loadCodes(true);
-        this.isSaving = false;
-      },
-      error: (err: unknown) => {
-        this.errorMessage = extractErrorMessage(err, 'Could not create invite code.');
-        this.isSaving = false;
-      }
-    });
-  }
-
   resendCode(code: AdminRegistrationCode): void {
-    if (!this.orgId || !this.canResend(code) || this.isResending) return;
+    if (!this.orgId || !this.canResend(code) || this.isResending()) return;
 
-    this.isResending = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isResending.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
-    this.preorderAdminService.resendRegistrationCode(this.orgId, code.codeId).subscribe({
-      next: () => {
-        this.successMessage = `Invite email resent to ${code.email}.`;
-        this.isResending = false;
-      },
-      error: (err: unknown) => {
-        this.errorMessage = extractErrorMessage(err, 'Could not resend invite email.');
-        this.isResending = false;
-      }
-    });
+    this.preorderAdminService
+      .resendRegistrationCode(this.orgId, code.codeId)
+      .subscribe({
+        next: () => {
+          this.successMessage.set(`Invite email resent to ${code.email}.`);
+          this.isResending.set(false);
+        },
+        error: (err: unknown) => {
+          this.errorMessage.set(
+            extractErrorMessage(err, 'Could not resend invite email.')
+          );
+          this.isResending.set(false);
+        }
+      });
   }
 
   deleteCode(code: AdminRegistrationCode): void {
     if (!this.orgId || code.isUsed) return;
+
     this.openPasswordPrompt(
       `Confirm your password to revoke invite code ${code.code}.`,
       () => this.runDeleteCode(code)
     );
   }
 
-  deactivateMember(member: AdminOrganizationMember): void {
-    if (!this.orgId || !member.isEnabled) {
-      return;
-    }
 
-    const requiresCompanyNameConfirmation = this.isLastActiveCompanyAdminSelfDeactivation(member);
+  deactivateMember(member: AdminOrganizationMember): void {
+    if (!this.orgId || !member.isEnabled) return;
+
+    const requiresCompanyNameConfirmation =
+      this.isLastActiveCompanyAdminSelfDeactivation(member);
+
     const requiredCompanyName = requiresCompanyNameConfirmation
       ? (this.authService.currentUserValue?.organizationName ?? '')
       : '';
@@ -179,9 +172,7 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
   }
 
   reactivateMember(member: AdminOrganizationMember): void {
-    if (!this.orgId || member.isEnabled) {
-      return;
-    }
+    if (!this.orgId || member.isEnabled) return;
 
     this.openPasswordPrompt(
       `Confirm your password to reactivate ${member.firstName} ${member.lastName} (${member.userName}).`,
@@ -189,39 +180,47 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
     );
   }
 
+
   cancelPasswordPrompt(): void {
-    this.passwordPromptOpen = false;
-    this.pendingAction = null;
-    this.pendingActionDescription = '';
-    this.confirmPassword = '';
-    this.confirmCompanyName = '';
-    this.requiredCompanyName = '';
-    this.requiresCompanyNameConfirmation = false;
-    this.isConfirmingAction = false;
+    this.passwordPromptOpen.set(false);
+    this.pendingAction.set(null);
+    this.pendingActionDescription.set('');
+    this.confirmPassword.set('');
+    this.confirmCompanyName.set('');
+    this.requiredCompanyName.set('');
+    this.requiresCompanyNameConfirmation.set(false);
+    this.isConfirmingAction.set(false);
   }
 
   confirmSensitiveAction(): void {
-    if (!this.pendingAction || !this.confirmPassword || this.isConfirmingAction) {
+    const action = this.pendingAction();
+    const password = this.confirmPassword();
+    const isConfirming = this.isConfirmingAction();
+
+    if (!action || !password || isConfirming) return;
+
+    if (this.requiresCompanyNameConfirmation() && !this.isCompanyNameConfirmationValid) {
       return;
     }
 
-    if (this.requiresCompanyNameConfirmation && !this.isCompanyNameConfirmationValid) {
-      return;
-    }
-
-    this.pendingAction();
+    action();
   }
+
 
   copyCode(code: AdminRegistrationCode): void {
     navigator.clipboard.writeText(code.code).then(() => {
-      this.copiedCodeId = code.codeId;
-      setTimeout(() => { this.copiedCodeId = null; }, 2000);
+      this.copiedCodeId.set(code.codeId);
+
+      setTimeout(() => {
+        this.copiedCodeId.set(null);
+      }, 2000);
     });
   }
 
   canResend(code: AdminRegistrationCode): boolean {
     return !code.isUsed && !code.isExpired && !!code.email;
   }
+
 
   codeStatus(code: AdminRegistrationCode): string {
     if (code.isUsed) return 'Used';
@@ -233,33 +232,35 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
     return member.isEnabled ? 'Active' : 'Deactivated';
   }
 
-  get pendingActionMainText(): string {
+  pendingActionMainText = computed(() => {
+    const text = this.pendingActionDescription();
     const warningMarker = 'WARNING:';
-    const warningIndex = this.pendingActionDescription.indexOf(warningMarker);
-    if (warningIndex < 0) {
-      return this.pendingActionDescription;
-    }
+    const warningIndex = text.indexOf(warningMarker);
 
-    return this.pendingActionDescription.slice(0, warningIndex).trim();
-  }
+    if (warningIndex < 0) return text.trim();
 
-  get pendingActionWarningText(): string {
+    return text.slice(0, warningIndex).trim();
+  });
+
+
+  pendingActionWarningText = computed(() => {
+    const text = this.pendingActionDescription();
     const warningMarker = 'WARNING:';
-    const warningIndex = this.pendingActionDescription.indexOf(warningMarker);
-    if (warningIndex < 0) {
-      return '';
-    }
+    const warningIndex = text.indexOf(warningMarker);
 
-    return this.pendingActionDescription.slice(warningIndex + warningMarker.length).trim();
-  }
+    if (warningIndex < 0) return '';
 
-  get isCompanyNameConfirmationValid(): boolean {
-    if (!this.requiresCompanyNameConfirmation) {
+    return text.slice(warningIndex + warningMarker.length).trim();
+  });
+
+  isCompanyNameConfirmationValid = computed(() => {
+    if (!this.requiresCompanyNameConfirmation()) {
       return true;
     }
 
-    return this.confirmCompanyName === this.requiredCompanyName;
-  }
+    return this.confirmCompanyName() === this.requiredCompanyName();
+  });
+
 
   private getDeactivatePrompt(member: AdminOrganizationMember): string {
     const isSelf = member.userId === this.authService.currentUserValue?.userId;
@@ -282,7 +283,9 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    return this.members.filter(m => m.isEnabled && m.userRole === 'CompanyAdmin').length <= 1;
+    return this.members()
+      .filter(m => m.isEnabled && m.userRole === 'CompanyAdmin')
+      .length <= 1;
   }
 
   private openPasswordPrompt(
@@ -291,65 +294,92 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
     requiresCompanyNameConfirmation = false,
     requiredCompanyName = ''
   ): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.pendingActionDescription = description;
-    this.pendingAction = action;
-    this.confirmPassword = '';
-    this.confirmCompanyName = '';
-    this.requiresCompanyNameConfirmation = requiresCompanyNameConfirmation && !!requiredCompanyName;
-    this.requiredCompanyName = this.requiresCompanyNameConfirmation ? requiredCompanyName : '';
-    this.passwordPromptOpen = true;
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.pendingActionDescription.set(description);
+    this.pendingAction.set(action);
+
+    this.confirmPassword.set('');
+    this.confirmCompanyName.set('');
+
+    const needsCompanyName = requiresCompanyNameConfirmation && !!requiredCompanyName;
+    this.requiresCompanyNameConfirmation.set(needsCompanyName);
+    this.requiredCompanyName.set(needsCompanyName ? requiredCompanyName : '');
+
+    this.passwordPromptOpen.set(true);
   }
 
   private runDeleteCode(code: AdminRegistrationCode): void {
     if (!this.orgId) return;
 
-    this.isConfirmingAction = true;
-    this.preorderAdminService.deleteRegistrationCode(this.orgId, code.codeId).subscribe({
-      next: () => {
-        this.successMessage = 'Invite code revoked.';
-        this.loadCodes(true);
-        this.cancelPasswordPrompt();
-      },
-      error: (err: unknown) => {
-        this.errorMessage = extractErrorMessage(err, 'Could not revoke invite code.');
-        this.isConfirmingAction = false;
-      }
-    });
+    this.isConfirmingAction.set(true);
+
+    this.preorderAdminService
+      .deleteRegistrationCode(this.orgId, code.codeId)
+      .subscribe({
+        next: () => {
+          this.successMessage.set('Invite code revoked.');
+          this.loadCodes(true);
+          this.cancelPasswordPrompt();
+        },
+        error: (err: unknown) => {
+          this.errorMessage.set(
+            extractErrorMessage(err, 'Could not revoke invite code.')
+          );
+          this.isConfirmingAction.set(false);
+        }
+      });
   }
+
 
   private runDeactivateMember(member: AdminOrganizationMember): void {
     if (!this.orgId) return;
 
-    this.isConfirmingAction = true;
-    this.preorderAdminService.deactivateOrganizationMember(this.orgId, member.userId, { password: this.confirmPassword }).subscribe({
-      next: (response: { message: string }) => {
-        this.successMessage = response.message || 'Member deactivated.';
-        this.loadMembers(true);
-        this.cancelPasswordPrompt();
-      },
-      error: (err: unknown) => {
-        this.errorMessage = extractErrorMessage(err, 'Could not deactivate member.');
-        this.isConfirmingAction = false;
-      }
-    });
+    this.isConfirmingAction.set(true);
+
+    this.preorderAdminService
+      .deactivateOrganizationMember(this.orgId, member.userId, {
+        password: this.confirmPassword()
+      })
+      .subscribe({
+        next: (response: { message: string }) => {
+          this.successMessage.set(response.message || 'Member deactivated.');
+          this.loadMembers(true);
+          this.cancelPasswordPrompt();
+        },
+        error: (err: unknown) => {
+          this.errorMessage.set(
+            extractErrorMessage(err, 'Could not deactivate member.')
+          );
+          this.isConfirmingAction.set(false);
+        }
+      });
   }
+
 
   private runReactivateMember(member: AdminOrganizationMember): void {
     if (!this.orgId) return;
 
-    this.isConfirmingAction = true;
-    this.preorderAdminService.reactivateOrganizationMember(this.orgId, member.userId, { password: this.confirmPassword }).subscribe({
-      next: (response: { message: string }) => {
-        this.successMessage = response.message || 'Member reactivated.';
-        this.loadMembers(true);
-        this.cancelPasswordPrompt();
-      },
-      error: (err: unknown) => {
-        this.errorMessage = extractErrorMessage(err, 'Could not reactivate member.');
-        this.isConfirmingAction = false;
-      }
-    });
+    this.isConfirmingAction.set(true);
+
+    this.preorderAdminService
+      .reactivateOrganizationMember(this.orgId, member.userId, {
+        password: this.confirmPassword()
+      })
+      .subscribe({
+        next: (response: { message: string }) => {
+          this.successMessage.set(response.message || 'Member reactivated.');
+          this.loadMembers(true);
+          this.cancelPasswordPrompt();
+        },
+        error: (err: unknown) => {
+          this.errorMessage.set(
+            extractErrorMessage(err, 'Could not reactivate member.')
+          );
+          this.isConfirmingAction.set(false);
+        }
+      });
   }
+
 }

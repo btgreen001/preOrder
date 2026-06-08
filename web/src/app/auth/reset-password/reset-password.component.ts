@@ -1,5 +1,4 @@
-import { Component, inject } from '@angular/core';
-
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
@@ -11,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [
     ReactiveFormsModule,
     RouterModule
-],
+  ],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
 })
@@ -20,9 +19,10 @@ export class ResetPasswordComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  isSubmitting = false;
-  errorMessage = '';
-  successMessage = '';
+  // 🔥 Signals replacing component state
+  isSubmitting = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -37,30 +37,35 @@ export class ResetPasswordComponent {
       return;
     }
 
-    const newPassword = this.form.value.newPassword || '';
-    const confirmPassword = this.form.value.confirmPassword || '';
+    const { newPassword, confirmPassword, email, code } = this.form.value;
+
     if (newPassword !== confirmPassword) {
-      this.errorMessage = 'Password and confirmation must match.';
+      this.errorMessage.set('Password and confirmation must match.');
       return;
     }
 
-    this.isSubmitting = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     this.authService.resetPasswordWithCode({
-      email: this.form.value.email || '',
-      code: this.form.value.code || '',
-      newPassword
+      email: email || '',
+      code: code || '',
+      newPassword: newPassword || ''
     }).subscribe({
       next: res => {
-        this.successMessage = res.message || 'Password reset successfully.';
-        this.isSubmitting = false;
-        setTimeout(() => this.router.navigate(['/login']), 1200);
+        this.successMessage.set(res.message || 'Password reset successfully.');
+
+        setTimeout(() => {
+          this.isSubmitting.set(false);
+          this.router.navigate(['/login']);
+        }, 4500);
       },
       error: err => {
-        this.errorMessage = err?.error?.message || 'Unable to reset password with that code.';
-        this.isSubmitting = false;
+        this.errorMessage.set(
+          err?.error?.message || 'Unable to reset password with that code.'
+        );
+        this.isSubmitting.set(false);
       }
     });
   }

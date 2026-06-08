@@ -53,7 +53,7 @@ export class RecipeStepService {
    * Get a specific step
    */
   getStep(externalId: string): Observable<RecipeStepDto> {
-    return this.http.get<RecipeStepDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.get<RecipeStepDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
@@ -67,20 +67,20 @@ export class RecipeStepService {
    * Update a step
    */
   updateStep(externalId: string, request: UpdateRecipeStepRequest): Observable<RecipeStepDto> {
-    return this.http.put<RecipeStepDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`, request);
+    return this.http.put<RecipeStepDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`, request);
   }
 
   /**
    * Delete a step
    */
   deleteStep(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
    * Batch update step numbers for a composition
    */
   reorderSteps(compositionExternalId: string, stepUpdates: { externalId: string; stepNumber: number }[]): Observable<void> {
-    return this.http.put<void>(`${import.meta.env['NG_APP_API_URL']}/reorder/${compositionExternalId}`, stepUpdates);
+    return this.http.put<void>(`${import.meta.env.NG_APP_API_URL}/reorder/${compositionExternalId}`, stepUpdates);
   }
 }

@@ -184,10 +184,19 @@ export interface PasswordConfirmRequest {
 })
 export class PreorderAdminService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${import.meta.env['NG_APP_API_URL']}/mvp`;
-  private readonly productsUrl = `${import.meta.env['NG_APP_API_URL']}/products`;
-  private readonly organizationsUrl = `${import.meta.env['NG_APP_API_URL']}/organization`;
-  private readonly selectedHolidayEventStorageKey = 'preorder-admin.selectedHolidayEventExternalId';
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+
+  private baseUrl!: string;
+  private organizationsUrl!: string;
+  private productsUrl!: string;
+
+  private selectedHolidayEventStorageKey = 'preorderAdminSelectedHolidayEventExternalId';
+
+  constructor() {    
+    this.baseUrl = `${this.apiBaseUrl}/mvp`;
+    this.productsUrl = `${this.apiBaseUrl}/products`;
+    this.organizationsUrl = `${this.apiBaseUrl}/organization`;
+  }
 
   setSelectedHolidayEventExternalId(externalId: string): void {
     if (typeof window === 'undefined') {

@@ -97,42 +97,48 @@ export interface PublicSendOrderEmailRequest {
   providedIn: 'root'
 })
 export class PublicPreorderService {
-  private readonly apiUrl = `${import.meta.env['NG_APP_API_URL']}/public/preorders`;
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private apiUrl: string;  
+
   private readonly http = inject(HttpClient);
+
+  constructor() {
+    this.apiUrl = `${this.apiBaseUrl}/public/preorders`;
+  }
 
 
   getHolidayEvents(orgToken: string): Observable<PublicHolidayEvent[]> {
-    return this.http.get<unknown[]>(`${import.meta.env['NG_APP_API_URL']}/preorder-event`, {
+    return this.http.get<unknown[]>(`${this.apiBaseUrl}/preorder-event`, {
       params: { org: orgToken }
     }).pipe(map(events => events.map(event => this.mapHolidayEvent(event))));
   }
 
   getMenuItems(orgToken: string, holidayEventExternalId: string): Observable<PublicMenuItem[]> {
-    return this.http.get<PublicMenuItem[]>(`${import.meta.env['NG_APP_API_URL']}/menu-items`, {
+    return this.http.get<PublicMenuItem[]>(`${this.apiBaseUrl}/menu-items`, {
       params: { org: orgToken, holidayEventExternalId }
     });
   }
 
   getPickupSlots(orgToken: string, holidayEventExternalId: string): Observable<PublicPickupSlot[]> {
-    return this.http.get<unknown[]>(`${import.meta.env['NG_APP_API_URL']}/pickup-slots`, {
+    return this.http.get<unknown[]>(`${this.apiBaseUrl}/pickup-slots`, {
       params: { org: orgToken, holidayEventExternalId }
     }).pipe(map(slots => slots.map(slot => this.mapPickupSlot(slot))));
   }
 
   getOrganizationDetails(orgToken: string): Observable<PublicOrganizationDtl> {
-    return this.http.get<unknown>(`${import.meta.env['NG_APP_API_URL']}/organization-details`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/organization-details`, {
       params: { org: orgToken }
     }).pipe(map(organization => this.mapOrganizationDetails(organization)));
   }
 
   createPreOrder(orgToken: string, request: PublicCreatePreOrderRequest): Observable<PublicPreOrderResponse> {
-    return this.http.post<PublicPreOrderResponse>(`${import.meta.env['NG_APP_API_URL']}/preorders`, request, {
+    return this.http.post<PublicPreOrderResponse>(`${this.apiBaseUrl}/preorders`, request, {
       params: { org: orgToken }
     });
   }
 
   sendOrderEmail(orgToken: string, request: PublicSendOrderEmailRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${import.meta.env['NG_APP_API_URL']}/send-order-email`, request, {
+    return this.http.post<{ message: string }>(`${this.apiBaseUrl}/send-order-email`, request, {
       params: { org: orgToken }
     });
   }

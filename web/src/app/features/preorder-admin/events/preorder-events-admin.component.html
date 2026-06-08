@@ -1,42 +1,76 @@
 <section class="preorder-admin">
-  <header class="page-head">
+  <header class="page-head" #welcomeStep>
     <div>
       <h1>Event Management</h1>
       <p>Manage event windows and pickup ranges.</p>
     </div>
-    <nav class="admin-links" data-tour="events-nav">
-      <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
-      <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
-      <a routerLink="/admin/slots" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Slots</a>
-      <a routerLink="/admin/orders" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Orders</a>
+    <nav
+      class="admin-links"
+      #eventsNav
+    >
+      <a
+        routerLink="/admin/events"
+        routerLinkActive="active-nav"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Events</a
+      >
+      <a
+        routerLink="/admin/menu"
+        routerLinkActive="active-nav"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Items</a
+      >
+      <a
+        routerLink="/admin/slots"
+        routerLinkActive="active-nav"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Slots</a
+      >
+      <a
+        routerLink="/admin/orders"
+        routerLinkActive="active-nav"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Orders</a
+      >
     </nav>
   </header>
 
-  <section class="editor" data-tour="event-editor">
-    <h2 data-tour="event-editor-title">{{ editingExternalId ? 'Edit Event' : 'Create Event' }}</h2>
-    <div class="grid">
+  <section class="editor">
+    <h2 #eventEditorTitle>
+      {{ editingExternalId() ? 'Edit Event' : 'Create Event' }}
+    </h2>
+
+    <form [formGroup]="form" class="grid">
       <label>
         Event Name
-        <input #nameInput [(ngModel)]="form.name" type="text" />
+        <input #nameInput type="text" formControlName="name" />
       </label>
 
-      <select hidden [(ngModel)]="form.isActive">
+      <select hidden formControlName="isActive">
         <option [ngValue]="true">Active</option>
         <option [ngValue]="false">Inactive</option>
       </select>
 
       <label class="span-2">
         Description
-        <textarea [(ngModel)]="form.description" rows="2"></textarea>
+        <textarea rows="2" formControlName="description"></textarea>
       </label>
 
       <div class="span-2 auto-sync-toggle">
         <label class="auto-sync-option">
-          <input type="checkbox" [(ngModel)]="autoSyncEnabled" (ngModelChange)="onAutoSyncToggle($event)" />
+          <input
+            type="checkbox"
+            [checked]="autoSyncEnabled()"
+            (change)="onAutoSyncToggle($event.target.checked)"
+          />
           <span>Cascade date updates</span>
         </label>
         <label class="all-day-option">
-          <input type="checkbox" [(ngModel)]="allDayEnabled" (ngModelChange)="onAllDayToggle($event)" />
+          <input
+            type="checkbox"
+            [checked]="allDayEnabled()"
+            (change)="onAllDayToggle($event.target.checked)"
+          />
           <span>All-day ordering</span>
         </label>
         <small>
@@ -50,63 +84,99 @@
       <label>
         <span class="field-head">
           <span>Ordering Opens</span>
-          <button type="button" class="quick-time-btn" (click)="setOpensMidnight()">Midnight</button>
+          <button
+            type="button"
+            class="quick-time-btn"
+            (click)="setOpensMidnight()"
+          >
+            Midnight
+          </button>
         </span>
         <div class="date-input-actions">
           <input
             #opensAtInput
-            [(ngModel)]="form.opensAt"
-            (ngModelChange)="onOpensAtChanged()"
             type="datetime-local"
-            />
+            formControlName="opensAt"
+            (change)="onOpensAtChanged()"
+          />
         </div>
       </label>
 
       <label>
         <span class="field-head">
           <span>Ordering Closes</span>
-          <button type="button" class="quick-time-btn" (click)="setClosesEndOfDay()">End of day</button>
+          <button
+            type="button"
+            class="quick-time-btn"
+            (click)="setClosesEndOfDay()"
+          >
+            End of day
+          </button>
         </span>
         <div class="date-input-actions">
-          <input #closesAtInput [(ngModel)]="form.closesAt"
-            (ngModelChange)="onClosesAtChanged()"
-            type="datetime-local" />
+          <input
+            #closesAtInput
+            type="datetime-local"
+            formControlName="closesAt"
+            (change)="onClosesAtChanged()"
+          />
         </div>
       </label>
 
       <label>
         Pickup Start Date
-        <input #pickupStartDtInput [(ngModel)]="form.pickupStartDt"
-          (ngModelChange)="onPickupStartChanged()"
-          type="date" />
+        <input
+          #pickupStartDtInput
+          type="date"
+          formControlName="pickupStartDt"
+          (change)="onPickupStartChanged()"
+        />
       </label>
 
       <label>
         Pickup End Date (including)
-        <input #pickupEndDtInput [(ngModel)]="form.pickupEndDt" (ngModelChange)="onPickupEndChanged()" type="date" />
+        <input
+          #pickupEndDtInput
+          type="date"
+          formControlName="pickupEndDt"
+          (change)="onPickupEndChanged()"
+        />
       </label>
-    </div>
+    </form>
 
     <div class="actions">
-      <button type="button" (click)="saveEvent()" [disabled]="isSaving">
-        {{ editingExternalId ? 'Save Changes' : 'Create Event' }}
+      <button type="button" (click)="saveEvent()" [disabled]="isSaving()">
+        {{ editingExternalId() ? 'Save Changes' : 'Create Event' }}
       </button>
-      <button type="button" data-tour="continue-button" (click)="saveEvent('/admin/menu')" [disabled]="isSaving">
-        {{ editingExternalId ? 'Save & Continue to Items' : 'Create & Continue to Items' }}
+      <button
+        type="button"
+        #continueButton
+        (click)="saveEvent('/admin/menu')"
+        [disabled]="isSaving()"
+      >
+        {{
+          editingExternalId()
+            ? 'Save & Continue to Items'
+            : 'Create & Continue to Items'
+        }}
       </button>
-      <button type="button" (click)="startCreate()" [disabled]="isSaving">Clear</button>
-      <button type="button" (click)="loadEvents()" [disabled]="isLoading">Refresh</button>
+      <button type="button" (click)="startCreate()" [disabled]="isSaving()">
+        Clear
+      </button>
+      <button type="button" (click)="loadEvents()" [disabled]="isLoading()">
+        Refresh
+      </button>
     </div>
   </section>
 
-  @if (errorMessage) {
-    <p class="error-message">{{ errorMessage }}</p>
+  @if (errorMessage()) {
+    <p class="error-message">{{ errorMessage() }}</p>
   }
-  @if (successMessage) {
-    <p class="success-message">{{ successMessage }}</p>
+  @if (successMessage()) {
+    <p class="success-message">{{ successMessage() }}</p>
   }
 
-  @if (!isLoading) {
+  @if (!isLoading()) {
     <section class="table-wrap">
       <table>
         <thead>
@@ -120,24 +190,36 @@
           </tr>
         </thead>
         <tbody>
-          @for (event of events; track event) {
-            <tr [class.anchored-row]="event.externalId === anchoredEventExternalId">
+          @for (event of events(); track event) {
+            <tr
+              [class.anchored-row]="
+                event.externalId === anchoredEventExternalId()
+              "
+            >
               <td>{{ event.name }}</td>
               <td>{{ event.opensAt | date: 'MM-dd-yyyy h:mm a' }}</td>
               <td>{{ event.closesAt | date: 'MM-dd-yyyy h:mm a' }}</td>
-              <td>{{ event.pickupStartDt | date: 'MM-dd-yyyy' }} -> {{ event.pickupEndDt | date: 'MM-dd-yyyy' }}</td>
+              <td>
+                {{ event.pickupStartDt | date: 'MM-dd-yyyy' }} ->
+                {{ event.pickupEndDt | date: 'MM-dd-yyyy' }}
+              </td>
               <td>{{ event.isActive ? 'Active' : 'Inactive' }}</td>
               <td>
                 @if (canEditEvent(event)) {
                   <button type="button" (click)="startEdit(event)">Edit</button>
                 }
-                <button type="button" (click)="activateToggleEvent(event)" class="delete-btn" [disabled]="isSaving">
+                <button
+                  type="button"
+                  (click)="activateToggleEvent(event)"
+                  class="delete-btn"
+                  [disabled]="isSaving()"
+                >
                   {{ event.isActive ? 'Deactivate' : 'Activate' }}
                 </button>
               </td>
             </tr>
           }
-          @if (events.length === 0) {
+          @if (events().length === 0) {
             <tr>
               <td colspan="6" class="empty">No pre-order events found.</td>
             </tr>
@@ -149,31 +231,44 @@
     <p class="loading">Loading events...</p>
   }
 
-
-  @if (showOnboardingTour) {
+  @if (showOnboardingTour()) {
     <div class="tour-backdrop">
-      <div class="tour-card" [ngStyle]="tourCardStyle" role="dialog" aria-modal="true" aria-label="First-time setup tour">
-        @if (currentTourStepIndex === 0) {
+      <div
+        class="tour-card"
+        [ngStyle]="tourCardStyle()"
+        role="dialog"
+        aria-modal="true"
+        aria-label="First-time setup tour"
+      >
+        @if (currentTourStepIndex() === 0) {
           <p class="tour-step-index">Welcome</p>
+        } @else {
+          <p class="tour-step-index">
+            Step {{ currentTourStepIndex() }} of {{ tourSteps().length - 1 }}
+          </p>
         }
-        @else {
-        <p class="tour-step-index">Step {{ currentTourStepIndex }} of {{ tourSteps.length - 1 }}</p>
-      }
-      <h3>{{ activeTourStep.title }}</h3>
-      <p>{{ activeTourStep.description }}</p>
-      <div class="tour-actions">
-        <button type="button" (click)="skipTour()">Skip</button>
-        @if (currentTourStepIndex > 0) {
-          <button type="button" (click)="previousTourStep()">Back</button>
-        }
-        <button type="button" class="tour-next" (click)="nextTourStep()">
-          {{ currentTourStepIndex === 0
-          ? 'Start Tour'
-          : (currentTourStepIndex === tourSteps.length - 1 ? 'Finish' : 'Next')
-          }}
-        </button>
+        <h3>{{ activeTourStep.title }}</h3>
+        <p>{{ activeTourStep.description }}</p>
+        <div class="tour-actions">
+          <button type="button" (click)="skipTour()">Skip</button>
+          @if (currentTourStepIndex() > 0) {
+            <button type="button" (click)="previousTourStep()">Back</button>
+          }
+          <button
+            type="button"
+            class="tour-next"
+            (click)="nextTourStep()"
+          >
+            {{
+              currentTourStepIndex() === 0
+                ? 'Start Tour'
+                : (currentTourStepIndex() === tourSteps().length - 1
+                    ? 'Finish'
+                    : 'Next')
+            }}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-}
+  }
 </section>

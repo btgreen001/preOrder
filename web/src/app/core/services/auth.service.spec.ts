@@ -65,7 +65,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    httpMock.match(req => req.url === `${import.meta.env['NG_APP_API_URL']}/auth/logout` || req.url === `${import.meta.env['NG_APP_API_URL']}/auth/logout-all`)
+    httpMock.match(req => req.url === `${import.meta.env.NG_APP_API_URL}/auth/logout` || req.url === `${import.meta.env.NG_APP_API_URL}/auth/logout-all`)
       .forEach(req => req.flush({}));
     service.clearLocalState();
     httpMock.verify();
@@ -97,7 +97,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       expect(req.request.method).toBe('POST');
       expect(req.request.withCredentials).toBeTrue();
       expect(req.request.body).toEqual(jasmine.objectContaining(mockLoginRequest));
@@ -109,7 +109,7 @@ describe('AuthService', () => {
 
       service.login(mockLoginRequest).subscribe();
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
         username: 'testuser',
@@ -129,7 +129,7 @@ describe('AuthService', () => {
         }
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       req.flush('Login failed', { status: 401, statusText: 'Unauthorized' });
     });
 
@@ -139,7 +139,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       req.flush(mockAuthResponse);
     });
   });
@@ -163,7 +163,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/register-user`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/register-user`);
       expect(req.request.method).toBe('POST');
       req.flush(mockAuthResponse);
     });
@@ -202,7 +202,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/register-company`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/register-company`);
       req.flush(mockCompanyResponse);
     });
   });
@@ -211,7 +211,7 @@ describe('AuthService', () => {
     beforeEach(() => {
       // Login first
       service.login(mockLoginRequest).subscribe();
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       req.flush(mockAuthResponse);
     });
 
@@ -239,7 +239,7 @@ describe('AuthService', () => {
     beforeEach(() => {
       // Login first
       service.login(mockLoginRequest).subscribe();
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       req.flush(mockAuthResponse);
     });
 
@@ -252,7 +252,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/refresh-token`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/refresh-token`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({});
       expect(req.request.withCredentials).toBeTrue();
@@ -269,7 +269,7 @@ describe('AuthService', () => {
         }
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/refresh-token`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/refresh-token`);
       req.flush('Refresh failed', { status: 401, statusText: 'Unauthorized' });
     });
 
@@ -286,7 +286,7 @@ describe('AuthService', () => {
       });
 
       // Should only have one HTTP request despite two method calls
-      const reqs = httpMock.match(`${import.meta.env['NG_APP_API_URL']}/auth/refresh-token`);
+      const reqs = httpMock.match(`${import.meta.env.NG_APP_API_URL}/auth/refresh-token`);
       expect(reqs.length).toBe(1);
 
       // Complete the request
@@ -298,7 +298,7 @@ describe('AuthService', () => {
     beforeEach(() => {
       // Login first
       service.login(mockLoginRequest).subscribe();
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       req.flush(mockAuthResponse);
     });
 
@@ -309,7 +309,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/revoke-token`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/revoke-token`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({});
       expect(req.request.withCredentials).toBeTrue();
@@ -325,7 +325,7 @@ describe('AuthService', () => {
         }
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/revoke-token`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/revoke-token`);
       req.flush('Revoke failed', { status: 500, statusText: 'Internal Server Error' });
     });
   });
@@ -397,7 +397,7 @@ describe('AuthService', () => {
   describe('role and license checking', () => {
     beforeEach(() => {
       service.login(mockLoginRequest).subscribe();
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/login`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/login`);
       req.flush(mockAuthResponse);
     });
 
@@ -428,7 +428,7 @@ describe('AuthService', () => {
         done();
       });
 
-      const req = httpMock.expectOne(`${import.meta.env['NG_APP_API_URL']}/auth/check-username/testuser`);
+      const req = httpMock.expectOne(`${import.meta.env.NG_APP_API_URL}/auth/check-username/testuser`);
       expect(req.request.method).toBe('GET');
       req.flush(true);
     });

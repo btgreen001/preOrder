@@ -1,17 +1,12 @@
-import { Component, inject } from '@angular/core';
-
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-forgot-username',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterModule
-],
+  imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './forgot-username.component.html',
   styleUrls: ['./forgot-username.component.scss']
 })
@@ -19,9 +14,10 @@ export class ForgotUsernameComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
 
-  isSubmitting = false;
-  errorMessage = '';
-  successMessage = '';
+  // 🔥 Signals instead of component properties
+  isSubmitting = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]]
@@ -33,20 +29,24 @@ export class ForgotUsernameComponent {
       return;
     }
 
-    this.isSubmitting = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     this.authService.requestUsernameReminder({
       email: this.form.value.email || ''
     }).subscribe({
       next: res => {
-        this.successMessage = res.message || 'If the email is valid, your username has been sent.';
-        this.isSubmitting = false;
+        this.successMessage.set(
+          res.message || 'If the email is valid, your username has been sent.'
+        );
+        this.isSubmitting.set(false);
       },
       error: err => {
-        this.errorMessage = err?.error?.message || 'Unable to request username reminder.';
-        this.isSubmitting = false;
+        this.errorMessage.set(
+          err?.error?.message || 'Unable to request username reminder.'
+        );
+        this.isSubmitting.set(false);
       }
     });
   }

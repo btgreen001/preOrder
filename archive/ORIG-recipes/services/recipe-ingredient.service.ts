@@ -64,11 +64,11 @@ export class RecipeIngredientService {
   constructor(private http: HttpClient) {}
 
   getIngredients(recipeExternalId: string): Observable<RecipeIngredientDto[]> {
-    return this.http.get<RecipeIngredientDto[]>(`${import.meta.env['NG_APP_API_URL']}/recipe/${recipeExternalId}`);
+    return this.http.get<RecipeIngredientDto[]>(`${import.meta.env.NG_APP_API_URL}/recipe/${recipeExternalId}`);
   }
 
   getIngredient(externalId: string): Observable<RecipeIngredientDto> {
-    return this.http.get<RecipeIngredientDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.get<RecipeIngredientDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   addIngredient(recipeExternalId: string, request: CreateRecipeIngredientRequest): Observable<RecipeIngredientDto> {
@@ -82,14 +82,14 @@ export class RecipeIngredientService {
   }
 
   updateIngredient(externalId: string, request: UpdateRecipeIngredientRequest): Observable<RecipeIngredientDto> {
-    return this.http.put<RecipeIngredientDto>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`, request);
+    return this.http.put<RecipeIngredientDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`, request);
   }
 
   removeIngredient(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${externalId}`);
+    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
   }
 
   reorderIngredients(recipeExternalId: string, request: ReorderIngredientsRequest): Observable<void> {
-    return this.http.put<void>(`${import.meta.env['NG_APP_API_URL']}/recipe/${recipeExternalId}/reorder`, request);
+    return this.http.put<void>(`${import.meta.env.NG_APP_API_URL}/recipe/${recipeExternalId}/reorder`, request);
   }
 }

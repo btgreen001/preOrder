@@ -41,14 +41,14 @@
           </mat-form-field>
         </div>
 
-        @if (error) {
-          <div class="error-message">{{ error }}</div>
+        @if (error()) {
+          <div class="error-message">{{ error() }}</div>
         }
-        @if (success) {
-          <div class="success-message">{{ success }}</div>
+        @if (success()) {
+          <div class="success-message">{{ success() }}</div>
         }
 
-        <button mat-flat-button class="spotify-btn" type="submit" [disabled]="form.invalid || loading">Register</button>
+        <button mat-flat-button class="spotify-btn" type="submit" [disabled]="form.invalid || loading()">Register</button>
       </form>
 
       <mat-card-actions class="card-actions">

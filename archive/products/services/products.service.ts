@@ -69,7 +69,7 @@ export class ProductsService {
    * Get a specific product by ID
    */
   getProductById(id: string): Observable<Product> {
-    return this.http.get<Product>(`${import.meta.env['NG_APP_API_URL']}/${id}`);
+    return this.http.get<Product>(`${import.meta.env.NG_APP_API_URL}/${id}`);
   }
 
   /**
@@ -81,20 +81,20 @@ export class ProductsService {
 
   /** Request a server-generated SKU suggestion */
   suggestSku(): Observable<{ sku: string }> {
-    return this.http.get<{ sku: string }>(`${import.meta.env['NG_APP_API_URL']}/sku-suggest`);
+    return this.http.get<{ sku: string }>(`${import.meta.env.NG_APP_API_URL}/sku-suggest`);
   }
 
   /**
    * Update an existing product
    */
   updateProduct(id: string, request: UpdateProductRequest): Observable<Product> {
-    return this.http.put<Product>(`${import.meta.env['NG_APP_API_URL']}/${id}`, request);
+    return this.http.put<Product>(`${import.meta.env.NG_APP_API_URL}/${id}`, request);
   }
 
   /**
    * Delete a product
    */
   deleteProduct(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env['NG_APP_API_URL']}/${id}`);
+    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${id}`);
   }
 }

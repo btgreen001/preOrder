@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { RegisterUserRequest } from '../../core/models/auth.model';
@@ -21,9 +21,11 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class RegisterComponent {
   form: FormGroup;
-  loading = false;
-  error: string | null = null;
-  success: string | null = null;
+
+  loading = signal(false);
+  error = signal<string | null>(null);
+  success = signal<string | null>(null);
+  redirectCountdown = signal(8);
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private route: ActivatedRoute) {
     // Use a valid test registration code from insert-test-data.sql
@@ -50,24 +52,46 @@ export class RegisterComponent {
       this.form.patchValue({ email: email });
     }
   }
-
   submit(): void {
     if (this.form.invalid) return;
-    this.loading = true;
-    this.error = null;
-    this.success = null;
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
     const data: RegisterUserRequest = this.form.value;
+
     this.auth.registerUser(data).subscribe({
-      next: (resp) => {
-        this.success = 'Registration successful! You may now log in.';
-        setTimeout(() => this.router.navigate(['/login']), 1500);
+      next: () => {
+        const countdownStart = 8;
+        this.redirectCountdown.set(countdownStart);
+
+        this.success.set(
+          `Registration successful! Redirecting to login in ${this.redirectCountdown()}…`
+        );
+
+        const interval = setInterval(() => {
+          const nextValue = this.redirectCountdown() - 1;
+          this.redirectCountdown.set(nextValue);
+
+          if (nextValue > 0) {
+            this.success.set(
+              `Registration successful! Redirecting to login in ${nextValue}…`
+            );
+          } else {
+            clearInterval(interval);
+            this.router.navigate(['/login']);
+          }
+        }, 1000);
       },
+
       error: (err) => {
-        this.error = err?.error?.message || 'Registration failed.';
-        this.loading = false;
+        this.error.set(err?.error?.message || 'Registration failed.');
+        this.loading.set(false);
       },
+
       complete: () => {
-        this.loading = false;
+        this.loading.set(false);
       }
     });
   }

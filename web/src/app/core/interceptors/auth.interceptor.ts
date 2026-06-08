@@ -160,6 +160,8 @@ export class AuthInterceptor implements HttpInterceptor {
         }),
         catchError((refreshError: any) => {
           this.isRefreshing = false;
+          // Unblock queued requests waiting on refreshTokenSubject so they fail fast instead of hanging.
+          this.refreshTokenSubject.next('REFRESH_FAILED');
           this.loadingService.hide();
           
           this.logger.log('[AuthInterceptor] Token refresh failed:', refreshError);

@@ -362,7 +362,7 @@ public class AuthController : ControllerBase
         }
 
         await _authService.RequestUsernameReminderAsync(request.Email);
-        return Ok(new { message = "If that email exists in our system, your username has been sent." });
+        return Ok(new { message = "If that email exists in our system, your username will been sent." });
     }
 
     [AllowAnonymous]

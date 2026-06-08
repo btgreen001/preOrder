@@ -20,7 +20,7 @@ export interface CreatePaymentIntentResponse {
 export class PaymentService {
 
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${import.meta.env['NG_APP_API_URL']}/payment`;
+  private readonly apiUrl = `${import.meta.env.NG_APP_API_URL}/payment`;
 
   createPaymentIntent(data: CreatePaymentIntentRequest): Observable<CreatePaymentIntentResponse> {
     const token = localStorage.getItem('authToken');
@@ -30,7 +30,7 @@ export class PaymentService {
       : undefined;
 
     return this.http.post<CreatePaymentIntentResponse>(
-      `${import.meta.env['NG_APP_API_URL']}/create-intent`,
+      `${import.meta.env.NG_APP_API_URL}/create-intent`,
       data,
       { headers }
     );

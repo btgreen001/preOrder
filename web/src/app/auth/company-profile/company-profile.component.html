@@ -3,17 +3,17 @@
     <h2>Company Profile</h2>
     <p class="muted">Company administrators can update organization contact details.</p>
 
-    @if (isLoading) {
+    @if (isLoading()) {
       <div class="info">Loading company profile...</div>
     }
-    @if (errorMessage) {
-      <div class="error">{{ errorMessage }}</div>
+    @if (errorMessage()) {
+      <div class="error">{{ errorMessage() }}</div>
     }
-    @if (successMessage) {
-      <div class="success">{{ successMessage }}</div>
+    @if (successMessage()) {
+      <div class="success">{{ successMessage() }}</div>
     }
 
-    @if (!isLoading) {
+    @if (!isLoading()) {
       <form [formGroup]="form" (ngSubmit)="save()">
         <label>
           Organization Name
@@ -64,8 +64,8 @@
           <input type="password" formControlName="currentPassword" autocomplete="current-password" />
         </label>
         <div class="actions">
-          <button type="submit" class="btn-primary" [disabled]="isSaving">
-            {{ isSaving ? 'Saving...' : 'Save Company Profile' }}
+          <button type="submit" class="btn-primary" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save Company Profile' }}
           </button>
         </div>
       </form>

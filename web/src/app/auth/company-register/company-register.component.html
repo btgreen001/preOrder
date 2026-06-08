@@ -86,21 +86,23 @@
           </div>
         </div>
 
-        <button mat-flat-button class="spotify-btn" type="submit" [disabled]="companyRegisterForm.invalid || isLoading">
-          @if (!isLoading) {
+        @if (successMessage()) {
+          <div class="success">
+            <span class="success-icon">✓</span> {{ successMessage() }}
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <div class="error">{{ errorMessage() }}</div>
+        }
+
+        <button mat-flat-button class="spotify-btn" type="submit" [disabled]="companyRegisterForm.invalid || isLoading()">
+          @if (!isLoading()) {
             <span>Register</span>
           }
         </button>
 
-        @if (successMessage) {
-          <div class="success">
-            <span class="success-icon">✓</span> {{ successMessage }}
-          </div>
-        }
 
-        @if (errorMessage) {
-          <div class="error">{{ errorMessage }}</div>
-        }
       </form>
 
       <mat-card-actions class="card-actions">

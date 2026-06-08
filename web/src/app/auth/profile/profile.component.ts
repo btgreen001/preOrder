@@ -1,8 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
-
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -10,8 +9,9 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    RouterModule
-],
+    RouterModule,
+    MatSnackBarModule
+  ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
@@ -20,10 +20,10 @@ export class ProfileComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private authService = inject(AuthService);
 
-  isLoading = false;
-  isSaving = false;
-  errorMessage = '';
-  successMessage = '';
+  isLoading = signal(true);
+  isSaving = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
 
   profileForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -40,8 +40,8 @@ export class ProfileComponent implements OnInit {
   }
 
   loadProfile(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
     this.authService.getMyProfile().subscribe({
       next: profile => {
         this.profileForm.patchValue({
@@ -53,12 +53,12 @@ export class ProfileComponent implements OnInit {
           newPassword: '',
           reenterNewPassword: ''
         });
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: err => {
-        this.errorMessage = err?.error?.message || 'Unable to load your profile.';
-        this.isLoading = false;
-        this.snackBar.open(this.errorMessage, 'Close', { duration: 5000, panelClass: ['error-snackbar']  });
+        this.errorMessage.set(err?.error?.message || 'Unable to load your profile.');
+        this.isLoading.set(false);
+        this.snackBar.open(this.errorMessage(), 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
       }
     });
   }
@@ -73,13 +73,13 @@ export class ProfileComponent implements OnInit {
     const reenterNewPassword = this.profileForm.value.reenterNewPassword || '';
     const wantsPasswordChange = !!newPassword || !!reenterNewPassword;
     if (wantsPasswordChange && newPassword !== reenterNewPassword) {
-      this.errorMessage = 'New password and re-entered password must match.';
+      this.errorMessage.set('New password and re-entered password must match.');
       return;
     }
 
-    this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     this.authService.updateMyProfile({
       email: this.profileForm.value.email || '',
@@ -90,19 +90,15 @@ export class ProfileComponent implements OnInit {
       reenterNewPassword: wantsPasswordChange ? reenterNewPassword : undefined
     }).subscribe({
       next: res => {
-        this.successMessage = res.message || 'Profile updated.';
-        this.profileForm.patchValue({
-          currentPassword: '',
-          newPassword: '',
-          reenterNewPassword: ''
-        });
-        this.isSaving = false;
-        this.snackBar.open(this.successMessage, 'Close', { duration: 5000, panelClass: ['success-snackbar']  });
+        this.successMessage.set(res.message || 'Profile updated.');
+        this.profileForm.patchValue({ currentPassword: '', newPassword: '', reenterNewPassword: '' });
+        this.isSaving.set(false);
+        this.snackBar.open(this.successMessage(), 'Close', { duration: 5000, panelClass: ['success-snackbar'] });
       },
       error: err => {
-        this.errorMessage = err?.error?.message || 'Unable to save your profile.';
-        this.isSaving = false;
-        this.snackBar.open(this.errorMessage, 'Close', { duration: 5000, panelClass: ['error-snackbar']  });
+        this.errorMessage.set(err?.error?.message || 'Unable to save your profile.');
+        this.isSaving.set(false);
+        this.snackBar.open(this.errorMessage(), 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
       }
     });
   }

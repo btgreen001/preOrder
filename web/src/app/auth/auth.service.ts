@@ -6,9 +6,14 @@ import { RegisterUserRequest, AuthResponse } from '../core/models/auth.model';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = import.meta.env['NG_APP_API_URL'] + '/auth';
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private apiUrl!: string;
+
+  constructor() {
+    this.apiUrl = this.apiBaseUrl + '/auth';
+  }
 
   registerUser(data: RegisterUserRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${import.meta.env['NG_APP_API_URL']}/register-user`, data);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register-user`, data);
   }
 }

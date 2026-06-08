@@ -28,7 +28,7 @@ export class CheckoutComponent implements OnInit {
   message = '';
 
   async ngOnInit() {
-    const stripeKey = import.meta.env['NG_APP_STRIPE_PUBLISHABLE_KEY'];
+    const stripeKey = import.meta.env.NG_APP_STRIPE_PUBLISHABLE_KEY;
     this.stripe = await loadStripe(stripeKey);
 
     const elements = this.stripe!.elements({
