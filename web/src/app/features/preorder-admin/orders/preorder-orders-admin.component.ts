@@ -1,10 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 import { PreorderAdminService, AdminHolidayEvent, AdminPreOrder } from '../services/preorder-admin.service';
-
 
 @Component({
   selector: 'app-preorder-orders-admin',
@@ -13,90 +12,78 @@ import { PreorderAdminService, AdminHolidayEvent, AdminPreOrder } from '../servi
   templateUrl: './preorder-orders-admin.component.html',
   styleUrl: './preorder-orders-admin.component.scss'
 })
-export class PreorderOrdersAdminComponent implements OnInit {
+export class PreorderOrdersAdminComponent {
   private readonly preorderAdminService = inject(PreorderAdminService);
 
-  holidayEvents: AdminHolidayEvent[] = [];
-  preOrders: AdminPreOrder[] = [];
-  selectedHolidayEventExternalId = '';
-  selectedPickupDateLocal = '';
+  // --- Signals ---
+  holidayEvents = signal<AdminHolidayEvent[]>([]);
+  preOrders = signal<AdminPreOrder[]>([]);
 
-  isLoading = false;
-  isExporting = false;
-  errorMessage = '';
-  savingStatusByOrderExternalId: Record<string, boolean> = {};
-  pendingStatusByOrderExternalId: Record<string, string> = {};
+  selectedHolidayEventExternalId = signal<string>('');
+  selectedPickupDateLocal = signal<string>('');
 
-  ngOnInit(): void {
+  isLoading = signal(false);
+  isExporting = signal(false);
+  errorMessage = signal('');
+
+  pendingStatusByOrderExternalId = signal<Record<string, string>>({});
+  savingStatusByOrderExternalId = signal<Record<string, boolean>>({});
+
+  constructor() {
+    // Load events once
     this.loadHolidayEvents();
-    this.loadPreOrders();
+
+    // Auto-load preorders whenever filters change
+    effect(() => {
+      const eventId = this.selectedHolidayEventExternalId();
+      this.loadPreOrders(eventId);
+    });
   }
 
+  // --- Load events ---
   loadHolidayEvents(): void {
     this.preorderAdminService.getAllHolidayEvents().subscribe({
-      next: (events) => {
-        this.holidayEvents = events;
+      next: events => this.holidayEvents.set(events),
+      error: () => this.errorMessage.set('Could not load pre-order events.')
+    });
+  }
+
+  // --- Load preorders ---
+  loadPreOrders(eventId?: string): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.preorderAdminService.getPreOrders(eventId || undefined).subscribe({
+      next: orders => {
+        this.preOrders.set(orders);
+
+        const pending: Record<string, string> = {};
+        orders.forEach(o => pending[o.externalId] = o.status);
+        this.pendingStatusByOrderExternalId.set(pending);
+
+        this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage = 'Could not load pre-order events.';
+        this.errorMessage.set('Could not load preorder operations data.');
+        this.isLoading.set(false);
       }
     });
   }
 
-  loadPreOrders(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+  // --- Computed filtered orders ---
+  filteredPreOrders = computed(() => {
+    const date = this.selectedPickupDateLocal();
+    const orders = this.preOrders();
 
-    this.preorderAdminService.getPreOrders(this.selectedHolidayEventExternalId || undefined).subscribe({
-      next: (orders) => {
-        this.preOrders = orders;
-        this.pendingStatusByOrderExternalId = {};
-        this.preOrders.forEach(order => {
-          this.pendingStatusByOrderExternalId[order.externalId] = order.status;
-        });
-        this.isLoading = false;
-      },
-      error: () => {
-        this.errorMessage = 'Could not load preorder operations data.';
-        this.isLoading = false;
-      }
-    });
-  }
+    if (!date) return orders;
 
-  exportCsv(): void {
-    this.isExporting = true;
-    this.errorMessage = '';
-
-    this.preorderAdminService
-      .exportPreOrdersCsv(this.selectedHolidayEventExternalId || undefined, this.selectedPickupDateLocal || undefined)
-      .subscribe({
-        next: (blob) => {
-          const objectUrl = URL.createObjectURL(blob);
-          const anchor = document.createElement('a');
-          anchor.href = objectUrl;
-          anchor.download = `preorders-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
-          anchor.click();
-          URL.revokeObjectURL(objectUrl);
-          this.isExporting = false;
-        },
-        error: () => {
-          this.errorMessage = 'CSV export failed.';
-          this.isExporting = false;
-        }
-      });
-  }
-
-  get filteredPreOrders(): AdminPreOrder[] {
-    if (!this.selectedPickupDateLocal) {
-      return this.preOrders;
-    }
-    return this.preOrders.filter(order => {
+    return orders.filter(order => {
       const slotDate = order.pickupSlot?.slotStartAt;
-      if (!slotDate) return false;
-      return slotDate.startsWith(this.selectedPickupDateLocal);
+      return slotDate?.startsWith(date);
     });
-  }
+  });
 
+  // --- Helpers ---
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -104,18 +91,15 @@ export class PreorderOrdersAdminComponent implements OnInit {
     }).format(value);
   }
 
-  getHolidayEventName(holidayEventId: number): string {
-    return this.holidayEvents.find(event => event.id === holidayEventId)?.name ?? 'Unknown event';
-  }
+  getHolidayEventName = (id: number): string =>
+    this.holidayEvents().find(e => e.id === id)?.name ?? 'Unknown event';
 
-  hasOrdersFor(holidayEventId: number): boolean {
-    return !!this.preOrders.find(order => order.holidayEventId === holidayEventId);
-  }
+  hasOrdersFor = (id: number): boolean =>
+    this.preOrders().some(o => o.holidayEventId === id);
 
   getAllowedNextStatuses(currentStatus: string): string[] {
-    const normalizedCurrent = currentStatus.trim().toUpperCase();
-
-    switch (normalizedCurrent) {
+    const s = currentStatus.trim().toUpperCase();
+    switch (s) {
       case 'SUBMITTED':
       case 'PENDING':
         return ['CONFIRMED', 'CANCELLED'];
@@ -127,33 +111,65 @@ export class PreorderOrdersAdminComponent implements OnInit {
   }
 
   canUpdateStatus(order: AdminPreOrder): boolean {
-    const targetStatus = this.pendingStatusByOrderExternalId[order.externalId] ?? order.status;
-    return !!targetStatus
-      && targetStatus.trim().toUpperCase() !== order.status.trim().toUpperCase()
-      && this.getAllowedNextStatuses(order.status).includes(targetStatus.trim().toUpperCase());
+    const pending = this.pendingStatusByOrderExternalId()[order.externalId];
+    const target = pending ?? order.status;
+
+    return !!target &&
+      target.trim().toUpperCase() !== order.status.trim().toUpperCase() &&
+      this.getAllowedNextStatuses(order.status).includes(target.trim().toUpperCase());
   }
 
+  // --- Update status ---
   updateOrderStatus(order: AdminPreOrder): void {
-    const targetStatus = this.pendingStatusByOrderExternalId[order.externalId];
-    if (!targetStatus || !this.canUpdateStatus(order)) {
-      return;
-    }
+    const pending = this.pendingStatusByOrderExternalId()[order.externalId];
+    if (!pending || !this.canUpdateStatus(order)) return;
 
-    this.savingStatusByOrderExternalId[order.externalId] = true;
-    this.errorMessage = '';
+    this.savingStatusByOrderExternalId.update(map => ({ ...map, [order.externalId]: true }));
+    this.errorMessage.set('');
 
-    this.preorderAdminService.updatePreOrderStatus(order.externalId, { status: targetStatus }).subscribe({
-      next: (response) => {
-        order.status = response.status;
-        this.pendingStatusByOrderExternalId[order.externalId] = response.status;
-        this.savingStatusByOrderExternalId[order.externalId] = false;
+    this.preorderAdminService.updatePreOrderStatus(order.externalId, { status: pending }).subscribe({
+      next: response => {
+        // update order in list
+        this.preOrders.update(list =>
+          list.map(o => o.externalId === order.externalId ? { ...o, status: response.status } : o)
+        );
+
+        // update pending
+        this.pendingStatusByOrderExternalId.update(map => ({ ...map, [order.externalId]: response.status }));
+        this.savingStatusByOrderExternalId.update(map => ({ ...map, [order.externalId]: false }));
       },
-      error: (error) => {
-        this.pendingStatusByOrderExternalId[order.externalId] = order.status;
-        this.savingStatusByOrderExternalId[order.externalId] = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not update order status.');
+      error: err => {
+        this.pendingStatusByOrderExternalId.update(map => ({ ...map, [order.externalId]: order.status }));
+        this.savingStatusByOrderExternalId.update(map => ({ ...map, [order.externalId]: false }));
+        this.errorMessage.set(extractErrorMessage(err, 'Could not update order status.'));
       }
     });
   }
 
+  // --- Export CSV ---
+  exportCsv(): void {
+    this.isExporting.set(true);
+    this.errorMessage.set('');
+
+    this.preorderAdminService
+      .exportPreOrdersCsv(
+        this.selectedHolidayEventExternalId() || undefined,
+        this.selectedPickupDateLocal() || undefined
+      )
+      .subscribe({
+        next: blob => {
+          const objectUrl = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = objectUrl;
+          anchor.download = `preorders-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+          anchor.click();
+          URL.revokeObjectURL(objectUrl);
+          this.isExporting.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('CSV export failed.');
+          this.isExporting.set(false);
+        }
+      });
+  }
 }

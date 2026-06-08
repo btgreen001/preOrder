@@ -1,9 +1,10 @@
-import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { extractErrorMessage } from '../../../shared/utils/error-extractor';
+import { take } from 'rxjs/operators';
 import {
   PreorderAdminService,
   AdminHolidayEvent,
@@ -22,129 +23,149 @@ export class PreorderSlotsAdminComponent implements OnInit {
   private readonly preorderAdminService = inject(PreorderAdminService);
   private readonly snackBar = inject(MatSnackBar);
 
-  holidayEvents: AdminHolidayEvent[] = [];
-  pickupSlots: AdminPickupSlot[] = [];
 
-  selectedHolidayEventExternalId = '';
-  editingExternalId: string | null = null;
+  // SIGNAL STATE
+  holidayEvents = signal<AdminHolidayEvent[]>([]);
+  pickupSlots = signal<AdminPickupSlot[]>([]);
 
-  isLoading = false;
-  isSaving = false;
-  errorMessage = '';
-  successMessage = '';
+  selectedHolidayEventExternalId = signal('');
+  editingExternalId = signal<string | null>(null);
 
-  form: SavePickupSlotRequest = {
+  isLoading = signal(false);
+  isSaving = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
+
+  form = signal<SavePickupSlotRequest>({
     holidayEventExternalId: '',
     slotStartAt: '',
     slotEndAt: '',
     capacity: 1,
     isActive: true
-  };
+  });
 
-  get selectedHolidayEvent(): AdminHolidayEvent | undefined {
-    return this.holidayEvents.find(event => event.externalId === this.selectedHolidayEventExternalId);
-  }
+  // COMPUTED
+  selectedHolidayEvent = computed(() =>
+    this.holidayEvents().find(e => e.externalId === this.selectedHolidayEventExternalId())
+  );
 
   ngOnInit(): void {
     this.loadHolidayEvents();
   }
 
+
+  // LOAD EVENTS
   loadHolidayEvents(): void {
-    this.preorderAdminService.getAllHolidayEvents().subscribe({
-      next: events => {
-        this.holidayEvents = events;
-        const persistedEventExternalId = this.preorderAdminService.getSelectedHolidayEventExternalId();
-        const candidateExternalId = this.selectedHolidayEventExternalId || persistedEventExternalId || '';
-        const preferredEvent = events.find(event => event.externalId === candidateExternalId) ?? events[0];
+    this.preorderAdminService.getAllHolidayEvents()
+      .pipe(take(1))
+      .subscribe({
+        next: events => {
+          this.holidayEvents.set(events);
 
-        if (preferredEvent) {
-          this.selectedHolidayEventExternalId = preferredEvent.externalId;
-          this.form.holidayEventExternalId = preferredEvent.externalId;
-          this.preorderAdminService.setSelectedHolidayEventExternalId(preferredEvent.externalId);
-        }
+          const persisted = this.preorderAdminService.getSelectedHolidayEventExternalId();
+          const chosen = persisted || events[0]?.externalId || '';
 
-        if (this.selectedHolidayEventExternalId) {
-          this.loadPickupSlots();
+          // Initialize selected event and immediately load matching slots.
+          if (!this.selectedHolidayEventExternalId() && chosen) {
+            this.onEventChange(chosen);
+          }
+        },
+        error: () => {
+          this.errorMessage.set('Could not load pre-order events.');
         }
-      },
-      error: () => {
-        this.errorMessage = 'Could not load pre-order events.';
-      }
-    });
+      });
   }
 
-  onEventChange(): void {
-    this.preorderAdminService.setSelectedHolidayEventExternalId(this.selectedHolidayEventExternalId);
-    this.form.holidayEventExternalId = this.selectedHolidayEventExternalId;
-    this.editingExternalId = null;
-    this.loadPickupSlots();
+
+
+  onEventChange(selectedId?: string): void {
+    const id = selectedId ?? this.selectedHolidayEventExternalId();
+    this.selectedHolidayEventExternalId.set(id);
+    this.preorderAdminService.setSelectedHolidayEventExternalId(id);
+
+    this.form.update(f => ({ ...f, holidayEventExternalId: id }));
+    this.editingExternalId.set(null);
+    this.successMessage.set('');
+
+    this.loadPickupSlots(); // <-- THIS FIXES EVERYTHING
+    this.snackBar.open('Event changed. Pickup slots reloaded.', 'Close', {
+      duration: 3000,
+      panelClass: ['info-snackbar']
+    });    
   }
 
+
+  // LOAD SLOTS
   loadPickupSlots(): void {
-    if (!this.selectedHolidayEventExternalId) {
-      this.pickupSlots = [];
+    const eventId = this.selectedHolidayEventExternalId();
+    if (!eventId) {
+      this.pickupSlots.set([]);
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
-    this.preorderAdminService.getPickupSlots(this.selectedHolidayEventExternalId).subscribe({
+    this.preorderAdminService.getPickupSlots(eventId).subscribe({
       next: slots => {
-        this.pickupSlots = slots;
-        this.isLoading = false;
+        this.pickupSlots.set(slots);
+        this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage = 'Could not load pickup slots.';
-        this.isLoading = false;
+        this.errorMessage.set('Could not load pickup slots.');
+        this.isLoading.set(false);
       }
     });
   }
 
+  // CREATE
   startCreate(): void {
-    this.editingExternalId = null;
-    this.successMessage = '';
-    this.form = {
-      holidayEventExternalId: this.selectedHolidayEventExternalId,
+    this.editingExternalId.set(null);
+    this.successMessage.set('');
+
+    this.form.set({
+      holidayEventExternalId: this.selectedHolidayEventExternalId(),
       slotStartAt: '',
       slotEndAt: '',
       capacity: 1,
       isActive: true
-    };
+    });
   }
 
+  // EDIT
   startEdit(slot: AdminPickupSlot): void {
-    this.editingExternalId = slot.externalId;
-    this.successMessage = '';
-    this.form = {
-      holidayEventExternalId: this.selectedHolidayEventExternalId,
+    this.editingExternalId.set(slot.externalId);
+    this.successMessage.set('');
+
+    this.form.set({
+      holidayEventExternalId: this.selectedHolidayEventExternalId(),
       slotStartAt: this.toDateTimeInput(slot.slotStartAt),
       slotEndAt: this.toDateTimeInput(slot.slotEndAt),
       capacity: slot.capacity,
       isActive: slot.isActive
-    };
+    });
 
     this.scrollToEditorStart();
   }
 
+  // DELETE / DEACTIVATE
   deletePickupSlot(slot: AdminPickupSlot): void {
     const dateStr = new Date(slot.slotStartAt).toLocaleString();
-    const deactivateMessage = `Deactivate timeslot "${dateStr}" (${slot.reservedCount}/${slot.capacity} reserved)? You will not be able to reactivate it. Existing orders will remain assigned to this slot.`
+    const deactivateMessage = `Deactivate timeslot "${dateStr}" (${slot.reservedCount}/${slot.capacity} reserved)? You will not be able to reactivate it. Existing orders will remain assigned to this slot.`;
     const deleteMessage = `Delete timeslot "${dateStr}"?`;
-    const confirmMsg = slot.reservedCount > 0
-      ? deactivateMessage
-      : deleteMessage;
+
+    const confirmMsg = slot.reservedCount > 0 ? deactivateMessage : deleteMessage;
 
     if (!confirm(confirmMsg)) {
-      this.snackBar.open('Action cancelled.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+      this.snackBar.open('Action cancelled.', 'Close', { duration: 3000 });
       return;
     }
 
-    this.isSaving = true;
-    this.errorMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set('');
 
     const deactivateRequest: SavePickupSlotRequest = {
-      holidayEventExternalId: this.selectedHolidayEventExternalId,
+      holidayEventExternalId: this.selectedHolidayEventExternalId(),
       slotStartAt: slot.slotStartAt,
       slotEndAt: slot.slotEndAt,
       capacity: slot.capacity,
@@ -153,96 +174,113 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
     this.preorderAdminService.updatePickupSlot(slot.externalId, deactivateRequest).subscribe({
       next: () => {
-        this.isSaving = false;
-        this.successMessage = slot.reservedCount > 0 ? 'Pickup slot deactivated.' : 'Pickup slot deleted.';
+        this.isSaving.set(false);
+        this.successMessage.set(slot.reservedCount > 0 ? 'Pickup slot deactivated.' : 'Pickup slot deleted.');
         this.loadPickupSlots();
-        this.snackBar.open(this.successMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-
       },
-      error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, slot.reservedCount > 0 ? 'Could not deactivate pickup slot.' : 'Could not delete pickup slot.');
-        this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+      error: err => {
+        this.isSaving.set(false);
+        this.errorMessage.set(
+          extractErrorMessage(err, slot.reservedCount > 0 ? 'Could not deactivate pickup slot.' : 'Could not delete pickup slot.')
+        );
       }
     });
   }
 
-  savePickupSlot(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
 
-    if (!this.form.holidayEventExternalId) {
-      this.errorMessage = 'Select an event first.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
+savePickupSlot(): void {
+  this.errorMessage.set('');
+  this.successMessage.set('');
 
-    if (!this.form.slotStartAt || this.form.slotStartAt.trim() === '') {
-      this.errorMessage = 'Slot start date/time is required.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
+  const form = this.form();
 
-    if (!this.form.slotEndAt || this.form.slotEndAt.trim() === '') {
-      this.errorMessage = 'Slot end date/time is required.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
-
-    if (new Date(this.form.slotEndAt) <= new Date(this.form.slotStartAt)) {
-      this.errorMessage = 'Slot end must be after slot start.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
-
-    if (!this.isSameDay(this.form.slotStartAt, this.form.slotEndAt)) {
-      this.errorMessage = 'Slot start and end must be on the same day.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
-
-    if (!this.isSlotWithinEventPickupWindow(this.form.slotStartAt, this.form.slotEndAt)) {
-      this.errorMessage = 'Pickup slot must be fully within the selected event pickup window.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
-
-    if (this.form.capacity < 1) {
-      this.errorMessage = 'Capacity must be at least 1.';
-      this.snackBar.open(this.errorMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      return;
-    }
-
-    this.isSaving = true;
-
-    const request: SavePickupSlotRequest = {
-      holidayEventExternalId: this.form.holidayEventExternalId,
-      // Keep wall-clock values as entered; do not force UTC conversion in UI.
-      slotStartAt: this.form.slotStartAt,
-      slotEndAt: this.form.slotEndAt,
-      capacity: Number(this.form.capacity),
-      isActive: this.form.isActive ?? true
-    };
-
-    const save$ = this.editingExternalId
-      ? this.preorderAdminService.updatePickupSlot(this.editingExternalId, request)
-      : this.preorderAdminService.createPickupSlot(request);
-
-    save$.subscribe({
-      next: () => {
-        this.isSaving = false;
-        const successMessage = this.editingExternalId ? 'Pickup slot updated.' : 'Pickup slot created.';
-        this.successMessage = successMessage;
-        this.startCreate();
-        this.loadPickupSlots();
-        this.snackBar.open(successMessage, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not save pickup slot.');
-      }
-    });
+  // VALIDATION
+  if (!form.holidayEventExternalId) {
+    const msg = 'Select an event first.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
   }
+
+  if (!form.slotStartAt || form.slotStartAt.trim() === '') {
+    const msg = 'Slot start date/time is required.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
+  }
+
+  if (!form.slotEndAt || form.slotEndAt.trim() === '') {
+    const msg = 'Slot end date/time is required.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
+  }
+
+  if (new Date(form.slotEndAt) <= new Date(form.slotStartAt)) {
+    const msg = 'Slot end must be after slot start.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
+  }
+
+  if (!this.isSameDay(form.slotStartAt, form.slotEndAt)) {
+    const msg = 'Slot start and end must be on the same day.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
+  }
+
+  if (!this.isSlotWithinEventPickupWindow(form.slotStartAt, form.slotEndAt)) {
+    const msg = 'Pickup slot must be fully within the selected event pickup window.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
+  }
+
+  if (form.capacity < 1) {
+    const msg = 'Capacity must be at least 1.';
+    this.errorMessage.set(msg);
+    this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    return;
+  }
+
+  // SAVE
+  this.isSaving.set(true);
+
+  const request: SavePickupSlotRequest = {
+    holidayEventExternalId: form.holidayEventExternalId,
+    slotStartAt: form.slotStartAt,
+    slotEndAt: form.slotEndAt,
+    capacity: Number(form.capacity),
+    isActive: form.isActive ?? true
+  };
+
+  const editingId = this.editingExternalId();
+  const save$ = editingId
+    ? this.preorderAdminService.updatePickupSlot(editingId, request)
+    : this.preorderAdminService.createPickupSlot(request);
+
+  save$.subscribe({
+    next: () => {
+      this.isSaving.set(false);
+
+      const msg = editingId ? 'Pickup slot updated.' : 'Pickup slot created.';
+      this.successMessage.set(msg);
+
+      this.startCreate();
+      this.loadPickupSlots();
+
+      this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    },
+    error: (error) => {
+      this.isSaving.set(false);
+      const msg = extractErrorMessage(error, 'Could not save pickup slot.');
+      this.errorMessage.set(msg);
+      this.snackBar.open(msg, 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    }
+  });
+}
+
 
   private toDateTimeInput(value: string): string {
     if (!value) {
@@ -305,10 +343,8 @@ export class PreorderSlotsAdminComponent implements OnInit {
   }
 
   private isSlotWithinEventPickupWindow(slotStartAt: string, slotEndAt: string): boolean {
-    const selectedEvent = this.selectedHolidayEvent;
-    if (!selectedEvent) {
-      return false;
-    }
+    const selectedEvent = this.selectedHolidayEvent();
+    if (!selectedEvent) return false;
 
     const slotStart = new Date(slotStartAt);
     const slotEnd = new Date(slotEndAt);
@@ -318,7 +354,9 @@ export class PreorderSlotsAdminComponent implements OnInit {
     return slotStart >= eventPickupStart && slotEnd <= eventPickupEnd;
   }
 
+
   @ViewChild('slotStartAtInput') slotStartAtInput!: ElementRef<HTMLInputElement>;
   @ViewChild('slotEndAtInput') slotEndAtInput!: ElementRef<HTMLInputElement>;
   @ViewChild('slotPickupHeader') slotPickupHeader!: ElementRef<HTMLElement>;
+
 }

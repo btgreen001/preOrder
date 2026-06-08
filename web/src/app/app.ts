@@ -39,10 +39,17 @@ export type NavItem =
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, LoadingOverlayComponent, MatIconModule, MatMenuModule],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    LoadingOverlayComponent,
+    MatIconModule,
+    MatMenuModule
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
+
 
 export class App implements OnInit, OnDestroy {
   private static readonly MOBILE_NAV_BREAKPOINT = 960;

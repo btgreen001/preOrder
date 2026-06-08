@@ -146,6 +146,10 @@ export class PreorderMenuAdminComponent implements OnInit {
     this.preorderAdminService.setSelectedHolidayEventExternalId(id);
     this.startCreate();
     this.loadMenuItems();
+    this.snackBar.open('Event changed. Items reloaded.', 'Close', {
+      duration: 3000,
+      panelClass: ['info-snackbar']
+    });
   }
 
   // -----------------------------
