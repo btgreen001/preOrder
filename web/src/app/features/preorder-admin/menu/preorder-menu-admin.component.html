@@ -4,6 +4,7 @@
       <h1>Event Items</h1>
       <p>Create and update items for each event.</p>
     </div>
+
     <nav class="admin-links">
       <a routerLink="/admin/events" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Events</a>
       <a routerLink="/admin/menu" routerLinkActive="active-nav" [routerLinkActiveOptions]="{ exact: true }">Items</a>
@@ -15,126 +16,160 @@
   <section class="filter-row">
     <label>
       Pre-Order Event
-      <select #selectEvent [(ngModel)]="selectedHolidayEventExternalId" (change)="onEventChange()">
+      <select
+        [ngModel]="selectedHolidayEventExternalId()"
+        (ngModelChange)="selectedHolidayEventExternalId.set($event); onEventChange()"
+      >
         <option value="" disabled>Select an event</option>
-        @for (event of holidayEvents; track event) {
+
+        @for (event of holidayEvents(); track event) {
           <option [value]="event.externalId">{{ event.name }}</option>
         }
       </select>
     </label>
   </section>
 
-  <section class="editor" #itemHeader>
-    <h2>{{ editingExternalId ? 'Edit Item' : 'Create Item' }}</h2>
-    <!-- <p class="warning-message">
-    Leaving Product Link blank will automatically attach this item to the <strong>Unlinked</strong> sellable product.
-  </p> -->
-  <div class="grid">
-    <label>
-      Item Name
-      <input #itemNameInput [(ngModel)]="form.name" type="text" />
-    </label>
+  <section #itemHeader class="editor">
+    <h2>{{ editingExternalId() ? 'Edit Item' : 'Create Item' }}</h2>
 
-    <!-- <label>
-    Product Link
-    <select [(ngModel)]="form.productExternalId">
-      <option [ngValue]="null">Auto-assign Unlinked</option>
-      <option *ngFor="let product of sellableProducts" [ngValue]="product.externalId">{{ product.name }}</option>
-    </select>
-  </label> -->
+    <div class="grid">
+      <label>
+        Item Name
+        <input
+          #itemNameInput
+          [ngModel]="form().name"
+          (ngModelChange)="form.update(f => f.name = $event)"
+        />
+      </label>
 
-  <label>
-    Price
-    <input #priceInput [(ngModel)]="form.price" type="number" min="0.00" step="0.01" />
-  </label>
+      <label>
+        Price
+        <input
+          #priceInput
+          type="number"
+          min="0.00"
+          step="0.01"
+          [ngModel]="form().price"
+          (ngModelChange)="form.update(f => f.price = $event)"
+        />
+      </label>
 
-  <label>
-    Max Per Order
-    <input #maxPerOrderInput [(ngModel)]="form.maxPerOrder" type="number" min="1" step="1" />
-  </label>
+      <label>
+        Max Per Order
+        <input
+          #maxPerOrderInput
+          type="number"
+          min="1"
+          step="1"
+          [ngModel]="form().maxPerOrder"
+          (ngModelChange)="form.update(f => f.maxPerOrder = $event)"
+        />
+      </label>
 
-  <label>
-    Display Order
-    <input #sortOrderInput [(ngModel)]="form.sortOrder" type="number" step="1" />
-    <small class="field-help">Controls item position on the customer order form. Lower numbers show first (1, 2, 3...).</small>
-  </label>
+      <label>
+        Display Order
+        <input
+          #sortOrderInput
+          type="number"
+          step="1"
+          [ngModel]="form().sortOrder"
+          (ngModelChange)="form.update(f => f.sortOrder = $event)"
+        />
+        <small class="field-help">
+          Controls item position on the customer order form.
+        </small>
+      </label>
 
-  <label class="label-hidden">
-    Active
-    <select class="select-hidden" #isActiveInput [(ngModel)]="form.isActive">
-      <option [ngValue]="true">Active</option>
-      <option [ngValue]="false">Inactive</option>
-    </select>
-  </label>
+      <label class="label-hidden">
+        Active
+        <select
+          class="select-hidden"
+          [ngModel]="form().isActive"
+          (ngModelChange)="form.update(f => f.isActive = $event)"
+        >
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </label>
 
-  <label class="span-2">
-    Description
-    <textarea #descriptionInput [(ngModel)]="form.description" rows="2" style="min-height: 50px;"></textarea>
-  </label>
-</div>
+      <label class="span-2">
+        Description
+        <textarea
+          #descriptionInput
+          rows="2"
+          [ngModel]="form().description"
+          (ngModelChange)="form.update(f => f.description = $event)"
+        ></textarea>
+      </label>
+    </div>
 
-<div class="actions">
-  <button type="button" (click)="saveMenuItem()" [disabled]="isSaving">{{ editingExternalId ? 'Save Changes' : 'Create Item' }}</button>
-  <button type="button" (click)="saveMenuItem('/admin/slots')" [disabled]="isSaving">Save & Continue to Slots</button>
-  <button type="button" (click)="startCreate()" [disabled]="isSaving">Reset</button>
-  <button type="button" (click)="loadMenuItems()" [disabled]="isLoading">Refresh</button>
-</div>
-</section>
+    <div class="actions">
+      <button type="button" (click)="saveMenuItem()" [disabled]="isSaving()">
+        {{ isSaving() ? 'Creating...' : 'Create Item' }}
+      </button>
 
-@if (errorMessage) {
-  <p class="error-message">{{ errorMessage }}</p>
-}
-@if (successMessage) {
-  <p class="success-message">{{ successMessage }}</p>
-}
-<!-- <p *ngIf="unlinkedMenuItems.length > 0" class="warning-message">
-{{ unlinkedMenuItems.length }} item(s) are still attached to <strong>Unlinked</strong>. Review them before final production/inventory planning.
-</p> -->
+      <button type="button" (click)="saveMenuItem('/admin/slots')" [disabled]="isSaving()">
+        Save & Continue to Slots
+      </button>
 
-@if (!isLoading) {
-  <section class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <!-- <th>Product</th> -->
-          <th>Price</th>
-          <th>Max/Order</th>
-          <th>Display Order</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of menuItems; track item) {
+      <button type="button" (click)="startCreate()" [disabled]="isSaving()">
+        Reset
+      </button>
+
+      <button type="button" (click)="loadMenuItems()" [disabled]="isLoading()">
+        Refresh
+      </button>
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <p class="error-message">{{ errorMessage() }}</p>
+  }
+
+  @if (successMessage()) {
+    <p class="success-message">{{ successMessage() }}</p>
+  }
+
+  @if (!isLoading()) {
+    <section class="table-wrap">
+      <table>
+        <thead>
           <tr>
-            <td>{{ item.name }}</td>
-            <!-- <td>
-            {{ resolveProductName(item) }}
-            <span *ngIf="isUsingUnlinkedProduct(item)" class="warning-badge">Needs review</span>
-          </td> -->
-          <td>{{ item.price | currency }}</td>
-          <td>{{ item.maxPerOrder ?? 'None' }}</td>
-          <td>{{ item.sortOrder }}</td>
-          <td>{{ item.isActive ? 'Active' : 'Inactive' }}</td>
-          <td>
-            <button type="button" (click)="startEdit(item)">Edit</button>
-            <button type="button" (click)="deleteMenuItem(item)" class="delete-btn" [disabled]="isSaving">
-              Delete
-            </button>
-          </td>
-        </tr>
-      }
-      @if (menuItems.length === 0) {
-        <tr>
-          <td colspan="7" class="empty">No items found for selected event.</td>
-        </tr>
-      }
-    </tbody>
-  </table>
-</section>
-} @else {
-  <p class="loading">Loading items...</p>
-}
+            <th>Name</th>
+            <th>Price</th>
+            <th>Max/Order</th>
+            <th>Display Order</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
 
+        <tbody>
+          @for (item of menuItems(); track item) {
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ item.price | currency }}</td>
+              <td>{{ item.maxPerOrder ?? 'None' }}</td>
+              <td>{{ item.sortOrder }}</td>
+              <td>{{ item.isActive ? 'Active' : 'Inactive' }}</td>
+              <td>
+                <button type="button" (click)="startEdit(item)">Edit</button>
+                <button type="button" (click)="deleteMenuItem(item)" class="delete-btn" [disabled]="isSaving()">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          }
+
+          @if (menuItems().length === 0) {
+            <tr>
+              <td colspan="7" class="empty">No items found for selected event.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @else {
+    <p class="loading">Loading items...</p>
+  }
 </section>

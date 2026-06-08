@@ -96,6 +96,39 @@ export class AdminInvitesComponent implements OnInit, OnDestroy {
     });
   }
 
+  generateCode(): void {
+    if (!this.orgId) return;
+
+    this.isSaving.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.preorderAdminService.createRegistrationCode(this.orgId, {
+      email: this.newCodeEmail() || undefined,
+      expiryDays: this.newCodeExpiryDays()
+    }).subscribe({
+      next: (newCode: AdminRegistrationCode) => {
+        this.newCodeEmail.set('');
+        this.newCodeExpiryDays.set(7);
+
+        this.successMessage.set(
+          newCode.emailSent
+            ? `Invite code created and email sent: ${newCode.code}`
+            : `Invite code created: ${newCode.code}`
+        );
+
+        this.loadCodes(true);
+        this.isSaving.set(false);
+      },
+      error: (err: unknown) => {
+        this.errorMessage.set(
+          extractErrorMessage(err, 'Could not create invite code.')
+        );
+        this.isSaving.set(false);
+      }
+    });
+  }
+
 
   loadCodes(silent = false): void {
     if (!this.orgId) return;

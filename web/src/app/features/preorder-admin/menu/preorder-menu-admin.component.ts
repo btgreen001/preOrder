@@ -1,9 +1,7 @@
-
-import { Component, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { extractErrorMessage } from '../../../shared/utils/error-extractor';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import {
@@ -27,139 +25,181 @@ export class PreorderMenuAdminComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
 
-  holidayEvents: AdminHolidayEvent[] = [];
-  menuItems: AdminMenuItem[] = [];
-  sellableProducts: AdminSellableProduct[] = [];
+  // -----------------------------
+  // SIGNAL STATE
+  // -----------------------------
+  holidayEvents = signal<AdminHolidayEvent[]>([]);
+  menuItems = signal<AdminMenuItem[]>([]);
+  sellableProducts = signal<AdminSellableProduct[]>([]);
 
-  selectedHolidayEventExternalId = '';
-  editingExternalId: string | null = null;
+  selectedHolidayEventExternalId = signal<string>('');
+  editingExternalId = signal<string | null>(null);
 
-  isLoading = false;
-  isSaving = false;
-  errorMessage = '';
-  successMessage = '';
+  isLoading = signal(false);
+  isSaving = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
 
-  form: SaveMenuItemRequest = {
+  form = signal<SaveMenuItemRequest>({
     holidayEventExternalId: '',
     productExternalId: null,
     name: '',
     description: '',
-    price: 0.00,
-    maxPerOrder: null,
-    sortOrder: 0,
+    price: 0.0,
+    maxPerOrder: 1,
+    sortOrder: 1,
     isActive: true
-  };
+  });
 
+  // -----------------------------
+  // LIFECYCLE
+  // -----------------------------
   ngOnInit(): void {
     this.setDefaults();
     this.loadHolidayEvents();
     this.loadSellableProducts();
   }
 
+  // -----------------------------
+  // RESET DEFAULTS
+  // -----------------------------
   setDefaults(): void {
-    this.selectedHolidayEventExternalId = '';
-    this.editingExternalId = null;
-    this.isLoading = false;
-    this.isSaving = false;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.form = {
+    this.selectedHolidayEventExternalId.set('');
+    this.editingExternalId.set(null);
+    this.isLoading.set(false);
+    this.isSaving.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.form.set({
       holidayEventExternalId: '',
       productExternalId: null,
       name: '',
       description: '',
-      price: 0.00,
+      price: 0.0,
       maxPerOrder: 1,
       sortOrder: 1,
       isActive: true
-    };
+    });
   }
 
+  // -----------------------------
+  // LOAD EVENTS
+  // -----------------------------
   loadHolidayEvents(): void {
     this.preorderAdminService.getAllHolidayEvents().subscribe({
       next: events => {
-        this.holidayEvents = events;
-        const persistedEventExternalId = this.preorderAdminService.getSelectedHolidayEventExternalId();
-        const candidateExternalId = this.selectedHolidayEventExternalId || persistedEventExternalId || '';
-        const preferredEvent = events.find(event => event.externalId === candidateExternalId) ?? events[0];
+        this.holidayEvents.set(events);
 
-        if (preferredEvent) {
-          this.selectedHolidayEventExternalId = preferredEvent.externalId;
-          this.form.holidayEventExternalId = preferredEvent.externalId;
-          this.preorderAdminService.setSelectedHolidayEventExternalId(preferredEvent.externalId);
+        const persisted = this.preorderAdminService.getSelectedHolidayEventExternalId();
+        const current = this.selectedHolidayEventExternalId();
+        const candidate = current || persisted || '';
+
+        const preferred =
+          events.find(e => e.externalId === candidate) ?? events[0];
+
+        if (preferred) {
+          this.selectedHolidayEventExternalId.set(preferred.externalId);
+
+          this.form.update(f => {
+            f.holidayEventExternalId = preferred.externalId;
+            return f;
+          });
+
+          this.preorderAdminService.setSelectedHolidayEventExternalId(
+            preferred.externalId
+          );
         }
 
-        if (this.selectedHolidayEventExternalId) {
+        if (this.selectedHolidayEventExternalId()) {
           this.loadMenuItems();
         }
       },
       error: () => {
-        this.errorMessage = 'Could not load pre-order events.';
+        this.errorMessage.set('Could not load pre-order events.');
       }
     });
   }
 
+  // -----------------------------
+  // LOAD PRODUCTS
+  // -----------------------------
   loadSellableProducts(): void {
     this.preorderAdminService.getSellableProducts().subscribe({
       next: products => {
-        this.sellableProducts = products.filter(product => product.isActive && product.isForSale);
+        this.sellableProducts.set(
+          products.filter(p => p.isActive && p.isForSale)
+        );
       },
       error: () => {
-        this.errorMessage = 'Could not load sellable products.';
+        this.errorMessage.set('Could not load sellable products.');
       }
     });
   }
 
+  // -----------------------------
+  // EVENT CHANGE
+  // -----------------------------
   onEventChange(): void {
-    this.preorderAdminService.setSelectedHolidayEventExternalId(this.selectedHolidayEventExternalId);
+    const id = this.selectedHolidayEventExternalId();
+    this.preorderAdminService.setSelectedHolidayEventExternalId(id);
     this.startCreate();
     this.loadMenuItems();
   }
 
+  // -----------------------------
+  // LOAD MENU ITEMS
+  // -----------------------------
   loadMenuItems(): void {
-    if (!this.selectedHolidayEventExternalId) {
-      this.menuItems = [];
+    const eventId = this.selectedHolidayEventExternalId();
+    if (!eventId) {
+      this.menuItems.set([]);
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
-    this.preorderAdminService.getMenuItems(this.selectedHolidayEventExternalId).subscribe({
+    this.preorderAdminService.getMenuItems(eventId).subscribe({
       next: items => {
-        this.menuItems = items;
-        this.isLoading = false;
+        this.menuItems.set(items);
+        this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage = 'Could not load items.';
-        this.isLoading = false;
+        this.errorMessage.set('Could not load items.');
+        this.isLoading.set(false);
       }
     });
   }
 
+  // -----------------------------
+  // START CREATE
+  // -----------------------------
   startCreate(): void {
-    this.editingExternalId = null;
-    this.successMessage = '';
-    this.form = {
-      holidayEventExternalId: this.selectedHolidayEventExternalId,
+    this.editingExternalId.set(null);
+    this.successMessage.set('');
+
+    this.form.set({
+      holidayEventExternalId: this.selectedHolidayEventExternalId(),
       productExternalId: null,
       name: '',
       description: '',
-      price: 0.00,
+      price: 0.0,
       maxPerOrder: 1,
       sortOrder: 1,
       isActive: true
-    };
+    });
   }
 
   startEdit(item: AdminMenuItem): void {
-    this.editingExternalId = item.externalId;
-    this.successMessage = '';
+    this.editingExternalId.set(item.externalId);
+    this.successMessage.set('');
 
-    const matchedProduct = this.sellableProducts.find(product => product.id === item.sellableProductId);
+    const matchedProduct = this.sellableProducts()
+      .find(product => product.id === item.sellableProductId);
 
-    this.form = {
-      holidayEventExternalId: this.selectedHolidayEventExternalId,
+    this.form.set({
+      holidayEventExternalId: this.selectedHolidayEventExternalId(),
       productExternalId: matchedProduct?.externalId ?? null,
       name: item.name,
       description: item.description ?? '',
@@ -167,24 +207,23 @@ export class PreorderMenuAdminComponent implements OnInit {
       maxPerOrder: item.maxPerOrder ?? null,
       sortOrder: item.sortOrder,
       isActive: item.isActive
-    };
+    });
 
     this.scrollToEditorStart();
   }
 
   deleteMenuItem(item: AdminMenuItem): void {
-    const confirmMsg =  `Delete "${item.name}"? Customers won't see it in new orders, but existing orders will remain.`;
+    const confirmMsg = `Delete "${item.name}"? Customers won't see it in new orders, but existing orders will remain.`;
 
-    if (!confirm(confirmMsg)) {
-      return;
-    }
+    if (!confirm(confirmMsg)) return;
 
-    this.isSaving = true;
-    this.errorMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set('');
 
     const deactivateRequest: SaveMenuItemRequest = {
-      holidayEventExternalId: this.selectedHolidayEventExternalId,
-      productExternalId: this.sellableProducts.find(p => p.id === item.sellableProductId)?.externalId || undefined,
+      holidayEventExternalId: this.selectedHolidayEventExternalId(),
+      productExternalId: this.sellableProducts()
+        .find(p => p.id === item.sellableProductId)?.externalId || undefined,
       name: item.name,
       description: item.description,
       price: item.price,
@@ -193,18 +232,25 @@ export class PreorderMenuAdminComponent implements OnInit {
       isActive: false
     };
 
-    this.preorderAdminService.updateMenuItem(item.externalId, deactivateRequest).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.snackBar.open('Item deleted.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-        this.loadMenuItems();
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not delete item.');
-      }
-    });
+    this.preorderAdminService.updateMenuItem(item.externalId, deactivateRequest)
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.snackBar.open('Item deleted.', 'Close', {
+            duration: 3000,
+            panelClass: ['info-snackbar']
+          });
+          this.loadMenuItems();
+        },
+        error: (error) => {
+          this.isSaving.set(false);
+          this.errorMessage.set(
+            extractErrorMessage(error, 'Could not delete item.')
+          );
+        }
+      });
   }
+
 
   private scrollToEditorStart(): void {
     const input = this.itemNameInput?.nativeElement;
@@ -246,76 +292,102 @@ export class PreorderMenuAdminComponent implements OnInit {
   }
 
   saveMenuItem(nextRoute?: string): void {
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
-    if (!this.form.holidayEventExternalId) {
-      this.snackBar.open('Select an event first.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    const form = this.form();
+
+    if (!form.holidayEventExternalId) {
+      this.snackBar.open('Select an event first.', 'Close', {
+        duration: 3000,
+        panelClass: ['info-snackbar']
+      });
       return;
     }
 
-    if (!this.form.name.trim()) {
+    if (!form.name.trim()) {
       this.focusValidationField(this.itemNameInput);
       return;
     }
 
-    if (this.form.price < 0) {
-      this.snackBar.open('Price cannot be negative.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
-
+    if (form.price < 0) {
+      this.snackBar.open('Price cannot be negative.', 'Close', {
+        duration: 3000,
+        panelClass: ['info-snackbar']
+      });
       return;
     }
 
-    if (this.form.maxPerOrder !== null && this.form.maxPerOrder !== undefined && this.form.maxPerOrder < 1) {
-      this.snackBar.open('Max-per-order must be at least 1.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+    if (form.maxPerOrder !== null && form.maxPerOrder < 1) {
+      this.snackBar.open('Max-per-order must be at least 1.', 'Close', {
+        duration: 3000,
+        panelClass: ['info-snackbar']
+      });
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
 
     const request: SaveMenuItemRequest = {
-      holidayEventExternalId: this.form.holidayEventExternalId,
-      productExternalId: this.form.productExternalId || undefined,
-      name: this.form.name.trim(),
-      description: this.form.description?.trim() || undefined,
-      price: Number(this.form.price),
-      maxPerOrder: this.form.maxPerOrder ?? undefined,
-      sortOrder: Number(this.form.sortOrder),
-      isActive: this.form.isActive ?? true
+      holidayEventExternalId: form.holidayEventExternalId,
+      productExternalId: form.productExternalId || undefined,
+      name: form.name.trim(),
+      description: form.description?.trim() || undefined,
+      price: Number(form.price),
+      maxPerOrder: form.maxPerOrder ?? undefined,
+      sortOrder: Number(form.sortOrder),
+      isActive: form.isActive ?? true
     };
 
-    const save$ = this.editingExternalId
-      ? this.preorderAdminService.updateMenuItem(this.editingExternalId, request)
+    const save$ = this.editingExternalId()
+      ? this.preorderAdminService.updateMenuItem(this.editingExternalId()!, request)
       : this.preorderAdminService.createMenuItem(request);
 
     save$.subscribe({
       next: () => {
-        this.isSaving = false;
-        this.snackBar.open(this.editingExternalId ? 'Item updated.' : 'Item created.', 'Close', { duration: 3000, panelClass: ['info-snackbar'] });
+        this.isSaving.set(false);
+
+        this.snackBar.open(
+          this.editingExternalId() ? 'Item updated.' : 'Item created.',
+          'Close',
+          { duration: 3000, panelClass: ['info-snackbar'] }
+        );
+
         if (nextRoute) {
           this.router.navigate([nextRoute]);
         }
+
         this.startCreate();
         this.loadMenuItems();
       },
       error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = extractErrorMessage(error, 'Could not save item.');
+        this.isSaving.set(false);
+        this.errorMessage.set(
+          extractErrorMessage(error, 'Could not save item.')
+        );
       }
     });
   }
 
+
   resolveProductName(item: AdminMenuItem): string {
-    const product = this.sellableProducts.find(entry => entry.id === item.sellableProductId);
+    const product = this.sellableProducts()
+      .find(entry => entry.id === item.sellableProductId);
+
     return product?.name ?? 'Unlinked';
   }
 
+
   isUsingUnlinkedProduct(item: AdminMenuItem): boolean {
-    return this.resolveProductName(item).trim().toUpperCase() === PreorderMenuAdminComponent.UNLINKED_PRODUCT_NAME;
+    return this.resolveProductName(item)
+      .trim()
+      .toUpperCase() === PreorderMenuAdminComponent.UNLINKED_PRODUCT_NAME;
   }
 
-  get unlinkedMenuItems(): AdminMenuItem[] {
-    return this.menuItems.filter(item => this.isUsingUnlinkedProduct(item));
-  }
+
+  unlinkedMenuItems = computed(() =>
+    this.menuItems().filter(item => this.isUsingUnlinkedProduct(item))
+  );
 
 
 @ViewChild('itemHeader') itemHeader!: ElementRef<HTMLElement>;
