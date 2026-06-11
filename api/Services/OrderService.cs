@@ -233,13 +233,20 @@ namespace PreOrderApp.Services
 
             order.OrderStatus = newStatus;
             order.UpdatedAt = DateTime.UtcNow;
-            
+            OrderSyncMilestoneAsync(order, newStatus);
+
             _logger.LogInformation($"Updating order {externalId} status to {newStatus}");
             
             await _context.SaveChangesAsync();
             return MapToDetailDto(order);
         }
-
+        private void OrderSyncMilestoneAsync(Order order, string newStatus)
+        {
+            // Implement the logic for syncing the order milestone here
+            order.CancelledAt = newStatus == "CANCELLED" ? DateTime.UtcNow : (DateTime?)null;
+            order.CompletedAt = newStatus == "COMPLETED" || newStatus == "DELIVERED" ? DateTime.UtcNow : (DateTime?)null;
+            
+        }
         private OrderDetailDto MapToDetailDto(Order order)
         {
             return new OrderDetailDto
@@ -462,6 +469,7 @@ namespace PreOrderApp.Services
             order.CompletedAt = DateTime.UtcNow;
             order.UpdatedAt = DateTime.UtcNow;
 
+            OrderSyncMilestoneAsync(order, order.OrderStatus);
             // Update order items status
             foreach (var item in order.OrderItems)
             {
@@ -501,7 +509,7 @@ namespace PreOrderApp.Services
             order.OrderStatus = "CANCELLED";
             order.CancelledAt = DateTime.UtcNow;
             order.UpdatedAt = DateTime.UtcNow;
-
+            OrderSyncMilestoneAsync(order, order.OrderStatus);
             // Update order items status
             foreach (var item in order.OrderItems)
             {

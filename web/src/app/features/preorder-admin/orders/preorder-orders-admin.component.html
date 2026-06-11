@@ -17,32 +17,36 @@
     <label>
       Pre-Order event (with orders)
       <select
-        [ngModel]="selectedHolidayEventExternalId"
+        [value]="selectedHolidayEventExternalId()"
+        (change)="onEventChange($any($event.target).value)"
       >
         <option value="">All events</option>
-
-        @for (event of holidayEvents(); track event) {
-          @if (hasOrdersFor(event.id)) {
-            <option [value]="event.externalId">
-              {{ event.name }}
-            </option>
-          }
+        @for (event of eventsWithOrders(); track event) {
+          <option [value]="event.externalId">{{ event.name }}</option>
         }
       </select>
+
+
     </label>
 
     <label>
       Pickup day
       <input
         type="date"
-        [ngModel]="selectedPickupDateLocal"
+        [value]="selectedPickupDateLocal()"
+        (change)="selectedPickupDateLocal.set($any($event.target).value)"
       />
     </label>
 
     <div class="actions">
-      <button type="button" (click)="loadPreOrders(selectedHolidayEventExternalId())" [disabled]="isLoading()">
-        Refresh
-      </button>
+    <button
+      type="button"
+      (click)="loadPreOrders(selectedHolidayEventExternalId() || undefined)"
+      [disabled]="isLoading()"
+    >
+      Refresh
+    </button>
+
 
       <button type="button" (click)="exportCsv()" [disabled]="isExporting()">
         Export CSV
@@ -61,13 +65,14 @@
           <tr>
             <th>Event</th>
             <th>Order #</th>
-            <th>Created</th>
-            <th>Customer</th>
-            <th>Email</th>
             <th>Status</th>
+            <th></th>
+            <th>Customer</th>
             <th>Pick Up</th>
             <th>Items</th>
             <th>Total</th>
+            <th>Created</th>
+            <th>Email</th>
           </tr>
         </thead>
 
@@ -76,36 +81,52 @@
             <tr>
               <td>{{ getHolidayEventName(order.holidayEventId) }}</td>
               <td>{{ order.id }}</td>
-              <td>{{ order.createdAt | date: 'MM-dd-yyyy h:mm a' }}</td>
-              <td>{{ order.customerName }}</td>
-              <td>{{ order.customerEmail }}</td>
-
               <td>
                 <div class="status">
-                  <select
-                    [ngModel]="pendingStatusByOrderExternalId()[order.externalId]"
-                    [disabled]="savingStatusByOrderExternalId()[order.externalId] || getAllowedNextStatuses(order.status).length === 0"
-                  >
-                    <option [ngValue]="order.status">{{ order.status }}</option>
+                  @if (getStatusOptions(order).length === 1) {
+                    <span class="current-status"
+                          [innerText]="pendingStatusByOrderExternalId.get(order.externalId)!()">
+                    </span>
+                  }
 
-                    @for (nextStatus of getAllowedNextStatuses(order.status); track nextStatus) {
-                      <option [ngValue]="nextStatus">{{ nextStatus }}</option>
-                    }
-                  </select>
-
+                  @else {
+                    <select
+                      [value]="pendingStatusByOrderExternalId.get(order.externalId)!()"
+                      (change)="updatePendingStatus(order.externalId, $any($event.target).value)"
+                    >
+                      @for (status of getStatusOptions(order); track status) {
+                        <option [value]="status">{{ status }}</option>
+                      }
+                    </select>
+                  }
+                  @if (getStatusOptions(order).length > 1) {
+                    <button
+                      type="button"
+                      (click)="updateOrderStatus(order)"
+                      [disabled]="savingStatusByOrderExternalId()[order.externalId] || !canUpdateStatus(order)"
+                    >
+                      {{ savingStatusByOrderExternalId()[order.externalId] ? 'Saving...' : 'Update' }}
+                    </button>
+                  }
+                </div>
+              </td>
+              <td>
+                <div>
                   <button
                     type="button"
-                    (click)="updateOrderStatus(order)"
-                    [disabled]="savingStatusByOrderExternalId()[order.externalId] || !canUpdateStatus(order)"
+                    class="override"
+                    (click)="openOverrideDialog(order)"
                   >
-                    {{ savingStatusByOrderExternalId()[order.externalId] ? 'Saving...' : 'Update' }}
+                    Override Status
                   </button>
                 </div>
               </td>
-
+              <td>{{ order.customerName }}</td>
               <td>{{ (order.pickupSlot?.slotStartAt || null) | date: 'MM-dd-yyyy h:mm a' }}</td>
               <td>{{ order.lines.length }}</td>
               <td>{{ formatCurrency(order.totalAmount) }}</td>
+              <td>{{ order.createdAt | date: 'MM-dd-yyyy h:mm a' }}</td>
+              <td>{{ order.customerEmail }}</td>
             </tr>
           }
 

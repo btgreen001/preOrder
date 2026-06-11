@@ -20,6 +20,7 @@ public class MvpPreOrdersController : ControllerBase
     private readonly IOrganizationContextService _orgContext;
     private readonly IEmailService _emailService;
     private readonly AppDbContext _context;
+    private readonly ILogger<OrdersController> _logger;
 
     public MvpPreOrdersController(
         IMvpPreOrderService service,
@@ -264,6 +265,39 @@ public class MvpPreOrdersController : ControllerBase
         return Ok(new { message = "Order confirmation email sent." });
     }
 
+    // POST api/mvp/preorders/{externalId}/override-status
+    [HttpPost("preorders/{externalId}/override-status")]
+    [RequireTenantAdmin]
+    public async Task<IActionResult> OverrideStatus([FromRoute] string externalId, [FromBody] OverrideStatusRequest request, CancellationToken ct)
+    {
+        try
+        {
+            var organizationId = _orgContext.GetCurrentOrganizationId();
+            // Determine the user performing the override. Adjust to your auth setup.
+            var performedBy = User?.Identity?.Name ?? "system";
+            var result = await _service.OverrideStatusAsync(organizationId, Guid.Parse(externalId), request, performedBy, ct);
+            
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = "Preorder not found." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error overriding status for {ExternalId}", externalId);
+            return StatusCode(500, new { message = "An error occurred while overriding status." });
+        }
+    }
+
     [HttpPatch("preorders/{preOrderExternalId:guid}/status")]
     [RequireTenantStaffOrAdmin]
     public async Task<IActionResult> UpdatePreOrderStatus(Guid preOrderExternalId, [FromBody] UpdatePreOrderStatusRequest request)
@@ -302,6 +336,7 @@ public class MvpPreOrdersController : ControllerBase
             return Conflict(new { message = ex.Message });
         }
     }
+
 
     private static object MapHolidayEvent(Models.HolidayEvent e)
     {

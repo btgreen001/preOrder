@@ -274,6 +274,13 @@ export class PreorderAdminService {
     return this.http.patch<UpdatePreOrderStatusResponse>(`${this.baseUrl}/preorders/${preOrderExternalId}/status`, request);
   }
 
+  overridePreOrderStatus(externalId: string, payload: { status: string; reason: string }): Observable<{ status: string }> {
+    return this.http.post<{ status: string }>(
+      `${this.baseUrl}/preorders/${externalId}/override-status`,
+      payload
+    );
+  }
+
   exportPreOrdersCsv(holidayEventExternalId?: string, pickupDateUtc?: string): Observable<Blob> {
     let params = new HttpParams();
     if (holidayEventExternalId) {

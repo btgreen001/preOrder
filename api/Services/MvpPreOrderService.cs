@@ -23,12 +23,13 @@ public class MvpPreOrderService : IMvpPreOrderService
     private readonly AppDbContext _context;
     private readonly IAuditService _auditService;
     private readonly ILogger<MvpPreOrderService> _logger;
-
-    public MvpPreOrderService(AppDbContext context, IAuditService auditService, ILogger<MvpPreOrderService> logger)
+    private readonly IOrderService _order;
+    public MvpPreOrderService(AppDbContext context, IAuditService auditService, ILogger<MvpPreOrderService> logger, IOrderService order)
     {
         _context = context;
         _auditService = auditService;
         _logger = logger;
+        _order = order;
     }
 
     public async Task<List<HolidayEvent>> GetAllHolidayEventsAsync(Guid organizationId)
@@ -349,7 +350,9 @@ public class MvpPreOrderService : IMvpPreOrderService
             orders = await query
                 .Include(o => o.OrderItems)
                 .Include(o => o.PickupSlot)
-                .OrderByDescending(o => o.CreatedAt)
+                .OrderByDescending(o => o.PickupSlot != null)
+                .ThenByDescending(o => o.PickupSlot!.SlotStartAt)
+                .ThenByDescending(o => o.CreatedAt)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -414,6 +417,7 @@ public class MvpPreOrderService : IMvpPreOrderService
 
         return await MapOrdersToPreOrdersAsync(orders);
     }
+
 
     public async Task<string> ExportPreOrdersCsvAsync(Guid organizationId, Guid? holidayEventExternalId = null, DateTime? pickupDateUtc = null)
     {
@@ -664,6 +668,42 @@ public class MvpPreOrderService : IMvpPreOrderService
         _logger.LogInformation("Preorder {ExternalId} status changed to {Status} in customer_order", order.ExternalId, order.OrderStatus);
 
         return await MapOrderToPreOrderAsync(order);
+    }
+ public async Task<OrderDetailDto?> OverrideStatusAsync(Guid organizationId, Guid externalId, OverrideStatusRequest request, string performedBy, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Status))
+            throw new ArgumentException("Status is required.", nameof(request.Status));
+        if (string.IsNullOrWhiteSpace(request.Reason))
+            throw new ArgumentException("Reason is required.", nameof(request.Reason));
+
+
+        var preorder = await _context.Orders
+                .Where(o => o.OrganizationId == organizationId)
+                .FirstOrDefaultAsync(o => o.ExternalId == externalId);
+
+        if (preorder == null)
+            throw new KeyNotFoundException($"Preorder with externalId '{externalId}' not found.");
+
+        var oldStatus = NormalizePreOrderStatus(preorder.OrderStatus) ?? string.Empty;
+        var newStatus = request.Status;
+        
+        // Update entity
+        var updatedOrder = await _order.UpdateOrderStatusAsync(externalId, newStatus);
+
+        // var audit = new PreorderStatusAudit
+        // {
+        //     Id = Guid.NewGuid(),
+        //     PreorderExternalId = preorder.ExternalId,
+        //     OldStatus = oldStatus,
+        //     NewStatus = newStatus,
+        //     Reason = request.Reason,
+        //     ChangedBy = performedBy,
+        //     ChangedAt = DateTimeOffset.UtcNow
+        // };
+        // await _repo.AddAuditAsync(audit, ct);
+
+        _logger.LogInformation("Preorder {ExternalId} status overridden from {Old} to {New} by {User}", externalId, oldStatus, newStatus, performedBy);
+        return updatedOrder;
     }
 
     private Task<List<PreOrder>> MapOrdersToPreOrdersAsync(List<Order> orders)
@@ -959,7 +999,9 @@ public class MvpPreOrderService : IMvpPreOrderService
             "CONFIRMED" => "CONFIRMED",
             "DELIVERED" => "DELIVERED",
             "CANCELLED" => "CANCELLED",
-            _ => throw new InvalidOperationException($"Unsupported preorder status '{status}'. Allowed values: CONFIRMED, DELIVERED, CANCELLED.")
+            "PENDING" => "PENDING",
+            "SUBMITTED" => "SUBMITTED",
+            _ => throw new InvalidOperationException($"Unsupported preorder status '{status}'. Allowed values: CONFIRMED, DELIVERED, CANCELLED, PENDING, SUBMITTED.")
         };
     }
 
@@ -970,7 +1012,7 @@ public class MvpPreOrderService : IMvpPreOrderService
         return normalizedCurrent switch
         {
             "SUBMITTED" when nextStatus is "CONFIRMED" or "CANCELLED" => true,
-            "PENDING" when nextStatus == "CANCELLED" => true,
+            "PENDING" when nextStatus is "SUBMITTED" or "CANCELLED" => true,
             "CONFIRMED" when nextStatus is "DELIVERED" or "CANCELLED" => true,
             _ => false
         };

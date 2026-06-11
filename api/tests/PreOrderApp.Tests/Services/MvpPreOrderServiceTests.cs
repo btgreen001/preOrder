@@ -28,7 +28,8 @@ public class MvpPreOrderServiceTests : IDisposable
 
         var auditService = Mock.Of<IAuditService>();
         var logger = Mock.Of<ILogger<MvpPreOrderService>>();
-        _sut = new MvpPreOrderService(_context, auditService, logger);
+        var orderService = Mock.Of<IOrderService>();
+        _sut = new MvpPreOrderService(_context, auditService, logger, orderService);
     }
 
     public void Dispose()
