@@ -34,7 +34,7 @@
           </label>
         </div>
         <label>
-          Current Password (required to save)
+          Current Password (required to save)*
           <input type="password" formControlName="currentPassword" autocomplete="current-password" />
         </label>
         <div class="row">
@@ -46,12 +46,13 @@
             Re-enter New Password
             <input type="password" formControlName="reenterNewPassword" autocomplete="new-password" />
             @if (showPasswordMismatchHint) {
-              <small class="field-hint error-hint">New and Reentered passwords do not match.</small>
+              <small class="field-hint error-hint">New and re-entered passwords do not match.</small>
             }
+            @else{<small>&nbsp;</small>}
           </label>
         </div>
         <div class="actions">
-          <button type="submit" class="btn-primary" [disabled]="isSaving()">
+          <button type="submit" class="btn-primary" [disabled]="isSaving() || profileForm.get('currentPassword')?.invalid || showPasswordMismatchHint">
             {{ isSaving() ? 'Saving...' : 'Save Profile' }}
           </button>
         </div>

@@ -1,342 +1,489 @@
 <div class="order-builder">
 
   <!-- Error: missing org token -->
-  @if (loadError && !isLoading) {
+  @if (loadError() && !isLoading()) {
     <div class="error-banner">
-      {{ loadError }}
+      {{ loadError() }}
     </div>
   }
 
   <!-- Loading -->
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="loading-indicator">
       Loading event details&hellip;
     </div>
   }
 
+
   <!-- Success screen -->
-  @if (submitSuccess) {
-    <div class="success-screen">
-      <h2>&#10003; Order Received!</h2>
-      <p>Thank you, <strong>{{ submitSuccess.customerName }}</strong>. Thank you so much for your pre-order.  It has been submitted.</p>
-      <p>Order ID: <strong>{{ submitSuccess.id }}</strong></p>
-      <p>Confirmation: <strong>{{ submitSuccess.externalId }}</strong></p>
-      <p>Total: <strong>${{ submitSuccess.totalAmount | number:'1.2-2' }}</strong></p>
-      <p>We will send a confirmation to <strong>{{ submitSuccess.customerEmail }}</strong>.</p>
-      <button class="btn btn-secondary" (click)="startAnotherOrder()">Place Another Order</button>
+@if (submitSuccess(); as success) {
+  <div class="success-screen">
+    <h2>&#10003; Order Received!</h2>
+
+    <p>
+      Thank you, <strong>{{ success.customerName }}</strong>.
+      Thank you so much for your pre-order. It has been submitted.
+    </p>
+
+    <p>Order ID: <strong>{{ success.id }}</strong></p>
+    <p>Confirmation: <strong>{{ success.externalId }}</strong></p>
+
+    <p>
+      Total:
+      <strong>${{ success.totalAmount | number:'1.2-2' }}</strong>
+    </p>
+
+    <p>
+      We will send a confirmation to
+      <strong>{{ success.customerEmail }}</strong>.
+    </p>
+
+    <button class="btn btn-secondary" (click)="startAnotherOrder()">
+      Place Another Order
+    </button>
+  </div>
+}
+
+  @if (!isLoading() && !loadError() && !submitSuccess()) {
+    <!-- Holiday event selector (only when multiple events) -->
+  @if (holidayEvents().length > 1) {
+    <div class="form-group event-selector">
+      <label for="holidayEvent" class="event-label">
+        {{ organization()?.organizationName }} Pre-Order Event Selection
+      </label>
+
+      <select
+        id="holidayEvent"
+        [ngModel]="selectedHolidayEventExternalId()"
+        (ngModelChange)="selectedHolidayEventExternalId.set($event); onHolidayEventChange()"
+      >
+        @for (event of holidayEvents(); track event.externalId) {
+          <option [value]="event.externalId">
+            {{ event.name }}
+          </option>
+        }
+      </select>
     </div>
   }
-  @if (!isLoading && !loadError && !submitSuccess) {
-    <!-- Holiday event selector (only when multiple events) -->
-    @if (holidayEvents.length > 1) {
-      <div class="form-group event-selector">
-        <label for="holidayEvent" class="event-label">{{ organization?.organizationName }} Pre-Order Event Selection</label>
-        <select id="holidayEvent"
-          [(ngModel)]="selectedHolidayEventExternalId"
-          (ngModelChange)="onHolidayEventChange()">
-          @for (event of holidayEvents; track event) {
-            <option [value]="event.externalId">
-              {{ event.name }}
-            </option>
-          }
-        </select>
+  @if (holidayEvents().length === 1) {
+    <div class="order-builder form-group event-selector">
+      <span class="event-label">
+        {{ organization()?.organizationName }} Pre-Order Event
+      </span>
+
+      <div class="single-event-name">
+        <strong>{{ holidayEvents()[0].name }}</strong>
       </div>
-    }
-    @if (holidayEvents.length === 1) {
-      <div class="order-builder form-group event-selector">
-        <span class="event-label">
-          {{ organization?.organizationName }} Pre-Order Event
-        </span>
-        <div class="single-event-name">
-          <strong>{{ holidayEvents[0].name }}</strong>
-        </div>
-      </div>
-    }
-    @if (holidayEvents.length === 0) {
-      <div class="empty-state">
-        No active events are currently accepting preorders.
-      </div>
-    }
-    @if (holidayEvents.length > 0) {
+    </div>
+  }
+  @if (holidayEvents().length === 0) {
+    <div class="empty-state">
+      No active events are currently accepting preorders.
+    </div>
+  }
+    @if (holidayEvents().length > 0) {
       <!-- Progress Indicator -->
       <div class="progress-bar">
-        <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+        <div class="step" 
+            [class.active]="currentStep() >= 1" 
+            [class.completed]="currentStep() > 1">
           <div class="step-number">1</div>
           <div class="step-label">Select Items</div>
         </div>
-        <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+
+        <div class="step" 
+            [class.active]="currentStep() >= 2" 
+            [class.completed]="currentStep() > 2">
           <div class="step-number">2</div>
           <div class="step-label">Your Info</div>
         </div>
-        <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+
+        <div class="step" 
+            [class.active]="currentStep() >= 3" 
+            [class.completed]="currentStep() > 3">
           <div class="step-number">3</div>
           <div class="step-label">Pickup Slot</div>
         </div>
-        <div class="step" [class.active]="currentStep >= 4">
+
+        <div class="step" 
+            [class.active]="currentStep() >= 4">
           <div class="step-number">4</div>
           <div class="step-label">Review</div>
         </div>
       </div>
       <div class="builder-content">
+
         <!-- Step 1: Menu Items -->
-        @if (currentStep === 1) {
+        @if (currentStep() === 1) {
           <div class="step-content">
             <h2>Choose Your Items</h2>
-            @if (selectedHolidayEvent) {
+
+            @if (selectedHolidayEvent(); as selectedEvent) {
               <div class="event-banner">
-                <strong>{{ selectedHolidayEvent.name }}</strong>
-                <span class="event-dates"> &mdash; order by {{ selectedHolidayEvent.closesAt | date:'shortDate' }}</span>
+                <strong>{{ selectedEvent.name }}</strong>
+                <span class="event-dates">
+                  &mdash; order by {{ selectedEvent.closesAt | date:'shortDate' }}
+                </span>
               </div>
             }
-            @if (pickupAvailabilityWarning) {
+
+            @if (pickupAvailabilityWarning()) {
               <div class="error-banner">
-                {{ pickupAvailabilityWarning }}
+                {{ pickupAvailabilityWarning() }}
               </div>
             }
+
             <div class="product-selection">
+
               <div class="available-products">
                 <div class="product-grid">
-                  @for (item of availableMenuItems; track item) {
+
+                  @for (item of availableMenuItems(); track item.externalId) {
                     <div class="product-item">
+
                       <div class="product-info">
                         <h4>{{ item.name }}</h4>
+
                         @if (item.description) {
                           <p class="category">{{ item.description }}</p>
                         }
+
                         <p class="price">${{ item.price | number:'1.2-2' }}</p>
+
                         @if (item.maxPerOrder) {
                           <p class="category">Max {{ item.maxPerOrder }} per order</p>
                         }
                       </div>
+
                       <div class="product-actions">
+
                         @if (getCartItemQuantity(item.externalId) === 0) {
                           <button
                             class="btn btn-primary"
                             (click)="addToCart(item)"
-                            [disabled]="!hasPickupCapacity">
+                            [disabled]="!hasPickupCapacity()">
                             Add
                           </button>
                         }
+
                         @if (getCartItemQuantity(item.externalId) > 0) {
                           <div class="inline-quantity-controls">
+
                             <button
                               type="button"
                               (click)="updateQuantity(item.externalId, getCartItemQuantity(item.externalId) - 1)">
                               -
                             </button>
-                            <span class="inline-qty-value">{{ getCartItemQuantity(item.externalId) }}</span>
+
+                            <span class="inline-qty-value">
+                              {{ getCartItemQuantity(item.externalId) }}
+                            </span>
+
                             <button
                               type="button"
                               (click)="updateQuantity(item.externalId, getCartItemQuantity(item.externalId) + 1)"
                               [disabled]="!canIncreaseItem(item)">
                               +
                             </button>
+
                             <button
                               type="button"
                               class="remove-btn"
                               (click)="removeFromCart(item.externalId)">
                               Del
                             </button>
+
                           </div>
                         }
+
                       </div>
+
                     </div>
                   }
+
                 </div>
-                @if (availableMenuItems.length === 0) {
+
+                @if (availableMenuItems().length === 0) {
                   <div class="empty-state">
                     No items are available for this event.
                   </div>
                 }
+
               </div>
+
               <div class="cart-sidebar">
-                <h3>Cart ({{ cartCount }} items)</h3>
+                <h3>Cart ({{ cartCount() }} items)</h3>
+
                 <div class="cart-items">
-                  @for (item of cart; track item) {
+                  @for (item of cart(); track item.menuItemExternalId) {
                     <div class="cart-item">
+
                       <div class="item-info">
                         <h4>{{ item.name }}</h4>
                         <p class="item-price">${{ item.totalPrice | number:'1.2-2' }}</p>
                       </div>
+
                       <div class="quantity-controls">
                         <button (click)="updateQuantity(item.menuItemExternalId, item.quantity - 1)">-</button>
                         <span>{{ item.quantity }}</span>
                         <button (click)="updateQuantity(item.menuItemExternalId, item.quantity + 1)">+</button>
                         <button class="remove-btn" (click)="removeFromCart(item.menuItemExternalId)">Del</button>
                       </div>
+
                     </div>
                   }
                 </div>
                 <div class="cart-total">
-                  <strong>Total: ${{ cartTotal | number:'1.2-2' }}</strong>
+                  <strong>Total: ${{ cartTotal() | number:'1.2-2' }}</strong>
                 </div>
               </div>
             </div>
           </div>
         }
         <!-- Step 2: Customer Info -->
-        @if (currentStep === 2) {
-          <div class="step-content">
-            <h2>Your Information</h2>
-            <div class="customer-form">
-              <div class="form-group">
-                <label for="customerName">Name *</label>
-                <input id="customerName" type="text" [(ngModel)]="customer.name" required>
-              </div>
-              <div class="form-group">
-                <label for="customerEmail">Email *</label>
-                <input id="customerEmail" type="email" [(ngModel)]="customer.email" required>
-              </div>
-              <div class="form-group">
-                <label for="customerPhone">Phone *</label>
-                <input id="customerPhone" type="tel" [(ngModel)]="customer.phone" required>
-              </div>
-              <div class="form-group">
-                <label for="customerNotes">Notes (optional)</label>
-                <textarea id="customerNotes" [(ngModel)]="customer.notes" rows="3"></textarea>
-              </div>
-            </div>
-          </div>
-        }
-        <!-- Step 3: Pickup Slot -->
-        @if (currentStep === 3) {
-          <div class="step-content">
-            <h2>Choose Pickup Slot</h2>
-            <h4>All times are local timezone</h4>
-            <div class="delivery-form">
-              @if (pickupSlots.length === 0) {
-                <div class="empty-state">
-                  No pickup slots are currently available for this event.
-                </div>
-              }
-              @for (slot of pickupSlots; track slot) {
-                <div
-                  class="pickup-slot-option"
-                  [class.selected]="selectedPickupSlotExternalId === slot.externalId"
-                  [class.full]="slot.reservedCount >= slot.capacity"
-                  tabindex="0"
-                  role="button"
-                  (click)="onSelect(slot)"
-                  (keydown)="onKeydown($event, slot)"
+          @if (currentStep() === 2) {
+            <div class="step-content">
+              <h2>Your Information</h2>
+
+              <div class="customer-form">
+
+                <div class="form-group">
+                  <label for="customerName">Name *</label>
+                  <input
+                    id="customerName"
+                    type="text"
+                    [ngModel]="customer().name"
+                    (ngModelChange)="customer.update(c => ({ ...c, name: $event }))"
+                    required
                   >
-                  <div class="slot-time">
-                    {{ slot.slotStartAt | date:'EEEE, MMMM d' }} —
-                    {{ slot.slotStartAt | date:'shortTime' }} to {{ slot.slotEndAt | date:'shortTime' }}
-                  </div>
-                  <div class="slot-availability">
-                    @if (slot.reservedCount < slot.capacity) {
-                      <span>
-                        {{ slot.capacity - slot.reservedCount }} spot(s) remaining
-                      </span>
-                    }
-                    @if (slot.reservedCount >= slot.capacity) {
-                      <span class="slot-full">Full</span>
-                    }
-                  </div>
                 </div>
-              }
+
+                <div class="form-group">
+                  <label for="customerEmail">Email *</label>
+                  <input
+                    id="customerEmail"
+                    type="email"
+                    [ngModel]="customer().email"
+                    (ngModelChange)="customer.update(c => ({ ...c, email: $event }))"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label for="customerPhone">Phone *</label>
+                  <input
+                    id="customerPhone"
+                    type="tel"
+                    [ngModel]="customer().phone"
+                    (ngModelChange)="customer.update(c => ({ ...c, phone: $event }))"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label for="customerNotes">Notes (optional)</label>
+                  <textarea
+                    id="customerNotes"
+                    rows="3"
+                    [ngModel]="customer().notes"
+                    (ngModelChange)="customer.update(c => ({ ...c, notes: $event }))"
+                  ></textarea>
+                </div>
+
+              </div>
             </div>
-          </div>
-        }
-        <!-- Step 4: Review & Submit -->
-        @if (currentStep === 4) {
-          <div class="step-content">
-            <h2>Review Your Order</h2>
-            <div class="order-review">
-              <div class="review-section">
-                <h3>Customer</h3>
-                <p><strong>Name:</strong> {{ customer.name }}</p>
-                <p><strong>Email:</strong> {{ customer.email }}</p>
-                <p><strong>Phone:</strong> {{ customer.phone }}</p>
-                @if (customer.notes) {
-                  <p><strong>Notes:</strong> {{ customer.notes }}</p>
-                }
-              </div>
-              <div class="review-section">
-                <h3>Items</h3>
-                @for (item of cart; track item) {
-                  <div class="review-item">
-                    <span>{{ item.name }} &times; {{ item.quantity }}</span>
-                    <span>${{ item.totalPrice | number:'1.2-2' }}</span>
+          }
+          <!-- Step 3: Pickup Slot -->
+          @if (currentStep() === 3) {
+            <div class="step-content">
+              <h2>Choose Pickup Slot</h2>
+              <h4>All times are local timezone</h4>
+
+              <div class="delivery-form">
+
+                @if (pickupSlots().length === 0) {
+                  <div class="empty-state">
+                    No pickup slots are currently available for this event.
                   </div>
                 }
-                <div class="review-total">
-                  <div class="final-total">
-                    <strong>Total: ${{ cartTotal | number:'1.2-2' }}</strong>
+
+                @for (slot of pickupSlots(); track slot.externalId) {
+                  <div
+                    class="pickup-slot-option"
+                    [class.selected]="selectedPickupSlotExternalId() === slot.externalId"
+                    [class.full]="slot.reservedCount >= slot.capacity"
+                    tabindex="0"
+                    role="button"
+                    (click)="onSelect(slot)"
+                    (keydown)="onKeydown($event, slot)"
+                  >
+
+                    <div class="slot-time">
+                      {{ slot.slotStartAt | date:'EEEE, MMMM d' }} —
+                      {{ slot.slotStartAt | date:'shortTime' }} to
+                      {{ slot.slotEndAt | date:'shortTime' }}
+                    </div>
+
+                    <div class="slot-availability">
+
+                      @if (slot.reservedCount < slot.capacity) {
+                        <span>
+                          {{ slot.capacity - slot.reservedCount }} spot(s) remaining
+                        </span>
+                      }
+
+                      @if (slot.reservedCount >= slot.capacity) {
+                        <span class="slot-full">Full</span>
+                      }
+
+                    </div>
+
+                  </div>
+                }
+
+              </div>
+            </div>
+          }
+
+          <!-- Step 4: Review & Submit -->
+          @if (currentStep() === 4) {
+            <div class="step-content">
+              <h2>Review Your Order</h2>
+
+              <div class="order-review">
+
+                <!-- Customer -->
+                <div class="review-section">
+                  <h3>Customer</h3>
+                  <p><strong>Name:</strong> {{ customer().name }}</p>
+                  <p><strong>Email:</strong> {{ customer().email }}</p>
+                  <p><strong>Phone:</strong> {{ customer().phone }}</p>
+
+                  @if (customer().notes) {
+                    <p><strong>Notes:</strong> {{ customer().notes }}</p>
+                  }
+                </div>
+
+                <!-- Items -->
+                <div class="review-section">
+                  <h3>Items</h3>
+
+                  @for (item of cart(); track item.menuItemExternalId) {
+                    <div class="review-item">
+                      <span>{{ item.name }} &times; {{ item.quantity }}</span>
+                      <span>${{ item.totalPrice | number:'1.2-2' }}</span>
+                    </div>
+                  }
+
+                  <div class="review-total">
+                    <div class="final-total">
+                      <strong>Total: ${{ cartTotal() | number:'1.2-2' }}</strong>
+                    </div>
                   </div>
                 </div>
-              </div>
-              @if (organization) {
-                <div class="review-section">
-                  <h3>Pickup Location</h3>
-                  <div class="pickup-location">
-                    <div class="pickup-location-details">
-                      @if (organization.organizationName) {
-                        <p>{{ organization.organizationName }}</p>
-                      }
-                      @if (organization.addressLine1 || organization.addressLine2) {
-                        <p>{{ organization.addressLine1 || organization.addressLine2 }}</p>
-                      }
-                      @if (organization.city) {
+
+                <!-- Pickup Location -->
+                @if (organization()) {
+                  <div class="review-section">
+                    <h3>Pickup Location</h3>
+
+                    <div class="pickup-location">
+                      <div class="pickup-location-details">
+
+                        @if (organization()?.organizationName) {
+                          <p>{{ organization()?.organizationName }}</p>
+                        }
+
+                        @if (organization()?.addressLine1 || organization()?.addressLine2) {
+                          <p>{{ organization()?.addressLine1 || organization()?.addressLine2 }}</p>
+                        }
+
+                        @if (organization()?.city) {
+                          <p>
+                            {{ organization()?.city }}
+                            @if (organization()?.state) {
+                              <span>, {{ organization()?.state }}</span>
+                            }
+                          </p>
+                        }
+
+                        @if (organization()?.contactPhone) {
+                          <p>Phone: {{ organization()?.contactPhone }}</p>
+                        }
+
+                        @if (organization()?.contactEmail) {
+                          <p>Email: {{ organization()?.contactEmail }}</p>
+                        }
+
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Pickup Time -->
+                @if (selectedPickupSlot(); as slot) {
+                  <div class="review-section">
+                    <div class="pickup-time">
+                      <div class="pickup-time-details">
+                        <h3>Pickup Time (merchant local time)</h3>
+
                         <p>
-                          {{ organization.city }}
-                          @if (organization.state) {
-                            <span>, {{ organization.state }}</span>
-                          }
+                          {{ slot.slotStartAt | date:'fullDate' }}
+                          {{ slot.slotStartAt | date:'shortTime' }}
+                          to
+                          {{ slot.slotEndAt | date:'shortTime' }}
                         </p>
-                      }
-                      @if (organization.contactPhone) {
-                        <p>Phone: {{ organization.contactPhone }}</p>
-                      }
-                      @if (organization.contactEmail) {
-                        <p>Email: {{ organization.contactEmail }}</p>
-                      }
+
+                        <p><i>Orders not picked up during this scheduled window may become unavailable.</i></p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              }
-              @if (selectedPickupSlot) {
-                <div class="review-section">
-                  <div class="pickup-time">
-                    <div class="pickup-time-details">
-                      <h3>Pickup Time (merchant local time)</h3>
-                      <p>{{ selectedPickupSlot.slotStartAt | date:'fullDate' }} {{ selectedPickupSlot.slotStartAt | date:'shortTime' }} to
-                      {{ selectedPickupSlot.slotEndAt | date:'shortTime' }}</p>
-                      <p><i>Orders not picked up during this scheduled window may become unavailable.</i></p>
-                    </div>
-                  </div>
-                </div>
-              }
-              @if (submitError) {
-                <div class="error-banner">{{ submitError }}</div>
-              }
+                }
+
+                <!-- Submit Error -->
+                @if (submitError()) {
+                  <div class="error-banner">{{ submitError() }}</div>
+                }
+
+              </div>
             </div>
+          }
+
+          <!-- Navigation Buttons -->
+          <div class="navigation-buttons">
+
+            @if (currentStep() > 1) {
+              <button class="btn btn-secondary"
+                      (click)="previousStep()"
+                      [disabled]="isSubmitting()">
+                Previous
+              </button>
+            }
+
+            @if (currentStep() === 1) {
+              <button class="btn btn-secondary" disabled>
+                Previous
+              </button>
+            }
+
+            @if (currentStep() < totalSteps) {
+              <button class="btn btn-primary"
+                      (click)="nextStep()"
+                      [disabled]="!canProceedToNext()">
+                Next
+              </button>
+            }
+
+            @if (currentStep() === totalSteps) {
+              <button class="btn btn-primary"
+                      (click)="submitOrder()"
+                      [disabled]="isSubmitting() || !canProceedToNext()">
+                {{ isSubmitting() ? 'Submitting…' : 'Submit Pre-Order' }}
+              </button>
+            }
+
           </div>
-        }
-      </div>
-      <!-- Navigation Buttons -->
-      <div class="navigation-buttons">
-        @if (currentStep > 1) {
-          <button class="btn btn-secondary" (click)="previousStep()" [disabled]="isSubmitting">
-            Previous
-          </button>
-        }
-        @if (currentStep === 1) {
-          <button class="btn btn-secondary" (click)="previousStep()" [disabled]="true">
-            Previous
-          </button>
-        }
-        @if (currentStep < totalSteps) {
-          <button class="btn btn-primary" (click)="nextStep()" [disabled]="!canProceedToNext()">
-            Next
-          </button>
-        }
-        @if (currentStep === totalSteps) {
-          <button class="btn btn-primary" (click)="submitOrder()" [disabled]="isSubmitting || !canProceedToNext()">
-            {{ isSubmitting ? 'Submitting&hellip;' : 'Submit Pre-Order' }}
-          </button>
-        }
-      </div>
-    }
+        </div>
+      }
   }
 </div>

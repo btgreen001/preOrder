@@ -42,10 +42,10 @@ public class MvpPreOrderService : IMvpPreOrderService
             .ToListAsync();
     }
 
-    public async Task<List<HolidayEvent>> GetHolidayEventsAsync(Guid organizationId)
+    public async Task<List<HolidayEvent>> GetPublicHolidayEventsAsync(Guid organizationId)
     {
         return await _context.HolidayEvents
-            .Where(e => e.OrganizationId == organizationId && e.IsActive)
+            .Where(e => e.OrganizationId == organizationId && e.IsActive && e.OpensAt <= DateTime.Now && e.ClosesAt >= DateTime.Now)
             .OrderBy(e => e.OpensAt)
             .AsNoTracking()
             .ToListAsync();

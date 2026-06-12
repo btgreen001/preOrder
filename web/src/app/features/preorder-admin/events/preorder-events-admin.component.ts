@@ -229,13 +229,13 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
       normalizedRole === 'companyadmin' || normalizedRole === 'systemadmin';
 
     const navDescription = isCompanyAdmin
-      ? 'Use these tabs for Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar also includes Profile Management, Store Preview, and Access Management.'
-      : 'Use these tabs for Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar includes Profile Management and Store Preview.';
+      ? 'Use these tabs to navigate between Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar also includes Profile and Access Management as well as Store Preview.'
+      : 'Use these tabs to navigate between Events, Event Items, Pickup Time Slots, and Managing Customer Orders. Your sidebar includes Profile Management and Store Preview.';
 
     return [
       {
         key: 'welcome',
-        title: 'Welcome to BakeAhead',
+        title: 'Welcome to BakeAhead!',
         description:
           'We are excited to have you here. In just a few quick steps, you will see how BakeAhead enables you to create delightful experiences for your customers for all of your pre-order events. Let start the short tour together!',
       },
@@ -253,7 +253,7 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
         key: 'continue',
         title: 'Step 3: Save and Continue',
         description:
-          'Use this action to save and move to items when your event is ready after which create pickup time slots.',
+          'Use this action to save your event and continue on with adding event items when you\'re ready, after which create customer pickup time slots.',
       },
     ] as const;
   }
@@ -261,8 +261,14 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   private startOnboardingTour(): void {
     this.showOnboardingTour.set(true);
     this.currentTourStepIndex.set(0);
-    this.applyTourStepPositioning();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.applyTourStepPositioning();
+      });
+    });
   }
+
 
   get activeTourStep() {
     const steps = this.tourSteps();
@@ -273,17 +279,24 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   previousTourStep(): void {
     const idx = this.currentTourStepIndex();
     if (idx === 0) return;
+
     this.currentTourStepIndex.set(idx - 1);
+
+    requestAnimationFrame(() => this.applyTourStepPositioning());
   }
 
   nextTourStep(): void {
     const idx = this.currentTourStepIndex();
     const steps = this.tourSteps();
+
     if (idx >= steps.length - 1) {
       this.completeTour();
       return;
     }
+
     this.currentTourStepIndex.set(idx + 1);
+
+    requestAnimationFrame(() => this.applyTourStepPositioning());
   }
 
   skipTour(): void {
@@ -293,6 +306,14 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
   private completeTour(): void {
     this.showOnboardingTour.set(false);
     this.currentTourStepIndex.set(0);
+
+    // Remove highlight from all possible targets
+    [
+      this.welcomeStep?.nativeElement,
+      this.eventsNav?.nativeElement,
+      this.eventEditorTitle?.nativeElement,
+      this.continueButton?.nativeElement
+    ].forEach(el => el?.classList.remove('tour-focus'));
 
     this.authService.markOnboardingComplete().subscribe({
       next: () => {
@@ -336,8 +357,28 @@ export class PreorderEventsAdminComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  private applyTourFocus(target: HTMLElement | null): void {
+    // Remove focus from all known targets
+    [
+      this.welcomeStep?.nativeElement,
+      this.eventsNav?.nativeElement,
+      this.eventEditorTitle?.nativeElement,
+      this.continueButton?.nativeElement
+    ].forEach(el => el?.classList.remove('tour-focus'));
+
+    // Do not highlight step 1
+    if (!target || this.activeTourStep.key === 'welcome') return;
+
+    // Add highlight to the active target
+    target.classList.add('tour-focus');
+  }
+
   private applyTourStepPositioning(): void {
     const target = this.getCurrentTourTarget();
+    // NEW: apply focus glow
+    this.applyTourFocus(target);
+    
     if (!target) {
       this.tourCardStyle.set({ top: '24px', left: '24px' });
       return;

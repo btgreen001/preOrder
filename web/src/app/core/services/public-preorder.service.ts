@@ -108,37 +108,37 @@ export class PublicPreorderService {
 
 
   getHolidayEvents(orgToken: string): Observable<PublicHolidayEvent[]> {
-    return this.http.get<unknown[]>(`${this.apiBaseUrl}/preorder-event`, {
+    return this.http.get<unknown[]>(`${this.apiUrl}/preorder-event`, {
       params: { org: orgToken }
     }).pipe(map(events => events.map(event => this.mapHolidayEvent(event))));
   }
 
   getMenuItems(orgToken: string, holidayEventExternalId: string): Observable<PublicMenuItem[]> {
-    return this.http.get<PublicMenuItem[]>(`${this.apiBaseUrl}/menu-items`, {
+    return this.http.get<PublicMenuItem[]>(`${this.apiUrl}/menu-items`, {
       params: { org: orgToken, holidayEventExternalId }
     });
   }
 
   getPickupSlots(orgToken: string, holidayEventExternalId: string): Observable<PublicPickupSlot[]> {
-    return this.http.get<unknown[]>(`${this.apiBaseUrl}/pickup-slots`, {
+    return this.http.get<unknown[]>(`${this.apiUrl}/pickup-slots`, {
       params: { org: orgToken, holidayEventExternalId }
     }).pipe(map(slots => slots.map(slot => this.mapPickupSlot(slot))));
   }
 
   getOrganizationDetails(orgToken: string): Observable<PublicOrganizationDtl> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/organization-details`, {
+    return this.http.get<unknown>(`${this.apiUrl}/organization-details`, {
       params: { org: orgToken }
     }).pipe(map(organization => this.mapOrganizationDetails(organization)));
   }
 
   createPreOrder(orgToken: string, request: PublicCreatePreOrderRequest): Observable<PublicPreOrderResponse> {
-    return this.http.post<PublicPreOrderResponse>(`${this.apiBaseUrl}/preorders`, request, {
+    return this.http.post<PublicPreOrderResponse>(`${this.apiUrl}/preorders`, request, {
       params: { org: orgToken }
     });
   }
 
   sendOrderEmail(orgToken: string, request: PublicSendOrderEmailRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiBaseUrl}/send-order-email`, request, {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/send-order-email`, request, {
       params: { org: orgToken }
     });
   }

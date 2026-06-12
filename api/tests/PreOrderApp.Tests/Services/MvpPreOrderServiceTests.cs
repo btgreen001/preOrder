@@ -186,7 +186,7 @@ public class MvpPreOrderServiceTests : IDisposable
         Assert.NotNull(saved);
     }
 
-    // ── GetAllHolidayEventsAsync / GetHolidayEventsAsync ─────────────────────
+    // ── GetAllHolidayEventsAsync / GetPublicHolidayEventsAsync ─────────────────────
 
     [Fact]
     public async Task GetAllHolidayEventsAsync_ReturnsAllForOrg()
@@ -215,7 +215,7 @@ public class MvpPreOrderServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetHolidayEventsAsync_ReturnsOnlyActive()
+    public async Task GetPublicHolidayEventsAsync_ReturnsOnlyActive()
     {
         var (org, activeEvent) = await SeedOrgWithEventAsync("-active");
         var inactive = new HolidayEvent
@@ -234,7 +234,7 @@ public class MvpPreOrderServiceTests : IDisposable
         _context.HolidayEvents.Add(inactive);
         await _context.SaveChangesAsync();
 
-        var results = await _sut.GetHolidayEventsAsync(org.OrganizationId);
+        var results = await _sut.GetPublicHolidayEventsAsync(org.OrganizationId);
 
         Assert.Single(results);
         Assert.Equal(activeEvent.ExternalId, results[0].ExternalId);

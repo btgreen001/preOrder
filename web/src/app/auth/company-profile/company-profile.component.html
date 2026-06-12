@@ -60,11 +60,11 @@
           </label>
         </div>
         <label>
-          Current Password (required to save)
+          Current Password (required to save)*
           <input type="password" formControlName="currentPassword" autocomplete="current-password" />
         </label>
         <div class="actions">
-          <button type="submit" class="btn-primary" [disabled]="isSaving()">
+          <button type="submit" class="btn-primary" [disabled]="isSaving() || form.get('currentPassword')?.invalid">
             {{ isSaving() ? 'Saving...' : 'Save Company Profile' }}
           </button>
         </div>

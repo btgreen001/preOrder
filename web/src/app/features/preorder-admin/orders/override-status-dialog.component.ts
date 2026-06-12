@@ -59,7 +59,7 @@ export class OverrideStatusDialogComponent {
   dialogRef = inject(MatDialogRef<OverrideStatusDialogComponent>);
   data = inject(MAT_DIALOG_DATA);
 
-  allStatuses = ['PENDING', 'SUBMITTED', 'CONFIRMED', 'DELIVERED', 'CANCELLED'];
+  allStatuses = ['SUBMITTED', 'CONFIRMED', 'DELIVERED', 'CANCELLED'];
 
   // Signals instead of ngModel
   newStatus = signal(this.data.currentStatus);

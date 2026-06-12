@@ -42,7 +42,7 @@ public class PublicPreOrdersController : ControllerBase
             return organization.error;
         }
 
-        var events = await _service.GetHolidayEventsAsync(organization.organizationId);
+        var events = await _service.GetPublicHolidayEventsAsync(organization.organizationId);
         return Ok(events.Select(MapHolidayEvent));
     }
 

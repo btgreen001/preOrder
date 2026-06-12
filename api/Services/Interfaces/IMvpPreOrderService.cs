@@ -6,7 +6,7 @@ namespace PreOrderApp.Services.Interfaces;
 
 public interface IMvpPreOrderService
 {
-    Task<List<HolidayEvent>> GetHolidayEventsAsync(Guid organizationId);
+    Task<List<HolidayEvent>> GetPublicHolidayEventsAsync(Guid organizationId);
     Task<List<HolidayEvent>> GetAllHolidayEventsAsync(Guid organizationId);
     Task<HolidayEvent> CreateHolidayEventAsync(Guid organizationId, CreateHolidayEventRequest request);
     Task<HolidayEvent> UpdateHolidayEventAsync(Guid organizationId, Guid holidayEventExternalId, UpdateHolidayEventRequest request);
@@ -18,6 +18,7 @@ public interface IMvpPreOrderService
     Task<List<PickupSlot>> GetPickupSlotsAsync(Guid organizationId, Guid holidayEventExternalId);
     Task<PickupSlot> CreatePickupSlotAsync(Guid organizationId, CreatePickupSlotRequest request);
     Task<PickupSlot> UpdatePickupSlotAsync(Guid organizationId, Guid pickupSlotExternalId, UpdatePickupSlotRequest request);
+
 
     Task<List<PreOrder>> GetPreOrdersAsync(Guid organizationId, Guid? holidayEventExternalId = null);
     Task<string> ExportPreOrdersCsvAsync(Guid organizationId, Guid? holidayEventExternalId = null, DateTime? pickupDateUtc = null);
