@@ -557,7 +557,7 @@ public class MvpPreOrderService : IMvpPreOrderService
             HolidayEventId = holidayEvent.Id,
             PickupSlotId = pickupSlot.Id,
             OrderDate = DateTime.UtcNow,
-            OrderStatus = "SUBMITTED",
+            OrderStatus = "PENDING",
             SpecialInstructionTxt = request.Notes,
             OrderedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
@@ -615,6 +615,28 @@ public class MvpPreOrderService : IMvpPreOrderService
         return await MapOrderToPreOrderAsync(order);
     }
 
+    public async Task MarkOrderAsSubmittedAsync(Guid organizationId, Guid preOrderExternalId)
+    {
+        var order = await _context.Orders
+            .FirstOrDefaultAsync(o => o.OrganizationId == organizationId && o.ExternalId == preOrderExternalId);
+
+        if (order == null)
+        {
+            throw new KeyNotFoundException($"Preorder {preOrderExternalId} not found.");
+        }
+
+        if (order.OrderStatus != "PENDING")
+        {
+            throw new InvalidOperationException($"Only orders in PENDING status can be marked as submitted. Current status: {order.OrderStatus}");
+        }
+
+        order.OrderStatus = "SUBMITTED";
+        order.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Preorder {ExternalId} marked as SUBMITTED in customer_order", order.ExternalId);
+    }
     public async Task<PreOrder> UpdatePreOrderStatusAsync(Guid organizationId, Guid preOrderExternalId, string nextStatus, Guid? changedByUserId = null, string? ipAddress = null, string? userAgent = null)
     {
         var normalizedStatus = NormalizePreOrderStatus(nextStatus);

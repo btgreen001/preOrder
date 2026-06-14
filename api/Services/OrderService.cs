@@ -603,7 +603,7 @@ namespace PreOrderApp.Services
                 throw new ArgumentException("OrderId is required.", nameof(orderId));
             }
 
-            var normalizedOrderType = NormalizeOrderType(orderType);
+            var normalizedOrderType = NormalizeOrderType(orderType)?.ToLowerInvariant();
             if (normalizedOrderType is null)
             {
                 throw new ArgumentException("OrderType is required.", nameof(orderType));
@@ -612,9 +612,10 @@ namespace PreOrderApp.Services
             return normalizedOrderType switch
             {
                 "preorder" => await ResolvePreOrderAsync(orderId, normalizedOrderType, requestedReturnUrl),
-                "company-registration" => throw new NotSupportedException("Payment flow for order type 'company-registration' is not implemented yet."),
+                "registration" => throw new NotSupportedException("Payment flow for order type 'registration' is not implemented yet."),
                 "event" => throw new NotSupportedException("Payment flow for order type 'event' is not implemented yet."),
-                "standalone" => throw new NotSupportedException("Payment flow for order type 'standalone' is not implemented yet."),
+                "order" => throw new NotSupportedException("Payment flow for order type 'order' is not implemented yet."),
+                "subscription" => throw new NotSupportedException("Payment flow for order type 'subscription' is not implemented yet."),
                 _ => throw new NotSupportedException($"Payment flow for order type '{orderType}' is not implemented yet.")
             };
         }
@@ -634,7 +635,8 @@ namespace PreOrderApp.Services
 
             var totalAmount = order.TotalAmount;
             var amountInCents = decimal.ToInt64(decimal.Round(totalAmount * 100m, 0, MidpointRounding.AwayFromZero));
-
+            _logger.LogDebug($"Resolved order summary for PreOrder {orderId}: TotalAmount={totalAmount}, AmountInCents={amountInCents}");
+        
             return new OrderSummary
             {
                 OrderId = order.ExternalId,
@@ -685,7 +687,6 @@ namespace PreOrderApp.Services
             {
                 "preorder" => "preorder",
                 "pre-order" => "preorder",
-                "order" => "preorder",
                 "customer-preorder" => "preorder",
                 "customer_preorder" => "preorder",
                 "customerpreorder" => "preorder",

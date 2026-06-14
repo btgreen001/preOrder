@@ -1,34 +1,56 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, inject, DestroyRef, effect, signal, output } from '@angular/core';
 import { loadStripe, Stripe, StripeCardElement } from '@stripe/stripe-js';
 import { PaymentService } from '../../shared-data-services/stripe.payment.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { input } from '@angular/core';
 
 @Component({
   selector: 'app-checkout',
-  templateUrl: './checkout.component.html',
-  styleUrls: ['./checkout.component.scss'],
   standalone: true,
-  imports: [CommonModule]
-
+  imports: [CommonModule],
+  templateUrl: './checkout.component.html',
+  styleUrls: ['./checkout.component.scss']
 })
+export class CheckoutComponent {
 
-export class CheckoutComponent implements OnInit {
+  // Angular 17+ style input signal
+  orderId = input.required<string>();
+  orderType = input.required<string>();
+  untrustedOrderAmt = input.required<string>();
+  redirectOnSuccess = input<boolean>(true);
 
   private paymentService = inject(PaymentService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   stripe!: Stripe | null;
   card!: StripeCardElement;
-  clientSecret!: string;
-  orderId!: string;
-  orderType!: string;
-  returnUrl!: string;
-  loading = false;
-  message = '';
 
-  async ngOnInit() {
-    const stripeKey = import.meta.env.NG_APP_STRIPE_PUBLISHABLE_KEY;
+  loading = signal(false);
+  message = signal('');
+  paymentSucceeded = output<void>();
+
+  constructor() {
+    // Initialize Stripe when orderId becomes available
+    effect(() => {
+      const id = this.orderId();
+      if (id) {
+        this.initializeStripe();
+      }
+    });
+
+    // Cleanup on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.card) {
+        this.card.unmount();
+      }
+    });
+  }
+
+  private async initializeStripe() {
+
+    const stripeKey = import.meta.env.VITE_NG_APP_STRIPE_PUBLISHABLE_KEY;
     this.stripe = await loadStripe(stripeKey);
 
     const elements = this.stripe!.elements({
@@ -36,54 +58,43 @@ export class CheckoutComponent implements OnInit {
       paymentMethodCreation: 'manual'
     });
 
-    this.card = elements.create('card', {
-      disableLink: true
-    });
-
+    this.card = elements.create('card', { disableLink: true });
     this.card.mount('#card-element');
-    this.orderId = '12345'; // This should come from your order data
-    this.orderType = 'preorder'; // This should be set based on your order type
-    this.returnUrl = this.router.url; // Current URL as return URL
-
   }
 
   async startPayment() {
-  this.loading = true;
-  this.message = '';
+    this.loading.set(true);
+    this.message.set('');
 
-  // Send identifiers, not the amount
-  this.paymentService.createPaymentIntent({
-      orderId: this.orderId,
-      orderType: this.orderType,
-      returnUrl: this.returnUrl
+    this.paymentService.createPaymentIntent({
+      orderId: this.orderId(),
+      orderType: this.orderType(),
+      untrustedOrderAmt: this.untrustedOrderAmt()
     }).subscribe({
-    next: async (res) => {
-      this.clientSecret = res.clientSecret;
-      const returnUrl = res.returnUrl;   // <-- backend-provided return URL
+      next: async (res) => {
+        const result = await this.stripe!.confirmCardPayment(res.clientSecret, {
+          payment_method: { card: this.card }
+        });
 
-      const result = await this.stripe!.confirmCardPayment(this.clientSecret, {
-        payment_method: {
-          card: this.card
+        if (result.error) {
+          this.message.set(result.error.message ?? 'Payment failed');
+        } else if (result.paymentIntent?.status === 'succeeded') {
+          this.message.set('Payment successful');
+          this.paymentSucceeded.emit();
+
+          const returnUrl = (res.returnUrl ?? '').trim();
+          if (this.redirectOnSuccess() && returnUrl) {
+            this.router.navigate([returnUrl]);
+          }
         }
-      });
 
-      if (result.error) {
-        this.message = result.error.message ?? 'Payment failed';
-      } else if (result.paymentIntent?.status === 'succeeded') {
-        this.message = 'Payment successful';
-
-        // Redirect to the correct page
-        this.router.navigate([returnUrl]);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.message.set('Error creating payment intent');
+        console.error(err);
+        this.loading.set(false);
       }
-
-      this.loading = false;
-    },
-    error: (err) => {
-      this.message = 'Error creating payment intent';
-      console.error(err);
-      this.loading = false;
-    }
-  });
-}
-
+    });
+  }
 }

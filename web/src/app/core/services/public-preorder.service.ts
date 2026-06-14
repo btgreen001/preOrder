@@ -106,6 +106,11 @@ export class PublicPreorderService {
     this.apiUrl = `${this.apiBaseUrl}/public/preorders`;
   }
 
+  markOrderAsSubmitted(orgToken: string, externalId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${externalId}/mark-submitted`, null, {
+      params: { org: orgToken }
+    });
+  }
 
   getHolidayEvents(orgToken: string): Observable<PublicHolidayEvent[]> {
     return this.http.get<unknown[]>(`${this.apiUrl}/preorder-event`, {
@@ -136,6 +141,13 @@ export class PublicPreorderService {
       params: { org: orgToken }
     });
   }
+
+  cancelPreOrder(orgToken: string, externalId: string): Observable<PublicPreOrderResponse> {
+    return this.http.post<PublicPreOrderResponse>(`${this.apiUrl}/preorders/${externalId}/cancel`, null, {
+      params: { org: orgToken }
+    });
+  }
+
 
   sendOrderEmail(orgToken: string, request: PublicSendOrderEmailRequest): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/send-order-email`, request, {

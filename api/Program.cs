@@ -92,6 +92,7 @@ builder.Services.AddScoped<IPinAdminService, PinAdminService>();
 builder.Services.AddScoped<ITerminalService, TerminalService>();
 builder.Services.AddScoped<IUnitConversionService, UnitConversionService>();
 builder.Services.AddScoped<IMvpPreOrderService, MvpPreOrderService>();
+builder.Services.AddScoped<PaymentService>();
 
 // Configure HTTPS enforcement
 builder.Services.AddHttpsRedirection(options =>

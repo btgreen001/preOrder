@@ -1,10 +1,13 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
+import { CheckoutComponent } from '../../checkout/checkout.component';
+import { PaymentService } from '../../../shared-data-services/stripe.payment.service';
+import { OrdersService } from '../../features/orders/services/orders.service';
 
 import {
   PublicCreatePreOrderRequest,
@@ -16,6 +19,8 @@ import {
   PublicSendOrderEmailRequest,
   PublicPreorderService
 } from '../../core/services/public-preorder.service';
+
+
 
 interface CartItem {
   menuItemExternalId: string;
@@ -30,21 +35,29 @@ interface CartItem {
 @Component({
   selector: 'app-order-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, CheckoutComponent],
   templateUrl: './order-builder.component.html',
   styleUrls: ['./order-builder.component.scss']
+
 })
+
+
 export class OrderBuilderComponent {
 
   private readonly route = inject(ActivatedRoute);
   private readonly preorderService = inject(PublicPreorderService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly paymentService = inject(PaymentService);
+  private readonly orderService = inject(OrdersService);
+
+
+  @ViewChild('checkout') checkout!: CheckoutComponent;
 
   // -----------------------------
   // Signals (state)
   // -----------------------------
   currentStep = signal(1);
-  totalSteps = 4;
+  totalSteps = 5;
 
   organizationToken = signal('');
   isLoading = signal(true);
@@ -54,6 +67,8 @@ export class OrderBuilderComponent {
   submitSuccess = signal<PublicPreOrderResponse | null>(null);
   pickupAvailabilityWarning = signal('');
   lastNoPickupCapacityAlertEventId = signal('');
+  preOrderResponse = signal<PublicPreOrderResponse | null>(null);
+  orderAmount = signal<number | null>(null);
 
   holidayEvents = signal<PublicHolidayEvent[]>([]);
   availableMenuItems = signal<PublicMenuItem[]>([]);
@@ -260,7 +275,7 @@ export class OrderBuilderComponent {
   }
 
   // -----------------------------
-  // Submit Order
+  // Submit Pending Order before payment
   // -----------------------------
   submitOrder() {
     if (!this.selectedHolidayEventExternalId() ||
@@ -287,39 +302,145 @@ export class OrderBuilderComponent {
     this.submitError.set('');
     this.submitSuccess.set(null);
 
-    this.preorderService.createPreOrder(this.organizationToken(), request).subscribe({
-      next: preorder => {
-        const emailReq: PublicSendOrderEmailRequest = {
-          customerName: this.customer().name.trim(),
-          customerEmail: this.customer().email.trim(),
-          orderExternalId: preorder.externalId,
-          slotStartAt: this.selectedPickupSlot()?.slotStartAt ?? '',
-          slotEndAt: this.selectedPickupSlot()?.slotEndAt ?? '',
-          lines: this.cart().map(i => ({
-            name: i.name,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice
-          }))
-        };
+    this.preorderService.createPreOrder(this.organizationToken(), request)
+      .subscribe({
+        next: preorder => {
+          // ⭐ Save preorder so Step 5 can use it
+          this.preOrderResponse.set(preorder);
 
-        this.preorderService.sendOrderEmail(this.organizationToken(), emailReq).subscribe({
-          next: () => {
-            this.isSubmitting.set(false);
-            this.submitSuccess.set(preorder);
-          },
-          error: () => {
-            this.isSubmitting.set(false);
-            this.submitSuccess.set(preorder);
-          }
-        });
-      },
-      error: err => {
-        this.isSubmitting.set(false);
-        this.submitError.set(this.getErrorMessage(err, 'Unable to submit preorder.'));
-      }
-    });
+           // ⭐ NEW: store the amount for the payment screen
+          this.orderAmount.set(preorder.totalAmount); 
+          this.isSubmitting.set(false);
+          // ⭐ Move to payment step
+          this.nextStep()
+        },
+        error: err => {
+          this.isSubmitting.set(false);
+          this.submitError.set(this.getErrorMessage(err, 'Unable to submit preorder.'));
+        }
+      });
   }
 
+  cancelOrder(preorder: PublicPreOrderResponse | null = this.preOrderResponse()): void {
+    if (!preorder) {
+      this.startAnotherOrder();
+      return;
+    }
+
+    if (!confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.submitError.set('');
+
+    this.orderService.cancelOrder(preorder.externalId)
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.snackBar.open('Order cancelled. You can start a new order now.', 'Close', {  duration: 3000, panelClass: ['success-snackbar'] });
+          this.startAnotherOrder();
+        },
+        error: err => {
+          this.isSubmitting.set(false);
+          this.submitError.set(this.getErrorMessage(err, 'Unable to cancel order.'));
+        }
+      });
+  }
+
+  // payOrder(preorder: PublicPreOrderResponse) {
+  //   this.isSubmitting.set(true);
+  //   this.submitError.set('');
+
+  //   // 1. Create payment intent or redirect to payment page
+  //   console.log('Creating payment intent for preorder:', preorder);
+  //   this.paymentService.createPaymentIntent({ orderId: preorder.externalId, orderType: 'preorder', untrustedOrderAmt: preorder.totalAmount.toString() })
+  //     .subscribe({
+  //       next: paymentIntent => {
+  //         console.log('Created payment intent for preorder:', preorder);
+  //         // TODO: integrate with your payment provider here
+  //         // e.g., stripe.confirmCardPayment(paymentIntent.clientSecret)
+
+  //         // 2. After successful payment, mark order submitted, and send confirmation email and show Thank You state.
+
+  //         this.preorderService.markOrderAsSubmitted(preorder.externalId)
+  //           .subscribe({
+  //             next: () => {
+  //               this.finalizeSuccessfulPayment(preorder);
+  //             },
+  //             error: err => {
+  //               this.isSubmitting.set(false);
+  //               this.submitError.set(this.getErrorMessage(err, 'Unable to finalize payment for order.'));
+  //             }
+  //           });
+
+  //         },
+  //       error: err => {
+  //         this.isSubmitting.set(false);
+  //         this.submitError.set(this.getErrorMessage(err, 'Unable to initiate payment.'));
+  //       }
+  //     });
+  // }
+
+  handleCheckoutSuccess() {
+    const preorder = this.preOrderResponse();
+    if (!preorder) return;
+
+    this.isSubmitting.set(true);
+    this.submitError.set('');
+
+    this.preorderService.markOrderAsSubmitted(this.organizationToken(), preorder.externalId)
+      .subscribe({
+        next: () => {
+          this.finalizeSuccessfulPayment(preorder);
+        },
+        error: err => {
+          // Payment succeeded in Stripe, but order finalization failed
+          this.isSubmitting.set(false);
+          this.submitError.set(
+            this.getErrorMessage(err, 'Payment succeeded, but we could not finalize your order.')
+          );
+
+          // You could log this or send it to your backend here if you want,
+          // but don't block the user from seeing success if you know payment is done.
+        }
+      });
+  }
+
+  private finalizeSuccessfulPayment(preorder: PublicPreOrderResponse) {
+    const emailReq: PublicSendOrderEmailRequest = {
+      customerName: this.customer().name.trim(),
+      customerEmail: this.customer().email.trim(),
+      orderExternalId: preorder.externalId,
+      slotStartAt: this.selectedPickupSlot()?.slotStartAt ?? '',
+      slotEndAt: this.selectedPickupSlot()?.slotEndAt ?? '',
+      lines: this.cart().map(i => ({
+        name: i.name,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice
+      }))
+    };
+
+    this.preorderService.sendOrderEmail(this.organizationToken(), emailReq)
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.submitSuccess.set(preorder);
+          this.snackBar.open('Order paid successfully.', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.submitSuccess.set(preorder);
+          this.snackBar.open('Payment completed, but confirmation email failed to send.', 'Close', {
+            duration: 4000,
+            panelClass: ['warning-snackbar']
+          });
+        }
+      });
+  }
 
   canProceedToNext(): boolean {
   switch (this.currentStep()) {
@@ -339,6 +460,9 @@ export class OrderBuilderComponent {
 
     case 4:
       return true;
+
+    case 5:
+      return !!this.preOrderResponse();
 
     default:
       return false;

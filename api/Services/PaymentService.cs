@@ -45,9 +45,14 @@ namespace PreOrderApp.Services
         public async Task<CreatePaymentIntentResult> CreatePaymentIntentAsync(
             Guid orderId,
             string orderType,
-            string? requestedReturnUrl = null)
+            string? requestedReturnUrl = null,
+            decimal untrustedOrderAmount = 0)
         {
             var paymentOrder = await _orderService.ResolveOrderSummaryAsync(orderId, orderType, requestedReturnUrl);
+            if (untrustedOrderAmount != paymentOrder.TotalAmount)
+            {
+                throw new ArgumentException("The provided amount does not match the expected amount.");
+            }
 
             try
             {

@@ -31,6 +31,14 @@ dependency-check \
   - Go-live gate: **CONFIRMED GO** on security
 
 ## 2026-05-28 Validation Snapshot
+Cancel preorder needs to return money if PAID
+
+HAPPY path ONLY built for PAYMENT of preorder
+NEED to instead add a order payment attempt/status table.  If the payment succeeds GREAT.  If it is still pending that I need to add WEBHOOK to wait for it to clear.  Also need to change email to be conditional of payment status.   
+
+
+
+
 
 - MVP validation status: the scoped preorder regression path is currently green.
 - Passed today:

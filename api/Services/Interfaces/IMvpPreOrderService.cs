@@ -19,7 +19,7 @@ public interface IMvpPreOrderService
     Task<PickupSlot> CreatePickupSlotAsync(Guid organizationId, CreatePickupSlotRequest request);
     Task<PickupSlot> UpdatePickupSlotAsync(Guid organizationId, Guid pickupSlotExternalId, UpdatePickupSlotRequest request);
 
-
+    Task MarkOrderAsSubmittedAsync(Guid organizationId, Guid preOrderExternalId);
     Task<List<PreOrder>> GetPreOrdersAsync(Guid organizationId, Guid? holidayEventExternalId = null);
     Task<string> ExportPreOrdersCsvAsync(Guid organizationId, Guid? holidayEventExternalId = null, DateTime? pickupDateUtc = null);
     Task<PreOrder> CreatePreOrderAsync(Guid organizationId, CreatePreOrderRequest request);

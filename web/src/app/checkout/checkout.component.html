@@ -6,10 +6,10 @@
 
     <div id="card-element" class="card-element"></div>
 
-    <button class="pay-btn" (click)="startPayment()" [disabled]="loading">
-      {{ loading ? 'Processing…' : 'Pay $1.20' }}
-    </button>
+    <!-- <button class="pay-btn" (click)="startPayment()" [disabled]="loading()">
+      {{ loading() ? 'Processing…' : 'Pay $' + untrustedOrderAmt() }}
+    </button> -->
 
-    <p class="message">{{ message }}</p>
+    <p class="message">{{ message() }}</p>
   </div>
 </div>

@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { input } from '@angular/core';
 
 export interface CreatePaymentIntentRequest {
   orderId: string;
   orderType: string;
-  returnUrl: string;
+  untrustedOrderAmt: string;
 }
 
 export interface CreatePaymentIntentResponse {
@@ -20,19 +21,14 @@ export interface CreatePaymentIntentResponse {
 export class PaymentService {
 
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${import.meta.env.NG_APP_API_URL}/payment`;
+  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiUrl = `${this.apiBaseUrl}/payment`;
 
   createPaymentIntent(data: CreatePaymentIntentRequest): Observable<CreatePaymentIntentResponse> {
-    const token = localStorage.getItem('authToken');
-
-    const headers = token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : undefined;
 
     return this.http.post<CreatePaymentIntentResponse>(
-      `${import.meta.env.NG_APP_API_URL}/create-intent`,
-      data,
-      { headers }
+      `${this.apiUrl}/create-intent/${encodeURIComponent(data.orderType)}`,
+      data
     );
   }
 }

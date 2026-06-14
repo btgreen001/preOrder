@@ -144,6 +144,24 @@ public class PublicPreOrdersController : ControllerBase
         return Ok(MapPreOrder(preorder));
     }
 
+    [HttpPost("{externalId}/mark-submitted")]
+    [AllowAnonymous]
+    public async Task<IActionResult> MarkOrderAsSubmitted(
+        [FromQuery(Name = "org")] string organizationToken,
+        Guid externalId)
+    {
+        var organization = await TryResolveOrganizationAsync(organizationToken);
+        if (organization.error != null)
+        {
+            return organization.error;
+        }
+
+        await _service.MarkOrderAsSubmittedAsync(organization.organizationId, externalId);
+        return NoContent();
+    }
+
+
+
     [HttpPost("send-order-email")]
     public async Task<IActionResult> SendOrderEmail(
         [FromQuery(Name = "org")] string organizationToken,
