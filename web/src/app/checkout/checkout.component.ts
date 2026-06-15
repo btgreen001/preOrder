@@ -50,7 +50,7 @@ export class CheckoutComponent {
 
   private async initializeStripe() {
 
-    const stripeKey = import.meta.env.VITE_NG_APP_STRIPE_PUBLISHABLE_KEY;
+    const stripeKey = window.__env.VITE_NG_APP_STRIPE_PUBLISHABLE_KEY;
     this.stripe = await loadStripe(stripeKey);
 
     const elements = this.stripe!.elements({

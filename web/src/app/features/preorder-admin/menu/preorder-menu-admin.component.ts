@@ -195,27 +195,30 @@ export class PreorderMenuAdminComponent implements OnInit {
       isActive: true
     });
   }
-
+  
   startEdit(item: AdminMenuItem): void {
+
+  const event = this.holidayEvents()
+    .find(e => e.id === item.holidayEventId);
+
     this.editingExternalId.set(item.externalId);
     this.successMessage.set('');
 
     const matchedProduct = this.sellableProducts()
       .find(product => product.id === item.sellableProductId);
 
+    const cloned = structuredClone(item);
+
     this.form.set({
-      holidayEventExternalId: this.selectedHolidayEventExternalId(),
+      ...cloned,
+      holidayEventExternalId: event!.externalId,
       productExternalId: matchedProduct?.externalId ?? null,
-      name: item.name,
-      description: item.description ?? '',
-      price: item.price,
-      maxPerOrder: item.maxPerOrder ?? null,
-      sortOrder: item.sortOrder,
-      isActive: item.isActive
+      description: cloned.description ?? ''
     });
 
     this.scrollToEditorStart();
   }
+
 
   deleteMenuItem(item: AdminMenuItem): void {
     const confirmMsg = `Delete "${item.name}"? Customers won't see it in new orders, but existing orders will remain.`;

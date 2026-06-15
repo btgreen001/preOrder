@@ -33,7 +33,7 @@ export class ProductionTaskService {
    * Get specific task by external ID
    */
   getTaskById(externalId: string): Observable<ProductionTaskDto> {
-    return this.http.get<ProductionTaskDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
+    return this.http.get<ProductionTaskDto>(`${window.__env.NG_APP_API_URL}/${externalId}`);
   }
 
   /**
@@ -52,7 +52,7 @@ export class ProductionTaskService {
       ActualCompletion: actualCompletion,
       QualityNotes: qualityNotes
     };
-    return this.http.put<ProductionTaskDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}/status`, request);
+    return this.http.put<ProductionTaskDto>(`${window.__env.NG_APP_API_URL}/${externalId}/status`, request);
   }
 
   /**
@@ -60,20 +60,20 @@ export class ProductionTaskService {
    */
   assignTask(externalId: string, staffId: string): Observable<ProductionTaskDto> {
     const request: AssignTaskRequest = { StaffId: staffId };
-    return this.http.put<ProductionTaskDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}/assign`, request);
+    return this.http.put<ProductionTaskDto>(`${window.__env.NG_APP_API_URL}/${externalId}/assign`, request);
   }
 
   /**
    * Update production task
    */
   updateTask(externalId: string, request: UpdateProductionTaskRequest): Observable<ProductionTaskDto> {
-    return this.http.put<ProductionTaskDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`, request);
+    return this.http.put<ProductionTaskDto>(`${window.__env.NG_APP_API_URL}/${externalId}`, request);
   }
 
   /**
    * Delete/Cancel production task
    */
   deleteTask(externalId: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/${externalId}`);
   }
 }

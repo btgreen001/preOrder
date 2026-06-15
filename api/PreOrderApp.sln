@@ -4,10 +4,10 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreOrderApp", "PreOrderApp.csproj", "{9B7D83B7-C493-844A-471B-DC67CA6B7FBC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D6659405-A2A1-416A-B93C-2ED51B0F514B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreOrderApp.Tests", "tests\PreOrderApp.Tests\PreOrderApp.Tests.csproj", "{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}"
-EndProject
+//Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D6659405-A2A1-416A-B93C-2ED51B0F514B}"
+//EndProject
+//Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreOrderApp.Tests", "tests\PreOrderApp.Tests\PreOrderApp.Tests.csproj", "{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}"
+//EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

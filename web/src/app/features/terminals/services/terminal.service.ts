@@ -82,7 +82,7 @@ export interface TerminalDeviceBinding {
 })
 export class TerminalService {
   private apiUrl!: string;
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiBaseUrl = window.__env.NG_APP_API_URL;
   private http = inject(HttpClient);
 
   constructor() {

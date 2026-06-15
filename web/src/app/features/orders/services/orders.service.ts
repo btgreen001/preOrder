@@ -37,7 +37,7 @@ export interface UpdateOrderStatusRequest {
   providedIn: 'root'
 })
 export class OrdersService {
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiBaseUrl = window.__env.NG_APP_API_URL;
   private apiUrl: string;
 
   constructor() {

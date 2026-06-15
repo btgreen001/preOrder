@@ -40,7 +40,7 @@ export interface TerminalDto {
 export class TerminalSelectionComponent implements OnInit {
   availableTerminals: TerminalDto[] = [];
   isLoading = true;
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiBaseUrl = window.__env.NG_APP_BASE_URL || '/api';
   private apiUrl: string;
   error: string | null = null;
 

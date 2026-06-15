@@ -108,7 +108,7 @@ export interface ReceiveGoodsRequest {
   providedIn: 'root'
 })
 export class InventoryService {
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL;
+  private readonly apiBaseUrl = window.__env.NG_APP_API_URL;
   private apiUrl: string;
   
   constructor(private http: HttpClient) {

@@ -1,3 +1,4 @@
+using Stripe;
 using PreOrderApp.Data;
 using PreOrderApp.Models;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,7 @@ public class OrganizationService : IOrganizationService
         await _context.SaveChangesAsync();
         
         // Create walk-in customer for this organization
-        var walkInCustomer = new Customer
+        var walkInCustomer = new PreOrderApp.Models.Customer
         {
             ExternalId = Guid.NewGuid(),
             OrganizationId = organization.OrganizationId,
@@ -67,6 +68,61 @@ public class OrganizationService : IOrganizationService
         await _context.SaveChangesAsync();
         
         return organization;
+    }
+
+
+
+    public async Task<StripeOnboardingResponse> StartOnboardingAsync(Guid organizationId)
+    {
+        // Create a connected account under YOUR platform
+        var accountService = new AccountService();
+        var account = await accountService.CreateAsync(new AccountCreateOptions
+        {
+            Type = "express"
+        });
+
+        // Save the connected account ID
+        var stripeAccount = new StripeAccount
+        {
+            ExternalId = Guid.NewGuid(),
+            AccountId = account.Id,
+            OrganizationId = organizationId,
+            OnboardingStatusCd = "pending",
+            IsEnabled = false,
+            CreatedOn = DateTime.UtcNow
+        };
+
+        _context.StripeAccounts.Add(stripeAccount);
+        await _context.SaveChangesAsync();
+
+        // Generate onboarding link
+        var linkService = new AccountLinkService();
+        var link = await linkService.CreateAsync(new AccountLinkCreateOptions
+        {
+            Account = account.Id,
+            RefreshUrl = "https://yourapp.com/stripe/refresh",
+            ReturnUrl = "https://yourapp.com/stripe/complete",
+            Type = "account_onboarding"
+        });
+
+        return new StripeOnboardingResponse
+        {
+            AccountId = account.Id,
+            OnboardingUrl = link.Url
+        };
+    }
+
+    public async Task<object> CheckOnboardingStatusAsync(Guid organizationId, string accountId)
+    {
+        // var accountService = new AccountService();
+        // var account = await accountService.GetAsync(accountId);
+
+        // return new
+        // {
+        //     accountId,
+        //     isCompleted = account.DetailsSubmitted
+        // };
+        return await Task.FromResult<object>(true);
     }
 
     public async Task<bool> ValidateRegistrationTokenAsync(string token)

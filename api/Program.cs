@@ -16,16 +16,18 @@ using PreOrderApp.Filters;
 using System.IO;
 using IAuditService = PreOrderApp.Services.IAuditService;
 using AuditService = PreOrderApp.Services.AuditService;
+using Stripe;
+
+var builder = WebApplication.CreateBuilder(args);
 
 // Load environment variables from repository root (.env, then .env.local override)
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
 var envLocalPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env.local");
-var builder = WebApplication.CreateBuilder(args);
 
-if (File.Exists(envPath))
+if (System.IO.File.Exists(envPath))
 {
     DotNetEnv.Env.Load(envPath);
-    if (builder.Environment.IsDevelopment() && File.Exists(envLocalPath))
+    if (builder.Environment.IsDevelopment() && System.IO.File.Exists(envLocalPath))
     {
         DotNetEnv.Env.Load(envLocalPath);
     }
@@ -35,8 +37,13 @@ else
     Console.WriteLine($"WARNING: .env file not found at {Path.GetFullPath(envPath)}");
 }
 
-
 // Add environment variables to configuration
+var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+if (!string.IsNullOrWhiteSpace(stripeSecretKey))
+{
+    StripeConfiguration.ApiKey = stripeSecretKey;
+}
+
 var pasetoSecretKey = Environment.GetEnvironmentVariable("PASETO_SECRET_KEY");
 if (!string.IsNullOrWhiteSpace(pasetoSecretKey))
 {
@@ -67,6 +74,8 @@ if (!string.IsNullOrWhiteSpace(frontendUrl))
 }
 var connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SslMode=Disable;Timeout=30;";
 
+
+
 Console.WriteLine($"INFO: Database connection details:");
 Console.WriteLine($"  Host: {dbHost}");
 Console.WriteLine($"  Port: {dbPort}");
@@ -89,7 +98,7 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ISellableProductService, SellableProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IPinAdminService, PinAdminService>();
-builder.Services.AddScoped<ITerminalService, TerminalService>();
+builder.Services.AddScoped<ITerminalService, PreOrderApp.Services.TerminalService>();
 builder.Services.AddScoped<IUnitConversionService, UnitConversionService>();
 builder.Services.AddScoped<IMvpPreOrderService, MvpPreOrderService>();
 builder.Services.AddScoped<PaymentService>();
@@ -278,12 +287,12 @@ builder.WebHost.ConfigureKestrel(options =>
         var certPath = Environment.GetEnvironmentVariable("BAKEBOARD_TLS_CERT_PATH") ?? "/etc/ssl/certs/lh-cert.pem";
         var keyPath = Environment.GetEnvironmentVariable("BAKEBOARD_TLS_KEY_PATH") ?? "/etc/ssl/private/lh-cert-key.pem";
 
-        if (!File.Exists(certPath) || !File.Exists(keyPath))
+        if (!System.IO.File.Exists(certPath) || !System.IO.File.Exists(keyPath))
         {
             if (explicitHttpsOn)
             {
                 throw new InvalidOperationException(
-                    $"TLS certificate files not found. Cert: '{certPath}' (exists: {File.Exists(certPath)}), Key: '{keyPath}' (exists: {File.Exists(keyPath)}). " +
+                    $"TLS certificate files not found. Cert: '{certPath}' (exists: {System.IO.File.Exists(certPath)}), Key: '{keyPath}' (exists: {System.IO.File.Exists(keyPath)}). " +
                     "Set BAKEBOARD_TLS_CERT_PATH and BAKEBOARD_TLS_KEY_PATH, or disable HTTPS with BAKEBOARD_ENABLE_HTTPS=false.");
             }
 
@@ -462,15 +471,15 @@ using (var scope = app.Services.CreateScope())
         try
         {
             var scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", "Scripts", "recreate-test-users-postgres.sql");
-            if (!File.Exists(scriptPath))
+            if (!System.IO.File.Exists(scriptPath))
             {
                 // fallback: script next to project folder in repo
                 scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "Database", "Scripts", "recreate-test-users-postgres.sql");
             }
 
-            if (File.Exists(scriptPath))
+                if (System.IO.File.Exists(scriptPath))
             {
-                var sql = File.ReadAllText(scriptPath);
+                var sql = System.IO.File.ReadAllText(scriptPath);
                 var parts = sql.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var part in parts)
                 {
@@ -510,11 +519,11 @@ using (var scope = app.Services.CreateScope())
                 Path.Combine(Directory.GetCurrentDirectory(), "..", "Database", unitSeedFile)
             };
 
-            var unitSeedPath = candidateUnitSeedPaths.FirstOrDefault(File.Exists);
+            var unitSeedPath = candidateUnitSeedPaths.FirstOrDefault(System.IO.File.Exists);
 
             if (!string.IsNullOrWhiteSpace(unitSeedPath))
             {
-                var sql = File.ReadAllText(unitSeedPath);
+                var sql = System.IO.File.ReadAllText(unitSeedPath);
                 db.Database.ExecuteSqlRaw(sql);
                 logger?.LogInformation("Applied unit conversion bootstrap SQL from {Path}", unitSeedPath);
             }

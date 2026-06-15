@@ -29,6 +29,7 @@ public class Organization
     public virtual ICollection<ItemCategory> ItemCategories { get; set; } = new List<ItemCategory>();
     public virtual ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     public virtual ICollection<SellableProduct> SellableProducts { get; set; } = new List<SellableProduct>();
+    public virtual ICollection<StripeAccount> StripeAccounts { get; set; } = new List<StripeAccount>();
     public virtual ICollection<InventoryItem> InventoryItems { get; set; } = new List<InventoryItem>();
     public virtual ICollection<InventoryMovement> InventoryMovements { get; set; } = new List<InventoryMovement>();
 }

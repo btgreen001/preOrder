@@ -24,7 +24,7 @@ export interface CreateCodeRequest {
 })
 export class InviteCodesService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${import.meta.env.NG_APP_API_URL}/organization`;
+  private readonly baseUrl = `${window.__env.NG_APP_API_URL}/organization`;
 
   getCodes(orgId: string): Observable<RegistrationCode[]> {
     return this.http.get<RegistrationCode[]>(`${this.baseUrl}/${orgId}/registration-codes`);

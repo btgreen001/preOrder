@@ -43,7 +43,7 @@ export interface UpdateUserRequest {
 export class AdminService {
   private http = inject(HttpClient);
 
-  private apiUrl = import.meta.env.NG_APP_API_URL + '/organization';
+  private apiUrl = window.__env.NG_APP_API_URL + '/organization';
 
   getAllOrganizations(): Observable<Organization[]> {
     return this.http.get<Organization[]>(`${this.apiUrl}`);

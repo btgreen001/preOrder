@@ -32,7 +32,7 @@ dependency-check \
 
 ## 2026-05-28 Validation Snapshot
 WORK to DO.
-	Onboarding flow started - it sends them to the right place.
+	Onboarding flow started - it sends them to the Stripe to setup.
 	Registration needs to keep this circling until Stripe is setup....
 
 	I need two pages to resume registration - 

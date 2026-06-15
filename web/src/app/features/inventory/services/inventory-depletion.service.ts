@@ -40,7 +40,7 @@ export class InventoryDepletionService {
    * Deplete inventory when production batch completes
    */
   depletInventory(batchId: string): Observable<DepletionHistoryDto> {
-    return this.http.post<DepletionHistoryDto>(`${import.meta.env.NG_APP_API_URL}/deplete`, { batchId });
+    return this.http.post<DepletionHistoryDto>(`${window.__env.NG_APP_API_URL}/deplete`, { batchId });
   }
 
   /**
@@ -51,7 +51,7 @@ export class InventoryDepletionService {
     startDate?: Date,
     endDate?: Date
   ): Observable<DepletionHistoryDto[]> {
-    let url = `${import.meta.env.NG_APP_API_URL}/history?productId=${productId}`;
+    let url = `${window.__env.NG_APP_API_URL}/history?productId=${productId}`;
     if (startDate) url += `&startDate=${startDate.toISOString()}`;
     if (endDate) url += `&endDate=${endDate.toISOString()}`;
     return this.http.get<DepletionHistoryDto[]>(url);
@@ -61,7 +61,7 @@ export class InventoryDepletionService {
    * Get depletion summary for time period
    */
   getDepletionSummary(startDate?: Date, endDate?: Date): Observable<DepletionSummaryDto> {
-    let url = `${import.meta.env.NG_APP_API_URL}/summary`;
+    let url = `${window.__env.NG_APP_API_URL}/summary`;
     if (startDate || endDate) {
       url += '?';
       if (startDate) url += `startDate=${startDate.toISOString()}`;
@@ -74,6 +74,6 @@ export class InventoryDepletionService {
    * Get inventory alerts (low stock, expiring soon, expired)
    */
   getInventoryAlerts(): Observable<InventoryAlertDto[]> {
-    return this.http.get<InventoryAlertDto[]>(`${import.meta.env.NG_APP_API_URL}/alerts`);
+    return this.http.get<InventoryAlertDto[]>(`${window.__env.NG_APP_API_URL}/alerts`);
   }
 }

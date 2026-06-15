@@ -20,9 +20,10 @@ namespace PreOrderApp.Controllers
             _logger = logger;
         }
 
-        [HttpPost("create-intent/{orderType}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> CreateIntent([FromRoute] string orderType, [FromBody] CreatePaymentRequest request)
+
+    [HttpPost("create-intent/{orderType}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CreateIntent([FromRoute] string orderType, [FromBody] CreatePaymentRequest request)
         {
             string lclOrderType = orderType?.ToUpper() ?? string.Empty;
             if (lclOrderType != "PREORDER" && lclOrderType != "SUBSCRIPTION" && lclOrderType != "ORDER")
@@ -79,6 +80,7 @@ namespace PreOrderApp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred while creating the payment intent." });
             }
         }
+
     }
 
     public class CreatePaymentRequest

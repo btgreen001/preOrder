@@ -27,7 +27,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private terminalContext = inject(TerminalContextService);
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiBaseUrl = window.__env.NG_APP_API_URL;
   private apiUrl!: string;
   private currentUserSubject: BehaviorSubject<AuthResponse | null>;
   public currentUser: Observable<AuthResponse | null>;
@@ -482,7 +482,7 @@ export class AuthService {
 
   // HTTPS enforcement methods
   enforceHttps(): void {
-    if (import.meta.env.NG_APP_ENFORCE_HTTPS && !this.isHttps()) {
+    if (window.__env.NG_APP_ENFORCE_HTTPS && !this.isHttps()) {
       console.warn('Redirecting to HTTPS for security');
       window.location.href = window.location.href.replace('http://', 'https://');
     }
@@ -493,8 +493,8 @@ export class AuthService {
   }
 
   getApiUrl(): string {
-    if (import.meta.env.NG_APP_ENFORCE_HTTPS && import.meta.env.NG_APP_HTTPS_API_URL) {
-      return import.meta.env.NG_APP_HTTPS_API_URL;
+    if (window.__env.NG_APP_ENFORCE_HTTPS && window.__env.NG_APP_HTTPS_API_URL) {
+      return window.__env.NG_APP_HTTPS_API_URL;
     }
     return this.apiBaseUrl;
   }

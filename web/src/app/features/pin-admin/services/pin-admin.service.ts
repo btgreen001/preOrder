@@ -43,27 +43,27 @@ export class PinAdminService {
   constructor(private http: HttpClient) {}
 
   getUser(userId: string): Observable<PinUserDto> {
-    return this.http.get<PinUserDto>(`${import.meta.env.NG_APP_API_URL}/users/${userId}`);
+    return this.http.get<PinUserDto>(`${window.__env.NG_APP_API_URL}/users/${userId}`);
   }
 
   getAllUsers(): Observable<PinUserDto[]> {
-    return this.http.get<PinUserDto[]>(`${import.meta.env.NG_APP_API_URL}/users`);
+    return this.http.get<PinUserDto[]>(`${window.__env.NG_APP_API_URL}/users`);
   }
 
   createUser(request: CreatePinUserRequest): Observable<PinUserDto> {
-    return this.http.post<PinUserDto>(`${import.meta.env.NG_APP_API_URL}/users`, request);
+    return this.http.post<PinUserDto>(`${window.__env.NG_APP_API_URL}/users`, request);
   }
 
   updateUser(userId: string, request: UpdatePinUserRequest): Observable<PinUserDto> {
-    return this.http.put<PinUserDto>(`${import.meta.env.NG_APP_API_URL}/users/${userId}`, request);
+    return this.http.put<PinUserDto>(`${window.__env.NG_APP_API_URL}/users/${userId}`, request);
   }
 
   resetPin(userId: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${import.meta.env.NG_APP_API_URL}/users/${userId}/reset-pin`, {});
+    return this.http.post<{ message: string }>(`${window.__env.NG_APP_API_URL}/users/${userId}/reset-pin`, {});
   }
 
   unlockUser(userId: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${import.meta.env.NG_APP_API_URL}/users/${userId}/unlock`, {});
+    return this.http.post<{ message: string }>(`${window.__env.NG_APP_API_URL}/users/${userId}/unlock`, {});
   }
 
   getAuditLogs(startDate?: Date, endDate?: Date): Observable<AdminAuditLogDto[]> {
@@ -74,6 +74,6 @@ export class PinAdminService {
     if (endDate) {
       params = params.set('endDate', endDate.toISOString());
     }
-    return this.http.get<AdminAuditLogDto[]>(`${import.meta.env.NG_APP_API_URL}/audit-logs`, { params });
+    return this.http.get<AdminAuditLogDto[]>(`${window.__env.NG_APP_API_URL}/audit-logs`, { params });
   }
 }

@@ -1,3 +1,5 @@
+using PreOrderApp.Data;
+using PreOrderApp.Models;
 using PreOrderApp.Services.Interfaces;
 using Stripe;
 
@@ -8,19 +10,22 @@ namespace PreOrderApp.Services
         private readonly IConfiguration _config;
         private readonly IOrderService _orderService;
         private readonly ILogger<PaymentService> _logger;
-
+        private readonly AppDbContext _context;
         public PaymentService(
             IConfiguration config,
             IOrderService orderService,
-            ILogger<PaymentService> logger)
+            ILogger<PaymentService> logger,
+            AppDbContext context)
         {
             _config = config;
             _orderService = orderService;
             _logger = logger;
+            _context = context;
 
             StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
                 ?? _config["Stripe:SecretKey"];
         }
+
 
         public async Task<PaymentOrderSummary> GetPaymentSummaryAsync(
             Guid orderId,
@@ -116,4 +121,6 @@ namespace PreOrderApp.Services
         public string PaymentIntentId { get; set; } = string.Empty;
         public string ClientSecret { get; set; } = string.Empty;
     }
+
+
 }

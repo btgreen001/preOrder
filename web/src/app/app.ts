@@ -1,4 +1,9 @@
 
+declare global {
+  interface Window {
+    __env: any;
+  }
+}
 import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, NavigationEnd, ActivatedRouteSnapshot } from '@angular/router';
 

@@ -1,0 +1,19 @@
+<div class="step-container">
+  <h2>Step 2: Connect Your Bank Account</h2>
+
+  <p>
+    To receive payouts, you must connect your bank account securely through Stripe.
+  </p>
+
+  <button
+    class="connect-btn"
+    (click)="startStripeOnboarding()"
+    [disabled]="loading"
+  >
+    {{ loading ? 'Redirecting…' : 'Connect your bank account' }}
+  </button>
+
+  <p *ngIf="error" class="error">
+    {{ error }}
+  </p>
+</div>

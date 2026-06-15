@@ -191,103 +191,103 @@ export class InventoryService {
 
   // Inventory Items
   getItems(): Observable<InventoryItem[]> {
-    return this.http.get<any[]>(`${import.meta.env.NG_APP_API_URL}`).pipe(
+    return this.http.get<any[]>(`${window.__env.NG_APP_API_URL}`).pipe(
       map(items => this.mapDtoToInventoryItem(items)),
       catchError((error) => throwError(() => error))
     );
   }
 
   getItem(id: string): Observable<InventoryItem> {
-    return this.http.get<any>(`${import.meta.env.NG_APP_API_URL}/${id}`).pipe(
+    return this.http.get<any>(`${window.__env.NG_APP_API_URL}/${id}`).pipe(
       map(dto => this.normalizeInventoryItem(dto))
     );
   }
 
   createItem(item: CreateInventoryItemRequest): Observable<InventoryItem> {
-    return this.http.post<any>(`${import.meta.env.NG_APP_API_URL}/receive`, item).pipe(
+    return this.http.post<any>(`${window.__env.NG_APP_API_URL}/receive`, item).pipe(
       map(dto => this.normalizeInventoryItem(dto))
     );
   }
 
   updateItem(id: string, item: UpdateInventoryItemRequest): Observable<InventoryItem> {
-    return this.http.put<any>(`${import.meta.env.NG_APP_API_URL}/${id}`, item).pipe(
+    return this.http.put<any>(`${window.__env.NG_APP_API_URL}/${id}`, item).pipe(
       map(dto => this.normalizeInventoryItem(dto))
     );
   }
 
   deleteItem(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${id}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/${id}`);
   }
 
   getMovements(id: string): Observable<InventoryMovement[]> {
-    return this.http.get<InventoryMovement[]>(`${import.meta.env.NG_APP_API_URL}/${id}/movements`);
+    return this.http.get<InventoryMovement[]>(`${window.__env.NG_APP_API_URL}/${id}/movements`);
   }
 
   // Categories
   getCategories(): Observable<InventoryCategory[]> {
-    return this.http.get<InventoryCategory[]>(`${import.meta.env.NG_APP_API_URL}/categories`).pipe(
+    return this.http.get<InventoryCategory[]>(`${window.__env.NG_APP_API_URL}/categories`).pipe(
       catchError(() => this.getMockCategories())
     );
   }
 
   getCategory(id: string): Observable<InventoryCategory> {
-    return this.http.get<InventoryCategory>(`${import.meta.env.NG_APP_API_URL}/categories/${id}`);
+    return this.http.get<InventoryCategory>(`${window.__env.NG_APP_API_URL}/categories/${id}`);
   }
 
   createCategory(category: Omit<InventoryCategory, 'id' | 'itemCount' | 'createdDate'>): Observable<InventoryCategory> {
-    return this.http.post<InventoryCategory>(`${import.meta.env.NG_APP_API_URL}/categories`, category);
+    return this.http.post<InventoryCategory>(`${window.__env.NG_APP_API_URL}/categories`, category);
   }
 
   updateCategory(id: string, category: Partial<InventoryCategory>): Observable<InventoryCategory> {
-    return this.http.put<InventoryCategory>(`${import.meta.env.NG_APP_API_URL}/categories/${id}`, category);
+    return this.http.put<InventoryCategory>(`${window.__env.NG_APP_API_URL}/categories/${id}`, category);
   }
 
   deleteCategory(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/categories/${id}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/categories/${id}`);
   }
 
   // Suppliers
   getSuppliers(): Observable<Supplier[]> {
-    return this.http.get<Supplier[]>(`${import.meta.env.NG_APP_API_URL}/suppliers`).pipe(
+    return this.http.get<Supplier[]>(`${window.__env.NG_APP_API_URL}/suppliers`).pipe(
       catchError(() => this.getMockSuppliers())
     );
   }
 
   getSupplier(id: string): Observable<Supplier> {
-    return this.http.get<Supplier>(`${import.meta.env.NG_APP_API_URL}/suppliers/${id}`);
+    return this.http.get<Supplier>(`${window.__env.NG_APP_API_URL}/suppliers/${id}`);
   }
 
   createSupplier(supplier: Omit<Supplier, 'id' | 'createdDate'>): Observable<Supplier> {
-    return this.http.post<Supplier>(`${import.meta.env.NG_APP_API_URL}/suppliers`, supplier);
+    return this.http.post<Supplier>(`${window.__env.NG_APP_API_URL}/suppliers`, supplier);
   }
 
   updateSupplier(id: string, supplier: Partial<Supplier>): Observable<Supplier> {
-    return this.http.put<Supplier>(`${import.meta.env.NG_APP_API_URL}/suppliers/${id}`, supplier);
+    return this.http.put<Supplier>(`${window.__env.NG_APP_API_URL}/suppliers/${id}`, supplier);
   }
 
   deleteSupplier(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/suppliers/${id}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/suppliers/${id}`);
   }
 
   // Batches
   getBatches(): Observable<Batch[]> {
-    return this.http.get<Batch[]>(`${import.meta.env.NG_APP_API_URL}/batches`).pipe(
+    return this.http.get<Batch[]>(`${window.__env.NG_APP_API_URL}/batches`).pipe(
       catchError(() => this.getMockBatches())
     );
   }
 
   getBatch(id: string): Observable<Batch> {
-    return this.http.get<Batch>(`${import.meta.env.NG_APP_API_URL}/batches/${id}`).pipe(
+    return this.http.get<Batch>(`${window.__env.NG_APP_API_URL}/batches/${id}`).pipe(
       catchError(() => this.getMockBatches().pipe(map(list => list.find(b => b.id === id) as Batch)))
     );
   }
 
   createBatch(batch: Omit<Batch, 'id'>): Observable<Batch> {
-    return this.http.post<Batch>(`${import.meta.env.NG_APP_API_URL}/batches`, batch);
+    return this.http.post<Batch>(`${window.__env.NG_APP_API_URL}/batches`, batch);
   }
 
   updateBatch(id: string, batch: Partial<Batch>): Observable<Batch> {
-    return this.http.put<Batch>(`${import.meta.env.NG_APP_API_URL}/batches/${id}`, batch).pipe(
+    return this.http.put<Batch>(`${window.__env.NG_APP_API_URL}/batches/${id}`, batch).pipe(
       catchError(() => {
         // Mock update: merge with a matching mock batch
         return this.getMockBatches().pipe(
@@ -301,63 +301,63 @@ export class InventoryService {
   }
 
   deleteBatch(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/batches/${id}`).pipe(
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/batches/${id}`).pipe(
       catchError(() => of(void 0))
     );
   }
 
   // Recipes
   getRecipes(): Observable<Recipe[]> {
-    return this.http.get<Recipe[]>(`${import.meta.env.NG_APP_API_URL}/recipes`);
+    return this.http.get<Recipe[]>(`${window.__env.NG_APP_API_URL}/recipes`);
   }
 
   getRecipe(id: string): Observable<Recipe> {
-    return this.http.get<Recipe>(`${import.meta.env.NG_APP_API_URL}/recipes/${id}`);
+    return this.http.get<Recipe>(`${window.__env.NG_APP_API_URL}/recipes/${id}`);
   }
 
   createRecipe(recipe: Omit<Recipe, 'id' | 'createdDate' | 'lastModified'>): Observable<Recipe> {
-    return this.http.post<Recipe>(`${import.meta.env.NG_APP_API_URL}/recipes`, recipe);
+    return this.http.post<Recipe>(`${window.__env.NG_APP_API_URL}/recipes`, recipe);
   }
 
   updateRecipe(id: string, recipe: Partial<Recipe>): Observable<Recipe> {
-    return this.http.put<Recipe>(`${import.meta.env.NG_APP_API_URL}/recipes/${id}`, recipe);
+    return this.http.put<Recipe>(`${window.__env.NG_APP_API_URL}/recipes/${id}`, recipe);
   }
 
   deleteRecipe(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/recipes/${id}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/recipes/${id}`);
   }
 
   // Waste Tracking
   getWasteRecords(): Observable<WasteRecord[]> {
-    return this.http.get<WasteRecord[]>(`${import.meta.env.NG_APP_API_URL}/waste`).pipe(
+    return this.http.get<WasteRecord[]>(`${window.__env.NG_APP_API_URL}/waste`).pipe(
       catchError(() => this.getMockWasteRecords())
     );
   }
 
   createWasteRecord(wasteRecord: Omit<WasteRecord, 'id' | 'recordedDate'>): Observable<WasteRecord> {
-    return this.http.post<WasteRecord>(`${import.meta.env.NG_APP_API_URL}/waste`, wasteRecord);
+    return this.http.post<WasteRecord>(`${window.__env.NG_APP_API_URL}/waste`, wasteRecord);
   }
 
   // Reconciliation
   getReconciliationRecords(): Observable<ReconciliationRecord[]> {
-    return this.http.get<ReconciliationRecord[]>(`${import.meta.env.NG_APP_API_URL}/reconciliation`).pipe(
+    return this.http.get<ReconciliationRecord[]>(`${window.__env.NG_APP_API_URL}/reconciliation`).pipe(
       catchError(() => this.getMockReconciliationRecords())
     );
   }
 
   createReconciliationRecord(record: Omit<ReconciliationRecord, 'id' | 'reconciledDate'>): Observable<ReconciliationRecord> {
-    return this.http.post<ReconciliationRecord>(`${import.meta.env.NG_APP_API_URL}/reconciliation`, record);
+    return this.http.post<ReconciliationRecord>(`${window.__env.NG_APP_API_URL}/reconciliation`, record);
   }
 
   // Settings
   getSettings(): Observable<InventorySettings> {
-    return this.http.get<InventorySettings>(`${import.meta.env.NG_APP_API_URL}/settings`).pipe(
+    return this.http.get<InventorySettings>(`${window.__env.NG_APP_API_URL}/settings`).pipe(
       catchError(() => this.getMockSettings())
     );
   }
 
   updateSettings(settings: InventorySettings): Observable<InventorySettings> {
-    return this.http.put<InventorySettings>(`${import.meta.env.NG_APP_API_URL}/settings`, settings);
+    return this.http.put<InventorySettings>(`${window.__env.NG_APP_API_URL}/settings`, settings);
   }
 
   // Mock data methods for development
@@ -1000,21 +1000,21 @@ export class InventoryService {
   }
 
   getAlerts(): Observable<InventoryAlert[]> {
-    return this.http.get<InventoryAlert[]>(`${import.meta.env.NG_APP_API_URL}/alerts`).pipe(
+    return this.http.get<InventoryAlert[]>(`${window.__env.NG_APP_API_URL}/alerts`).pipe(
       catchError(() => this.getMockAlerts())
     );
   }
 
 
   getSummary(): Observable<InventorySummary> {
-    return this.http.get<InventorySummary>(`${import.meta.env.NG_APP_API_URL}/summary`).pipe(
+    return this.http.get<InventorySummary>(`${window.__env.NG_APP_API_URL}/summary`).pipe(
       catchError(() => this.getMockSummary())
     );
   }
 
   // Backend endpoints for filtered data.
   getLowStockItems(): Observable<InventoryItem[]> {
-    return this.http.get<any[]>(`${import.meta.env.NG_APP_API_URL}/low-stock`).pipe(
+    return this.http.get<any[]>(`${window.__env.NG_APP_API_URL}/low-stock`).pipe(
       map(items => this.mapDtoToInventoryItem(items)),
       catchError(() => {
         // Fallback to client-side filtering if endpoint unavailable
@@ -1026,7 +1026,7 @@ export class InventoryService {
   }
 
   getExpiringSoonItems(days: number = 30): Observable<InventoryItem[]> {
-    return this.http.get<any[]>(`${import.meta.env.NG_APP_API_URL}/expiring-soon?daysUntilExpiration=${days}`).pipe(
+    return this.http.get<any[]>(`${window.__env.NG_APP_API_URL}/expiring-soon?daysUntilExpiration=${days}`).pipe(
       map(items => this.mapDtoToInventoryItem(items)),
       catchError(() => {
         // Fallback to client-side filtering if endpoint unavailable

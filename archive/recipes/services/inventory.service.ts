@@ -25,6 +25,6 @@ export class InventoryService {
   }
 
   getInventoryItem(externalId: string): Observable<InventoryItemDto> {
-    return this.http.get<InventoryItemDto>(`${import.meta.env.NG_APP_API_URL}/${externalId}`);
+    return this.http.get<InventoryItemDto>(`${window.__env.NG_APP_API_URL}/${externalId}`);
   }
 }

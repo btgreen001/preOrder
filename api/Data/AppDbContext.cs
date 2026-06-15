@@ -10,8 +10,8 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
         : base(options) { }
 
     public DbSet<Order> Orders { get; set; } = null!;
-
     public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<StripeAccount> StripeAccounts { get; set; } = null!;
     public DbSet<Supplier> Suppliers { get; set; } = null!;
     public DbSet<SellableProduct> SellableProducts { get; set; } = null!;
     public DbSet<InventoryItem> InventoryItems { get; set; } = null!;
@@ -95,6 +95,27 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.HasIndex(e => e.RegistrationToken).IsUnique().HasDatabaseName("ix_organization_registration_token");
             entity.HasIndex(e => e.ParentOrganizationId).HasDatabaseName("organization__parent_organization_id__IX");
         });
+
+        modelBuilder.Entity<StripeAccount>(entity =>
+        {
+            entity.ToTable("stripe_account", schema: "public");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.AccountId).HasColumnName("account_id");
+            entity.Property(e => e.OnboardingStatusCd).HasColumnName("onboarding_status_cd");
+            entity.Property(e => e.IsEnabled).HasColumnName("is_enabled");
+            entity.Property(e => e.CreatedOn).HasColumnName("created_on");
+            entity.Property(e => e.ModifiedOn).HasColumnName("modified_on");
+            entity.HasOne(e => e.Organization)
+                  .WithMany(o => o.StripeAccounts)
+                  .HasForeignKey(e => e.OrganizationId)
+                  .HasConstraintName("organization__stripe_account__FK");
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("stripe_account__external_id__UIX");
+            entity.HasIndex(e => e.OrganizationId).HasDatabaseName("stripe_account__organization_id__IX");
+        });
+
 
         modelBuilder.Entity<Customer>(entity =>
         {

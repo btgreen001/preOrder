@@ -21,7 +21,7 @@ export interface CreatePaymentIntentResponse {
 export class PaymentService {
 
   private readonly http = inject(HttpClient);
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiBaseUrl = window.__env.NG_APP_API_URL;
   private readonly apiUrl = `${this.apiBaseUrl}/payment`;
 
   createPaymentIntent(data: CreatePaymentIntentRequest): Observable<CreatePaymentIntentResponse> {

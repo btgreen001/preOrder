@@ -605,6 +605,27 @@ namespace PreOrderApp.Controllers
             return Ok(new { message = "Invite email resent." });
         }
 
+
+
+        [HttpPost("stripe/onboard")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> StripeOnboard()
+        {
+            var orgId = _orgContext.GetCurrentOrganizationId();
+            var result = await _organizationService.StartOnboardingAsync(orgId);
+            return Ok(result);
+        }
+
+        [HttpGet("stripe/onboarding-status/{accountId}")]
+        [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]
+        public async Task<IActionResult> GetOnboardingStatus([FromRoute] string accountId)
+        {
+            var orgId = _orgContext.GetCurrentOrganizationId();
+            var status = await _organizationService.CheckOnboardingStatusAsync(orgId, accountId);
+            return Ok(status);
+        }
+
+
         // COMPANY ADMIN: Delete (revoke) an unused invite code
         [HttpDelete("{orgId}/registration-codes/{codeId}")]
         [Authorize(Roles = $"{UserRoles.CompanyAdmin},{UserRoles.SystemAdmin}")]

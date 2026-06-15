@@ -39,7 +39,7 @@ export interface PinManagement {
   providedIn: 'root'
 })
 export class PinService {
-  private readonly apiUrl = `${import.meta.env.NG_APP_API_URL}/auth`;
+  private readonly apiUrl = `${window.__env.NG_APP_API_URL}/auth`;
   private authService = inject(AuthService);
   private terminalContext = inject(TerminalContextService);
   private http = inject(HttpClient);
@@ -55,7 +55,7 @@ export class PinService {
                         ?? this.terminalContext.getOrganizationId();
     
     // POST request to get PIN users - organization ONLY from auth service
-    return this.http.post<PinUser[]>(`${import.meta.env.NG_APP_API_URL}/pin-users`, {
+    return this.http.post<PinUser[]>(`${window.__env.NG_APP_API_URL}/pin-users`, {
       organizationId: organizationId || null
     });
   }
@@ -66,7 +66,7 @@ export class PinService {
    * Allows switching to another user (in same organization) with valid PIN
    */
   authenticateWithPin(userId: string, pin: string): Observable<PinAuthResponse> {
-    return this.http.post<PinAuthResponse>(`${import.meta.env.NG_APP_API_URL}/pin-login`, {
+    return this.http.post<PinAuthResponse>(`${window.__env.NG_APP_API_URL}/pin-login`, {
       userId,
       pin
     }, {
@@ -101,7 +101,7 @@ export class PinService {
    * Create or update PIN for a user (admin function)
    */
   setUserPin(userId: string, pin: string): Observable<void> {
-    return this.http.post<void>(`${import.meta.env.NG_APP_API_URL}/pin/set`, {
+    return this.http.post<void>(`${window.__env.NG_APP_API_URL}/pin/set`, {
       userId,
       pin
     });
@@ -111,14 +111,14 @@ export class PinService {
    * Remove PIN for a user (admin function)
    */
   removeUserPin(userId: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/pin/${userId}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/pin/${userId}`);
   }
 
   /**
    * Get PIN management status for a user
    */
   getPinStatus(userId: string): Observable<PinManagement> {
-    return this.http.get<PinManagement>(`${import.meta.env.NG_APP_API_URL}/pin/status/${userId}`);
+    return this.http.get<PinManagement>(`${window.__env.NG_APP_API_URL}/pin/status/${userId}`);
   }
 
   /**

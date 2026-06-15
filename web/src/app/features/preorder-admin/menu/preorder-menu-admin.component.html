@@ -38,19 +38,19 @@
         <input
           #itemNameInput
           [ngModel]="form().name"
-          (ngModelChange)="form.update(f => f.name = $event)"
+          (ngModelChange)="form.update(f => ({ ...f, name: $event }))"
         />
       </label>
 
       <label>
-        Price
+        Price (AFTER tax)
         <input
           #priceInput
           type="number"
           min="0.00"
           step="0.01"
           [ngModel]="form().price"
-          (ngModelChange)="form.update(f => f.price = $event)"
+          (ngModelChange)="form.update(f => ({ ...f, price: $event }))"
         />
       </label>
 
@@ -62,7 +62,7 @@
           min="1"
           step="1"
           [ngModel]="form().maxPerOrder"
-          (ngModelChange)="form.update(f => f.maxPerOrder = $event)"
+          (ngModelChange)="form.update(f => ({ ...f, maxPerOrder: $event }))"
         />
       </label>
 
@@ -73,7 +73,7 @@
           type="number"
           step="1"
           [ngModel]="form().sortOrder"
-          (ngModelChange)="form.update(f => f.sortOrder = $event)"
+          (ngModelChange)="form.update(f => ({ ...f, sortOrder: $event }))"
         />
         <small class="field-help">
           Controls item position on the customer order form.
@@ -85,7 +85,7 @@
         <select
           class="select-hidden"
           [ngModel]="form().isActive"
-          (ngModelChange)="form.update(f => f.isActive = $event)"
+          (ngModelChange)="form.update(f => ({ ...f, isActive: $event }))"
         >
           <option [ngValue]="true">Active</option>
           <option [ngValue]="false">Inactive</option>
@@ -98,18 +98,25 @@
           #descriptionInput
           rows="2"
           [ngModel]="form().description"
-          (ngModelChange)="form.update(f => f.description = $event)"
+          (ngModelChange)="form.update(f => ({ ...f, description: $event }))"
         ></textarea>
       </label>
     </div>
 
     <div class="actions">
       <button type="button" (click)="saveMenuItem()" [disabled]="isSaving()">
-        {{ isSaving() ? 'Creating...' : 'Create Item' }}
+        @if (editingExternalId()) {
+           {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+         } @else {
+           {{ isSaving() ? 'Creating...' : 'Create Item' }}
+         }
       </button>
-
       <button type="button" (click)="saveMenuItem('/admin/slots')" [disabled]="isSaving()">
-        Save & Continue to Slots
+        @if (editingExternalId()) {
+           {{ isSaving() ? 'Saving...' : 'Save & Continue to Slots' }}
+         } @else {
+           {{ isSaving() ? 'Creating...' : 'Create & Continue to Slots' }}
+         }        
       </button>
 
       <button type="button" (click)="startCreate()" [disabled]="isSaving()">
@@ -145,7 +152,7 @@
         </thead>
 
         <tbody>
-          @for (item of menuItems(); track item) {
+          @for (item of menuItems(); track item.externalId) {
             <tr>
               <td>{{ item.name }}</td>
               <td>{{ item.price | currency }}</td>

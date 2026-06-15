@@ -6,11 +6,11 @@ import { RegisterUserRequest, AuthResponse } from '../core/models/auth.model';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  private readonly apiBaseUrl = import.meta.env.NG_APP_API_URL || '/api';
+  private readonly apiBaseUrl = window.__env.NG_APP_BASE_URL;
   private apiUrl!: string;
 
   constructor() {
-    this.apiUrl = this.apiBaseUrl + '/auth';
+    this.apiUrl = this.apiBaseUrl + '/api/auth';
   }
 
   registerUser(data: RegisterUserRequest): Observable<AuthResponse> {

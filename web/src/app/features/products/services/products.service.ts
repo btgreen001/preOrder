@@ -54,7 +54,7 @@ export interface UpdateProductRequest {
   providedIn: 'root'
 })
 export class ProductsService {
-  private readonly apiUrl = `${import.meta.env.NG_APP_API_URL}/products`;
+  private readonly apiUrl = `${window.__env.NG_APP_API_URL}/products`;
 
   constructor(private http: HttpClient) {}
 
@@ -69,7 +69,7 @@ export class ProductsService {
    * Get a specific product by ID
    */
   getProductById(id: string): Observable<Product> {
-    return this.http.get<Product>(`${import.meta.env.NG_APP_API_URL}/${id}`);
+    return this.http.get<Product>(`${window.__env.NG_APP_API_URL}/${id}`);
   }
 
   /**
@@ -81,20 +81,20 @@ export class ProductsService {
 
   /** Request a server-generated SKU suggestion */
   suggestSku(): Observable<{ sku: string }> {
-    return this.http.get<{ sku: string }>(`${import.meta.env.NG_APP_API_URL}/sku-suggest`);
+    return this.http.get<{ sku: string }>(`${window.__env.NG_APP_API_URL}/sku-suggest`);
   }
 
   /**
    * Update an existing product
    */
   updateProduct(id: string, request: UpdateProductRequest): Observable<Product> {
-    return this.http.put<Product>(`${import.meta.env.NG_APP_API_URL}/${id}`, request);
+    return this.http.put<Product>(`${window.__env.NG_APP_API_URL}/${id}`, request);
   }
 
   /**
    * Delete a product
    */
   deleteProduct(id: string): Observable<void> {
-    return this.http.delete<void>(`${import.meta.env.NG_APP_API_URL}/${id}`);
+    return this.http.delete<void>(`${window.__env.NG_APP_API_URL}/${id}`);
   }
 }
