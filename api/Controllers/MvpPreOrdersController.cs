@@ -185,15 +185,10 @@ public class MvpPreOrdersController : ControllerBase
         return Ok(preorder);
     }
 
-    [HttpPost("preorders/send-order-email")]
+    [HttpPost("preorders/send-order-email/{orderExternalId:guid}")]
     [RequireTenantStaffOrAdmin]
-    public async Task<IActionResult> SendOrderEmail([FromBody] SendOrderEmailDto request)
+    public async Task<IActionResult> SendOrderEmail([FromRoute] Guid orderExternalId)
     {
-        if (string.IsNullOrWhiteSpace(request.CustomerEmail) || string.IsNullOrWhiteSpace(request.CustomerName))
-        {
-            return BadRequest(new { message = "Customer name and email are required." });
-        }
-
         var organizationId = _orgContext.GetCurrentOrganizationId();
         var org = await _context.Organizations
             .Where(o => o.OrganizationId == organizationId)
@@ -216,39 +211,59 @@ public class MvpPreOrdersController : ControllerBase
 
         var organizationName = org.OrganizationName;
 
-        var slotStartAt = request.SlotStartAt;
-        var slotEndAt = request.SlotEndAt;
-        if (Guid.TryParse(request.OrderExternalId, out var orderExternalId))
-        {
-            var slotFromOrder = await _context.Orders
-                .AsNoTracking()
-                .Where(o => o.OrganizationId == organizationId && o.ExternalId == orderExternalId && o.PickupSlot != null)
-                .Select(o => new
-                {
-                    SlotStartAt = (DateTime?)o.PickupSlot!.SlotStartAt,
-                    SlotEndAt = (DateTime?)o.PickupSlot!.SlotEndAt
-                })
-                .FirstOrDefaultAsync();
-
-            if (slotFromOrder?.SlotStartAt.HasValue == true && slotFromOrder.SlotEndAt.HasValue)
+        var order = await _context.Orders
+            .AsNoTracking()
+            .Where(o => o.OrganizationId == organizationId &&
+                        o.ExternalId == orderExternalId)
+            .Select(o => new
             {
-                slotStartAt = slotFromOrder.SlotStartAt.Value;
-                slotEndAt = slotFromOrder.SlotEndAt.Value;
-            }
+                o.Id,
+                o.ExternalId,
+                o.CustomerEmail,
+                o.CustomerName,
+
+                SlotStartAt = o.PickupSlot != null ? (DateTime?)o.PickupSlot.SlotStartAt : null,
+                SlotEndAt   = o.PickupSlot != null ? (DateTime?)o.PickupSlot.SlotEndAt   : null,
+
+                Lines = o.OrderItems.Select(l => new OrderEmailLineItem
+                {
+                    Name =
+                        l.MenuItem != null ? l.MenuItem.Name :
+                        l.SellableProduct != null ? l.SellableProduct.Name :
+                        "(Unknown Item)",
+                    Quantity = l.Quantity,
+                    UnitPrice = l.UnitPrice
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (order is null)
+        {
+            // handle not found
+            return NotFound(new { message = "Order not found." });
+        }
+
+        DateTime? slotStartAt = null;
+        DateTime? slotEndAt = null;
+
+        if (order.SlotStartAt.HasValue && order.SlotEndAt.HasValue)
+        {
+            slotStartAt = order.SlotStartAt.Value;
+            slotEndAt = order.SlotEndAt.Value;
         }
 
         var line1 = org.AddressLine1?.Trim();
         var line2 = org.AddressLine2?.Trim();
         await _emailService.SendOrderEmailAsync(
-            request.CustomerEmail,
+            order.CustomerEmail,
             organizationName,
             org.ContactEmail,
-            request.CustomerName,
-            request.OrderId,
-            request.OrderExternalId,
+            order.CustomerName,
+            order.Id.ToString(),  // You can format this as needed
+            order.ExternalId.ToString(),
             slotStartAt,
             slotEndAt,
-            request.Lines.Select(line => new OrderEmailLineItem
+            order.Lines.Select(line => new OrderEmailLineItem
             {
                 Name = line.Name,
                 Quantity = line.Quantity,

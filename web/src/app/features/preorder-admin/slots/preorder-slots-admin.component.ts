@@ -22,6 +22,7 @@ import {
 export class PreorderSlotsAdminComponent implements OnInit {
   private readonly preorderAdminService = inject(PreorderAdminService);
   private readonly snackBar = inject(MatSnackBar);
+  private initialized = false;
 
 
   // SIGNAL STATE
@@ -80,6 +81,8 @@ export class PreorderSlotsAdminComponent implements OnInit {
 
   onEventChange(selectedId?: string): void {
     const id = selectedId ?? this.selectedHolidayEventExternalId();
+    const isInitial = !this.initialized;
+
     this.selectedHolidayEventExternalId.set(id);
     this.preorderAdminService.setSelectedHolidayEventExternalId(id);
 
@@ -87,12 +90,19 @@ export class PreorderSlotsAdminComponent implements OnInit {
     this.editingExternalId.set(null);
     this.successMessage.set('');
 
-    this.loadPickupSlots(); // <-- THIS FIXES EVERYTHING
-    this.snackBar.open('Event changed. Pickup slots reloaded.', 'Close', {
-      duration: 3000,
-      panelClass: ['info-snackbar']
-    });    
+    this.loadPickupSlots();
+
+    // Only show snackbar if NOT initial load
+    if (!isInitial) {
+      this.snackBar.open('Event changed. Pickup slots reloaded.', 'Close', {
+        duration: 3000,
+        panelClass: ['info-snackbar']
+      });
+    }
+
+    this.initialized = true;
   }
+
 
 
   // LOAD SLOTS

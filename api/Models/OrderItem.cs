@@ -9,9 +9,9 @@ public class OrderItem
     [System.ComponentModel.DataAnnotations.Schema.Column("customer_order_id")]
     public long OrderId { get; set; }  // BIGINT FK to customer_order (column: customer_order_id)
     
-    [System.ComponentModel.DataAnnotations.Schema.Column("menu_item_id")]
-    public long MenuItemId { get; set; }  // BIGINT FK to menu_item (column: menu_item_id)
-    
+    [System.ComponentModel.DataAnnotations.Schema.Column("product_id")] // product id for orders or menu item id for preorder
+    public long ProductId { get; set; }
+
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     // NOTE: LineTotal removed - this is a calculated value (UnitPrice × Quantity) and not persisted in database
@@ -25,5 +25,7 @@ public class OrderItem
     public int VersionNbr { get; set; } = 1;
 
     public virtual Order? Order { get; set; }
+
     public virtual MenuItem? MenuItem { get; set; }
+    public virtual SellableProduct? SellableProduct { get; set; }
 }

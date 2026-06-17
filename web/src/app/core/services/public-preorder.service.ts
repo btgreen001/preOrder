@@ -149,8 +149,8 @@ export class PublicPreorderService {
   }
 
 
-  sendOrderEmail(orgToken: string, request: PublicSendOrderEmailRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/send-order-email`, request, {
+  sendOrderEmail(orgToken: string, externalId: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/send-order-email/${externalId}`, null, {
       params: { org: orgToken }
     });
   }

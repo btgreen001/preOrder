@@ -727,39 +727,56 @@ modelBuilder.Entity<RecipeStep>(entity =>
             entity.HasIndex(e => e.InventoryItemId).HasDatabaseName("inventory_movement__inventory_item_id__IX");
         });
 
-        modelBuilder.Entity<OrderItem>(entity =>
-        {
+      modelBuilder.Entity<OrderItem>(entity =>
+      {
             entity.ToTable("order_item");
-            entity.HasKey(e => e.Id);
+
+            entity.HasKey(e => e.Id).HasName("order_item__id__PK");
+
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ExternalId).HasColumnName("external_id").IsRequired();
+            entity.Property(e => e.ExternalId).HasColumnName("external_id");
             entity.Property(e => e.OrderId).HasColumnName("customer_order_id");
-            entity.Property(e => e.MenuItemId).HasColumnName("product_id"); //this a menu item for preorder
+
+            // ONE COLUMN — used for BOTH navigations
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+
             entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.UnitPrice).HasColumnName("unit_price").HasPrecision(18, 2);
-            // NOTE: LineTotal removed from model - it's a calculated value (UnitPrice × Quantity), not persisted
             entity.Property(e => e.Customizations).HasColumnName("customizations");
             entity.Property(e => e.FulfilledQty).HasColumnName("fulfilled_qty").HasPrecision(18, 2);
-            entity.Property(e => e.OrderItemStatus).HasColumnName("order_item_status").HasMaxLength(50);
+            entity.Property(e => e.OrderItemStatus).HasColumnName("order_item_status");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
             entity.Property(e => e.VersionNbr).HasColumnName("version_nbr");
+
+            // Order relationship
             entity.HasOne(e => e.Order)
                   .WithMany(o => o.OrderItems)
                   .HasForeignKey(e => e.OrderId)
                   .HasConstraintName("customer_order__order_item__FK");
+
+            // BOTH navigations use the SAME FK column
             entity.HasOne(e => e.MenuItem)
                   .WithMany(m => m.OrderItems)
-                  .HasForeignKey(e => e.MenuItemId)
-                  .HasConstraintName("menu_item__order_item__FK");
-            entity.HasKey(e => e.Id).HasName("order_item__id__PK");
+                  .HasForeignKey(e => e.ProductId)
+                  .HasConstraintName("menu_item__order_item__FK")
+                  .IsRequired(false);
+
+            entity.HasOne(e => e.SellableProduct)
+                  .WithMany(p => p.OrderItems)
+                  .HasForeignKey(e => e.ProductId)
+                  .HasConstraintName("product__order_item__FK")
+                  .IsRequired(false);
+
+            // Indexes
             entity.HasIndex(e => e.ExternalId).IsUnique().HasDatabaseName("order_item__external_id__UIX");
             entity.HasIndex(e => e.OrderId).HasDatabaseName("order_item__order_id__IX");
-            entity.HasIndex(e => e.MenuItemId).HasDatabaseName("order_item__menu_item_id__IX");
+            entity.HasIndex(e => e.ProductId).HasDatabaseName("order_item__product_id__IX");
             entity.HasIndex(e => e.OrderItemStatus).HasDatabaseName("order_item__status__IX");
-        });
+      });
+
 
         // Phase 3.1: Recipe and Batch Management
         modelBuilder.Entity<RecipeDetail>(entity =>

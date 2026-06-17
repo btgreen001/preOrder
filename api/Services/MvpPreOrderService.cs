@@ -593,7 +593,7 @@ public class MvpPreOrderService : IMvpPreOrderService
             order.OrderItems.Add(new OrderItem
             {
                 ExternalId = Guid.NewGuid(),
-                MenuItemId = menuItem.Id,
+                ProductId = menuItem.Id,
                 Quantity = line.Quantity,
                 UnitPrice = menuItem.Price,
                 OrderItemStatus = "PENDING",
@@ -747,7 +747,7 @@ public class MvpPreOrderService : IMvpPreOrderService
     {
         var menuItemIds = orders
             .SelectMany(order => order.OrderItems)
-            .Select(item => item.MenuItemId)
+            .Select(item => item.ProductId)
             .Distinct()
             .ToList();
 
@@ -879,7 +879,7 @@ public class MvpPreOrderService : IMvpPreOrderService
         IReadOnlyDictionary<long, string> menuNameLookup)
     {
         var menuItemName = string.Empty;
-        if (orderItem != null && menuNameLookup.TryGetValue(orderItem.MenuItemId, out var resolvedName))
+        if (orderItem != null && menuNameLookup.TryGetValue(orderItem.ProductId, out var resolvedName))
         {
             menuItemName = resolvedName;
         }
@@ -956,7 +956,7 @@ public class MvpPreOrderService : IMvpPreOrderService
                 Id = item.Id,
                 ExternalId = item.ExternalId,
                 PreOrderId = order.Id,
-                MenuItemId = item.MenuItemId,
+                MenuItemId = item.ProductId,
                 Quantity = item.Quantity,
                 UnitPrice = item.UnitPrice
             }).ToList()

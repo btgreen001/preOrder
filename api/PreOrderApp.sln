@@ -18,10 +18,10 @@ Global
 		{9B7D83B7-C493-844A-471B-DC67CA6B7FBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B7D83B7-C493-844A-471B-DC67CA6B7FBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B7D83B7-C493-844A-471B-DC67CA6B7FBC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Release|Any CPU.Build.0 = Release|Any CPU
+//		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+//		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Debug|Any CPU.Build.0 = Debug|Any CPU
+//		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Release|Any CPU.ActiveCfg = Release|Any CPU
+//		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -29,7 +29,7 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DA2D61D8-0E0E-4765-BE41-3476B3BF221E}
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254} = {D6659405-A2A1-416A-B93C-2ED51B0F514B}
-	EndGlobalSection
+//	GlobalSection(NestedProjects) = preSolution
+//		{DE73E2E7-4375-4213-9C47-8A4A7E6CC254} = {D6659405-A2A1-416A-B93C-2ED51B0F514B}
+//	EndGlobalSection
 EndGlobal

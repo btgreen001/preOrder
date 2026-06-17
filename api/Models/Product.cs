@@ -2,8 +2,8 @@ namespace PreOrderApp.Models;
 
 public class SellableProduct
 {
-    public long Id { get; set; }  // BIGINT primary key (for joins)
-    public Guid ExternalId { get; set; }  // UUID external ID (for APIs)
+    public long Id { get; set; }
+    public Guid ExternalId { get; set; }
     public Guid OrganizationId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -11,14 +11,14 @@ public class SellableProduct
     public long? CategoryId { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal? UnitCost { get; set; }
-    public decimal QuantityOnHand { get; set; } = 0;  // Phase 2: Finished goods inventory
+    public decimal QuantityOnHand { get; set; } = 0;
     public bool IsActive { get; set; } = true;
-    public bool IsRecipeComponent { get; set; } = false;  // Component flag: true if this is an intermediate product used in recipes
-    public bool IsForSale { get; set; } = true;  // Sale flag: true if this product is available for sale
-    public decimal? OutputUnitCount { get; set; } //Meaning: If your product is sold or used in packages, this tells you how many base units are in each package.
-    public string? OutputUnitMsr { get; set; } //Meaning: The label for the output unit (e.g., "case", "box", "bottle", "kg", "lb").
+    public bool IsRecipeComponent { get; set; } = false;
+    public bool IsForSale { get; set; } = true;
+    public decimal? OutputUnitCount { get; set; }
+    public string? OutputUnitMsr { get; set; }
     public decimal? BaseUnitsPerOutputUnit { get; set; }
-    public decimal ServingsPerPackage { get; set; } = 1;  // Number of servings per package unit (e.g., 4 servings per box)
+    public decimal ServingsPerPackage { get; set; } = 1;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Guid? CreatedBy { get; set; }
     public Guid? UpdatedBy { get; set; }
@@ -27,4 +27,7 @@ public class SellableProduct
 
     public virtual Organization? Organization { get; set; }
     public virtual ProductCategory? ProductCategory { get; set; }
+
+    // ⭐ REQUIRED for EF relationship
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }

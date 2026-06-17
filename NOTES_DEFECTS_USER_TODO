@@ -31,28 +31,33 @@ dependency-check \
   - Go-live gate: **CONFIRMED GO** on security
 
 ## 2026-05-28 Validation Snapshot
-WORK to DO.
-	Onboarding flow started - it sends them to the Stripe to setup.
-	Registration needs to keep this circling until Stripe is setup....
+=====================================
+TODO list.
 
-	I need two pages to resume registration - 
-		1) refreshUrl if they never get their Stripe account setup in time.  Starts the process over.
-		2) returnUrl when the user finishes with Stripe and is ready to come back.
-			This page should keep them here until Stripe is verified as setup on the CheckOnboardingStatusAsync
-	CheckOnboardingStatusAsync needs to check status and update their org as ready to begin...otherwise they stay in registration
-		All other accounts need terminated and only work with the most current...will need to confirm that is the right flow with Stripe
+	MVP items
 
-	Then I need to update the payment flow to use the org's stripe account with payment for events.
+		ONLY the HAPPY path built for PAYMENT of preorder
+		NEED to instead add a order payment attempt/status table.  If the payment succeeds GREAT.  If it is still pending that I need to add WEBHOOK to wait for it to clear.  Also need to change email to be conditional of payment status.   
 
 
-Event navigation - when I got Items nothing but when I go to Pickup Slot I get snackbar saying event has changed...it shouldn't in initial navigation.
+		Onboarding flow started - it sends them to the Stripe to setup.
+		Registration needs to keep this circling until Stripe is setup....
 
-Cancel preorder needs to return money if PAID
+		I need two pages to resume registration - 
+			1) refreshUrl if they never get their Stripe account setup in time.  Starts the process over.
+			2) returnUrl when the user finishes with Stripe and is ready to come back.
+				This page should keep them here until Stripe is verified as setup on the CheckOnboardingStatusAsync
+		CheckOnboardingStatusAsync needs to check status and update their org as ready to begin...otherwise they stay in registration
+			All other accounts need terminated and only work with the most current...will need to confirm that is the right flow with Stripe
 
-HAPPY path ONLY built for PAYMENT of preorder
-NEED to instead add a order payment attempt/status table.  If the payment succeeds GREAT.  If it is still pending that I need to add WEBHOOK to wait for it to clear.  Also need to change email to be conditional of payment status.   
+		Then I need to update the payment flow to use the org's stripe account with payment for events.
 
-Send email needs updated.  Currently the POST accepts all the details to build the order and the unit amount and pickup window can be manipulated to show a lower amount to be paid.  The details should come from the database.
+
+NOT MVP
+	Cancel preorder needs to return money if PAID;  Current state is Cancel button removed and admin can refund from Stripe and update order to cancelled.
+
+
+=====================================
 
 
 

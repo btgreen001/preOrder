@@ -421,7 +421,7 @@ export class OrderBuilderComponent {
       }))
     };
 
-    this.preorderService.sendOrderEmail(this.organizationToken(), emailReq)
+    this.preorderService.sendOrderEmail(this.organizationToken(), preorder.externalId)
       .subscribe({
         next: () => {
           this.isSubmitting.set(false);
