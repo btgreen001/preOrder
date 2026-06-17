@@ -1,11 +1,11 @@
-
 declare global {
   interface Window {
     __env: any;
   }
 }
 import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterOutlet, RouterLink, NavigationEnd, ActivatedRouteSnapshot } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRouteSnapshot } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';

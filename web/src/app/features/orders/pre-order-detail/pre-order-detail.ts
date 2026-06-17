@@ -15,11 +15,11 @@ import { OrdersService, Order, AvailablePickupSlot } from '../services/pre-order
         <header class="page-header">
           <h1>Order Details</h1>
 
-          <button class="btn-cancel"
+          <!-- <button class="btn-cancel"
                   (click)="cancelOrder()"
                   [disabled]="isCancelling() || !canCancel(order()?.orderStatus)">
             {{ isCancelling() ? 'Cancelling...' : 'Cancel Order' }}
-          </button>
+          </button> -->
 
           <button class="btn" (click)="startAnotherOrder()">
             Place Another Order
