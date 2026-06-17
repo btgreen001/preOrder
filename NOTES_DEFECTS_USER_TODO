@@ -53,9 +53,6 @@ TODO list.
 		Then I need to update the payment flow to use the org's stripe account with payment for events.
 
 
-NOT MVP
-	Cancel preorder needs to return money if PAID;  Current state is Cancel button removed and admin can refund from Stripe and update order to cancelled.
-
 
 =====================================
 
@@ -70,6 +67,7 @@ NOT MVP
 - Still-open product work remains:
 	- bad-password attempt lockout / password reset enforcement (POST go LIVE)
 	- event create/edit downstream date-time UX hardening (POST go LIVE, connected to item 1)
+	- Cancel preorder needs to return money if PAID;  Current state is Cancel button removed and admin can refund from Stripe and update order to cancelled.
 
 ## 2026-05-28 Go-Live Recheck
 
